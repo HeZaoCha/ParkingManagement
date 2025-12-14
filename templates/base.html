@@ -1,0 +1,2165 @@
+{# 基础模板 - 所有页面的公共部分，支持主题系统 #}
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN" class="light" data-theme="blue">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="停车场管理系统">
+  <title>{% block title %}停车场管理系统{% endblock %}</title>
+  
+  {# DNS 预解析和预连接 - 优化外部资源加载 #}
+  <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  {# 预加载关键资源 #}
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style">
+  <link rel="preload" href="{% static 'parking/css/license_plate_input.css' %}" as="style">
+  <link rel="preload" href="{% static 'parking/css/components.css' %}" as="style">
+  <link rel="preload" href="{% static 'parking/js/license_plate_input.js' %}" as="script">
+  <link rel="preload" href="{% static 'parking/js/form_validation.js' %}" as="script">
+  
+  {# 预获取非关键资源 #}
+  <link rel="prefetch" href="{% static 'parking/css/image_lazy_load.css' %}" as="style">
+  <link rel="prefetch" href="{% static 'parking/css/skeleton.css' %}" as="style">
+  <link rel="prefetch" href="{% static 'parking/js/components.js' %}" as="script">
+  <link rel="prefetch" href="{% static 'parking/js/network_optimization.js' %}" as="script">
+  <link rel="prefetch" href="{% static 'parking/js/image_lazy_load.js' %}" as="script">
+  <link rel="prefetch" href="{% static 'parking/js/skeleton.js' %}" as="script">
+  
+  {# Tailwind CSS #}
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  {# Font Awesome #}
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        rel="stylesheet" 
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+        crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+  
+  {# Google Fonts #}
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  {# International Telephone Input - 国际手机号输入组件 #}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.13.1/build/css/intlTelInput.css">
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.13.1/build/js/intlTelInput.min.js"></script>
+  
+  {# Tailwind 配置 #}
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            // 主题色通过 CSS 变量注入
+            primary: {
+              50: 'var(--color-primary-50)',
+              100: 'var(--color-primary-100)',
+              200: 'var(--color-primary-200)',
+              300: 'var(--color-primary-300)',
+              400: 'var(--color-primary-400)',
+              500: 'var(--color-primary-500)',
+              600: 'var(--color-primary-600)',
+              700: 'var(--color-primary-700)',
+              800: 'var(--color-primary-800)',
+              900: 'var(--color-primary-900)',
+            }
+          },
+          fontFamily: {
+            sans: ['Noto Sans SC', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          boxShadow: {
+            'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            'glow': '0 0 20px var(--color-primary-400)'
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+            'pulse-slow': 'pulse 3s infinite',
+            'bounce-subtle': 'bounceSubtle 2s infinite',
+            'gradient': 'gradient 8s ease infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' }
+            },
+            bounceSubtle: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-5px)' }
+            },
+            gradient: {
+              '0%, 100%': { backgroundPosition: '0% 50%' },
+              '50%': { backgroundPosition: '100% 50%' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  {# 主题系统 CSS 变量 #}
+  <style>
+    /* ========== 统一设计语言 ========== */
+    
+    /* 圆角系统 */
+    :root {
+      --radius-sm: 0.375rem;    /* 6px - 小元素 */
+      --radius-md: 0.5rem;      /* 8px - 按钮、输入框 */
+      --radius-lg: 0.75rem;     /* 12px - 卡片 */
+      --radius-xl: 1rem;        /* 16px - 大卡片 */
+      --radius-2xl: 1.5rem;     /* 24px - 模态框 */
+      --radius-full: 9999px;    /* 圆形 */
+    }
+    
+    /* 阴影系统 */
+    :root {
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    
+    html.dark {
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+      --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* 间距系统 */
+    :root {
+      --spacing-xs: 0.25rem;    /* 4px */
+      --spacing-sm: 0.5rem;     /* 8px */
+      --spacing-md: 1rem;       /* 16px */
+      --spacing-lg: 1.5rem;    /* 24px */
+      --spacing-xl: 2rem;      /* 32px */
+      --spacing-2xl: 3rem;     /* 48px */
+      --spacing-3xl: 4rem;     /* 64px */
+    }
+    
+    /* 图标和文字对齐 */
+    .icon-text-align {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .icon-text-align i {
+      flex-shrink: 0;
+      width: 1em;
+      text-align: center;
+    }
+    
+    /* ========== 主题色板定义 ========== */
+    
+    /* 蓝色主题 (默认) */
+    [data-theme="blue"] {
+      --color-primary-50: #eff6ff;
+      --color-primary-100: #dbeafe;
+      --color-primary-200: #bfdbfe;
+      --color-primary-300: #93c5fd;
+      --color-primary-400: #60a5fa;
+      --color-primary-500: #3b82f6;
+      --color-primary-600: #2563eb;
+      --color-primary-700: #1d4ed8;
+      --color-primary-800: #1e40af;
+      --color-primary-900: #1e3a8a;
+      --gradient-start: #1e40af;
+      --gradient-end: #3b82f6;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #f0f9ff;      /* 蓝色主题的浅色背景 */
+      --bg-secondary-light: #e0f2fe;
+      --bg-tertiary-light: #bae6fd;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #e0f2fe;
+      --bg-primary-dark: #121212;       /* 蓝色主题的深色背景 - 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 紫色主题 */
+    [data-theme="purple"] {
+      --color-primary-50: #faf5ff;
+      --color-primary-100: #f3e8ff;
+      --color-primary-200: #e9d5ff;
+      --color-primary-300: #d8b4fe;
+      --color-primary-400: #c084fc;
+      --color-primary-500: #a855f7;
+      --color-primary-600: #9333ea;
+      --color-primary-700: #7e22ce;
+      --color-primary-800: #6b21a8;
+      --color-primary-900: #581c87;
+      --gradient-start: #6b21a8;
+      --gradient-end: #a855f7;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #faf5ff;      /* 紫色主题的浅色背景 */
+      --bg-secondary-light: #f3e8ff;
+      --bg-tertiary-light: #e9d5ff;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #f3e8ff;
+      --bg-primary-dark: #121212;       /* 紫色主题的深色背景 - 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 绿色主题 */
+    [data-theme="green"] {
+      --color-primary-50: #f0fdf4;
+      --color-primary-100: #dcfce7;
+      --color-primary-200: #bbf7d0;
+      --color-primary-300: #86efac;
+      --color-primary-400: #4ade80;
+      --color-primary-500: #22c55e;
+      --color-primary-600: #16a34a;
+      --color-primary-700: #15803d;
+      --color-primary-800: #166534;
+      --color-primary-900: #14532d;
+      --gradient-start: #166534;
+      --gradient-end: #22c55e;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #f0fdf4;      /* 绿色主题的浅色背景 */
+      --bg-secondary-light: #dcfce7;
+      --bg-tertiary-light: #bbf7d0;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #dcfce7;
+      --bg-primary-dark: #121212;       /* 绿色主题的深色背景 - 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 橙色主题 */
+    [data-theme="orange"] {
+      --color-primary-50: #fff7ed;
+      --color-primary-100: #ffedd5;
+      --color-primary-200: #fed7aa;
+      --color-primary-300: #fdba74;
+      --color-primary-400: #fb923c;
+      --color-primary-500: #f97316;
+      --color-primary-600: #ea580c;
+      --color-primary-700: #c2410c;
+      --color-primary-800: #9a3412;
+      --color-primary-900: #7c2d12;
+      --gradient-start: #9a3412;
+      --gradient-end: #f97316;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff7ed;      /* 橙色主题的浅色背景 */
+      --bg-secondary-light: #ffedd5;
+      --bg-tertiary-light: #fed7aa;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffedd5;
+      --bg-primary-dark: #121212;       /* 橙色主题的深色背景 - 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 玫瑰主题 */
+    [data-theme="rose"] {
+      --color-primary-50: #fff1f2;
+      --color-primary-100: #ffe4e6;
+      --color-primary-200: #fecdd3;
+      --color-primary-300: #fda4af;
+      --color-primary-400: #fb7185;
+      --color-primary-500: #f43f5e;
+      --color-primary-600: #e11d48;
+      --color-primary-700: #be123c;
+      --color-primary-800: #9f1239;
+      --color-primary-900: #881337;
+      --gradient-start: #9f1239;
+      --gradient-end: #f43f5e;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff1f2;      /* 玫瑰主题的浅色背景 */
+      --bg-secondary-light: #ffe4e6;
+      --bg-tertiary-light: #fecdd3;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffe4e6;
+      --bg-primary-dark: #121212;       /* 玫瑰主题的深色背景 - 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* ========== 浅色调主题 ========== */
+    
+    /* 浅蓝色主题 */
+    [data-theme="blue-light"] {
+      --color-primary-50: #f0f9ff;
+      --color-primary-100: #e0f2fe;
+      --color-primary-200: #bae6fd;
+      --color-primary-300: #7dd3fc;
+      --color-primary-400: #38bdf8;
+      --color-primary-500: #0ea5e9;
+      --color-primary-600: #0284c7;
+      --color-primary-700: #0369a1;
+      --color-primary-800: #075985;
+      --color-primary-900: #0c4a6e;
+      --gradient-start: #0284c7;
+      --gradient-end: #0ea5e9;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #f0f9ff;
+      --bg-secondary-light: #e0f2fe;
+      --bg-tertiary-light: #bae6fd;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #e0f2fe;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 浅绿色主题 */
+    [data-theme="green-light"] {
+      --color-primary-50: #ecfdf5;
+      --color-primary-100: #d1fae5;
+      --color-primary-200: #a7f3d0;
+      --color-primary-300: #6ee7b7;
+      --color-primary-400: #34d399;
+      --color-primary-500: #10b981;
+      --color-primary-600: #059669;
+      --color-primary-700: #047857;
+      --color-primary-800: #065f46;
+      --color-primary-900: #064e3b;
+      --gradient-start: #059669;
+      --gradient-end: #10b981;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #ecfdf5;
+      --bg-secondary-light: #d1fae5;
+      --bg-tertiary-light: #a7f3d0;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #d1fae5;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 浅粉色主题 */
+    [data-theme="pink-light"] {
+      --color-primary-50: #fdf2f8;
+      --color-primary-100: #fce7f3;
+      --color-primary-200: #fbcfe8;
+      --color-primary-300: #f9a8d4;
+      --color-primary-400: #f472b6;
+      --color-primary-500: #ec4899;
+      --color-primary-600: #db2777;
+      --color-primary-700: #be185d;
+      --color-primary-800: #9f1239;
+      --color-primary-900: #831843;
+      --gradient-start: #db2777;
+      --gradient-end: #ec4899;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fdf2f8;
+      --bg-secondary-light: #fce7f3;
+      --bg-tertiary-light: #fbcfe8;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #fce7f3;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 浅紫色主题 */
+    [data-theme="purple-light"] {
+      --color-primary-50: #faf5ff;
+      --color-primary-100: #f3e8ff;
+      --color-primary-200: #e9d5ff;
+      --color-primary-300: #d8b4fe;
+      --color-primary-400: #c084fc;
+      --color-primary-500: #a855f7;
+      --color-primary-600: #9333ea;
+      --color-primary-700: #7e22ce;
+      --color-primary-800: #6b21a8;
+      --color-primary-900: #581c87;
+      --gradient-start: #9333ea;
+      --gradient-end: #c084fc;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #faf5ff;
+      --bg-secondary-light: #f3e8ff;
+      --bg-tertiary-light: #e9d5ff;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #f3e8ff;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 浅橙色主题 */
+    [data-theme="orange-light"] {
+      --color-primary-50: #fff7ed;
+      --color-primary-100: #ffedd5;
+      --color-primary-200: #fed7aa;
+      --color-primary-300: #fdba74;
+      --color-primary-400: #fb923c;
+      --color-primary-500: #f97316;
+      --color-primary-600: #ea580c;
+      --color-primary-700: #c2410c;
+      --color-primary-800: #9a3412;
+      --color-primary-900: #7c2d12;
+      --gradient-start: #ea580c;
+      --gradient-end: #fb923c;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff7ed;
+      --bg-secondary-light: #ffedd5;
+      --bg-tertiary-light: #fed7aa;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffedd5;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* ========== 深色调主题 ========== */
+    
+    /* 深蓝色主题 */
+    [data-theme="blue-dark"] {
+      --color-primary-50: #1e3a8a;
+      --color-primary-100: #1e40af;
+      --color-primary-200: #1d4ed8;
+      --color-primary-300: #2563eb;
+      --color-primary-400: #3b82f6;
+      --color-primary-500: #60a5fa;
+      --color-primary-600: #93c5fd;
+      --color-primary-700: #bfdbfe;
+      --color-primary-800: #dbeafe;
+      --color-primary-900: #eff6ff;
+      --gradient-start: #1e3a8a;
+      --gradient-end: #3b82f6;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #f0f9ff;
+      --bg-secondary-light: #e0f2fe;
+      --bg-tertiary-light: #bae6fd;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #e0f2fe;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 深绿色主题 */
+    [data-theme="green-dark"] {
+      --color-primary-50: #14532d;
+      --color-primary-100: #166534;
+      --color-primary-200: #15803d;
+      --color-primary-300: #16a34a;
+      --color-primary-400: #22c55e;
+      --color-primary-500: #4ade80;
+      --color-primary-600: #86efac;
+      --color-primary-700: #bbf7d0;
+      --color-primary-800: #dcfce7;
+      --color-primary-900: #f0fdf4;
+      --gradient-start: #14532d;
+      --gradient-end: #22c55e;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #ecfdf5;
+      --bg-secondary-light: #d1fae5;
+      --bg-tertiary-light: #a7f3d0;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #d1fae5;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 深紫色主题 */
+    [data-theme="purple-dark"] {
+      --color-primary-50: #581c87;
+      --color-primary-100: #6b21a8;
+      --color-primary-200: #7e22ce;
+      --color-primary-300: #9333ea;
+      --color-primary-400: #a855f7;
+      --color-primary-500: #c084fc;
+      --color-primary-600: #d8b4fe;
+      --color-primary-700: #e9d5ff;
+      --color-primary-800: #f3e8ff;
+      --color-primary-900: #faf5ff;
+      --gradient-start: #581c87;
+      --gradient-end: #a855f7;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #faf5ff;
+      --bg-secondary-light: #f3e8ff;
+      --bg-tertiary-light: #e9d5ff;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #f3e8ff;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 深橙色主题 */
+    [data-theme="orange-dark"] {
+      --color-primary-50: #7c2d12;
+      --color-primary-100: #9a3412;
+      --color-primary-200: #c2410c;
+      --color-primary-300: #ea580c;
+      --color-primary-400: #f97316;
+      --color-primary-500: #fb923c;
+      --color-primary-600: #fdba74;
+      --color-primary-700: #fed7aa;
+      --color-primary-800: #ffedd5;
+      --color-primary-900: #fff7ed;
+      --gradient-start: #7c2d12;
+      --gradient-end: #f97316;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff7ed;
+      --bg-secondary-light: #ffedd5;
+      --bg-tertiary-light: #fed7aa;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffedd5;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 深玫瑰主题 */
+    [data-theme="rose-dark"] {
+      --color-primary-50: #881337;
+      --color-primary-100: #9f1239;
+      --color-primary-200: #be123c;
+      --color-primary-300: #e11d48;
+      --color-primary-400: #f43f5e;
+      --color-primary-500: #fb7185;
+      --color-primary-600: #fda4af;
+      --color-primary-700: #fecdd3;
+      --color-primary-800: #ffe4e6;
+      --color-primary-900: #fff1f2;
+      --gradient-start: #881337;
+      --gradient-end: #f43f5e;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff1f2;
+      --bg-secondary-light: #ffe4e6;
+      --bg-tertiary-light: #fecdd3;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffe4e6;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* ========== 渐变主题（第四类） ========== */
+    
+    /* 蓝色渐变主题 */
+    [data-theme="blue-gradient"] {
+      --color-primary-50: #eff6ff;
+      --color-primary-100: #dbeafe;
+      --color-primary-200: #bfdbfe;
+      --color-primary-300: #93c5fd;
+      --color-primary-400: #60a5fa;
+      --color-primary-500: #3b82f6;
+      --color-primary-600: #2563eb;
+      --color-primary-700: #1d4ed8;
+      --color-primary-800: #1e40af;
+      --color-primary-900: #1e3a8a;
+      --gradient-start: #1e40af;
+      --gradient-end: #3b82f6;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #f0f9ff;
+      --bg-secondary-light: #e0f2fe;
+      --bg-tertiary-light: #bae6fd;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #e0f2fe;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 紫色渐变主题 */
+    [data-theme="purple-gradient"] {
+      --color-primary-50: #faf5ff;
+      --color-primary-100: #f3e8ff;
+      --color-primary-200: #e9d5ff;
+      --color-primary-300: #d8b4fe;
+      --color-primary-400: #c084fc;
+      --color-primary-500: #a855f7;
+      --color-primary-600: #9333ea;
+      --color-primary-700: #7e22ce;
+      --color-primary-800: #6b21a8;
+      --color-primary-900: #581c87;
+      --gradient-start: #6b21a8;
+      --gradient-end: #a855f7;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #faf5ff;
+      --bg-secondary-light: #f3e8ff;
+      --bg-tertiary-light: #e9d5ff;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #f3e8ff;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 绿色渐变主题 */
+    [data-theme="green-gradient"] {
+      --color-primary-50: #f0fdf4;
+      --color-primary-100: #dcfce7;
+      --color-primary-200: #bbf7d0;
+      --color-primary-300: #86efac;
+      --color-primary-400: #4ade80;
+      --color-primary-500: #22c55e;
+      --color-primary-600: #16a34a;
+      --color-primary-700: #15803d;
+      --color-primary-800: #166534;
+      --color-primary-900: #14532d;
+      --gradient-start: #166534;
+      --gradient-end: #22c55e;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #ecfdf5;
+      --bg-secondary-light: #d1fae5;
+      --bg-tertiary-light: #a7f3d0;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #d1fae5;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 橙色渐变主题 */
+    [data-theme="orange-gradient"] {
+      --color-primary-50: #fff7ed;
+      --color-primary-100: #ffedd5;
+      --color-primary-200: #fed7aa;
+      --color-primary-300: #fdba74;
+      --color-primary-400: #fb923c;
+      --color-primary-500: #f97316;
+      --color-primary-600: #ea580c;
+      --color-primary-700: #c2410c;
+      --color-primary-800: #9a3412;
+      --color-primary-900: #7c2d12;
+      --gradient-start: #9a3412;
+      --gradient-end: #f97316;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff7ed;
+      --bg-secondary-light: #ffedd5;
+      --bg-tertiary-light: #fed7aa;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffedd5;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* 玫瑰渐变主题 */
+    [data-theme="rose-gradient"] {
+      --color-primary-50: #fff1f2;
+      --color-primary-100: #ffe4e6;
+      --color-primary-200: #fecdd3;
+      --color-primary-300: #fda4af;
+      --color-primary-400: #fb7185;
+      --color-primary-500: #f43f5e;
+      --color-primary-600: #e11d48;
+      --color-primary-700: #be123c;
+      --color-primary-800: #9f1239;
+      --color-primary-900: #881337;
+      --gradient-start: #9f1239;
+      --gradient-end: #f43f5e;
+      /* 背景色（结合主题色和亮暗模式） */
+      --bg-primary-light: #fff1f2;
+      --bg-secondary-light: #ffe4e6;
+      --bg-tertiary-light: #fecdd3;
+      --bg-card-light: #ffffff;
+      --bg-hover-light: #ffe4e6;
+      --bg-primary-dark: #121212;       /* 使用深灰色而非纯黑色 */
+      --bg-secondary-dark: #1e1e1e;    /* 稍浅的深灰色，保持层次 */
+      --bg-tertiary-dark: #2a2a2a;     /* 中等深灰色 */
+      --bg-card-dark: #1e1e1e;         /* 卡片背景 */
+      --bg-hover-dark: #2a2a2a;        /* 悬停背景 */
+    }
+    
+    /* ========== 亮色模式 ========== */
+    html.light {
+      /* 背景色使用主题色定义的浅色变体，如果没有定义则使用默认值 */
+      --bg-primary: var(--bg-primary-light, #ffffff);
+      --bg-secondary: var(--bg-secondary-light, #f8fafc);
+      --bg-tertiary: var(--bg-tertiary-light, #f1f5f9);
+      --bg-card: var(--bg-card-light, #ffffff);
+      --bg-hover: var(--bg-hover-light, #f1f5f9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border-color: #e2e8f0;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    /* ========== 暗色模式 ========== */
+    html.dark {
+      /* 背景色使用主题色定义的深色变体，如果没有定义则使用默认值 */
+      /* 使用深灰色（#121212）而非纯黑色，符合深色UI设计最佳实践 */
+      --bg-primary: var(--bg-primary-dark, #121212);
+      --bg-secondary: var(--bg-secondary-dark, #1e1e1e);
+      --bg-tertiary: var(--bg-tertiary-dark, #2a2a2a);
+      --bg-card: var(--bg-card-dark, #1e1e1e);
+      --bg-hover: var(--bg-hover-dark, #2a2a2a);
+      /* 文本颜色确保与深色背景的对比度至少4.5:1（WCAG AA级） */
+      --text-primary: #f1f5f9;        /* 浅色文本，与#121212对比度约15.8:1 */
+      --text-secondary: #cbd5e1;      /* 中等浅色文本，与#121212对比度约11.2:1 */
+      --text-muted: #94a3b8;          /* 浅色文本，与#121212对比度约6.8:1 */
+      --border-color: #2a2a2a;        /* 边框颜色 */
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+    
+    /* ========== 全局样式应用 ========== */
+    body {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* 渐变主题：为 body 添加动态渐变背景 - 使用颜色范围 */
+    html[data-theme*="gradient"] body {
+      background: linear-gradient(-45deg, 
+        var(--color-primary-900),  /* 最深色 */
+        var(--color-primary-700),   /* 深色 */
+        var(--color-primary-500),   /* 主色 */
+        var(--color-primary-300),   /* 浅色 */
+        var(--color-primary-100),   /* 最浅色 */
+        var(--color-primary-300),   /* 浅色 */
+        var(--color-primary-500),   /* 主色 */
+        var(--color-primary-700),   /* 深色 */
+        var(--color-primary-900)    /* 最深色 */
+      );
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      background-attachment: fixed;
+    }
+    
+    .bg-theme-primary { background-color: var(--bg-primary); }
+    .bg-theme-secondary { background-color: var(--bg-secondary); }
+    .bg-theme-tertiary { background-color: var(--bg-tertiary); }
+    .bg-theme-card { background-color: var(--bg-card); }
+    .bg-theme-hover:hover { background-color: var(--bg-hover); }
+    .text-theme-primary { color: var(--text-primary); }
+    .text-theme-secondary { color: var(--text-secondary); }
+    .text-theme-muted { color: var(--text-muted); }
+    .border-theme { border-color: var(--border-color); }
+    
+    /* 渐变背景 */
+    .bg-gradient-theme {
+      background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    }
+    
+    /* 渐变主题使用动态渐变背景 - 使用颜色范围 */
+    [data-theme*="gradient"] .bg-gradient-theme {
+      background: linear-gradient(-45deg, 
+        var(--color-primary-900),  /* 最深色 */
+        var(--color-primary-700),   /* 深色 */
+        var(--color-primary-500),   /* 主色 */
+        var(--color-primary-300),   /* 浅色 */
+        var(--color-primary-100),   /* 最浅色 */
+        var(--color-primary-300),   /* 浅色 */
+        var(--color-primary-500),   /* 主色 */
+        var(--color-primary-700),   /* 深色 */
+        var(--color-primary-900)    /* 最深色 */
+      );
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    /* ========== 联系页面卡片主题色系统 ========== */
+    /* 为每个卡片类型定义独立的颜色变量，基于不同的主题色 */
+    /* 邮件联系卡片 - 使用蓝色系 */
+    :root {
+      --contact-email-50: #eff6ff;
+      --contact-email-100: #dbeafe;
+      --contact-email-200: #bfdbfe;
+      --contact-email-300: #93c5fd;
+      --contact-email-400: #60a5fa;
+      --contact-email-500: #3b82f6;
+      --contact-email-600: #2563eb;
+      --contact-email-700: #1d4ed8;
+      --contact-email-800: #1e40af;
+      --contact-email-900: #1e3a8a;
+      
+      /* GitHub Issues 卡片 - 使用紫色系 */
+      --contact-github-50: #faf5ff;
+      --contact-github-100: #f3e8ff;
+      --contact-github-200: #e9d5ff;
+      --contact-github-300: #d8b4fe;
+      --contact-github-400: #c084fc;
+      --contact-github-500: #a855f7;
+      --contact-github-600: #9333ea;
+      --contact-github-700: #7e22ce;
+      --contact-github-800: #6b21a8;
+      --contact-github-900: #581c87;
+      
+      /* CSDN私信卡片 - 使用绿色系 */
+      --contact-csdn-50: #f0fdf4;
+      --contact-csdn-100: #dcfce7;
+      --contact-csdn-200: #bbf7d0;
+      --contact-csdn-300: #86efac;
+      --contact-csdn-400: #4ade80;
+      --contact-csdn-500: #22c55e;
+      --contact-csdn-600: #16a34a;
+      --contact-csdn-700: #15803d;
+      --contact-csdn-800: #166534;
+      --contact-csdn-900: #14532d;
+      
+      /* 在岗工作人员卡片 - 使用橙色系 */
+      --contact-staff-50: #fff7ed;
+      --contact-staff-100: #ffedd5;
+      --contact-staff-200: #fed7aa;
+      --contact-staff-300: #fdba74;
+      --contact-staff-400: #fb923c;
+      --contact-staff-500: #f97316;
+      --contact-staff-600: #ea580c;
+      --contact-staff-700: #c2410c;
+      --contact-staff-800: #9a3412;
+      --contact-staff-900: #7c2d12;
+    }
+    
+    
+    /* 动态渐变背景 - 使用颜色范围 */
+    .bg-gradient-animated {
+      background: linear-gradient(-45deg, 
+        var(--color-primary-900),  /* 最深色 */
+        var(--color-primary-700),   /* 深色 */
+        var(--color-primary-500),   /* 主色 */
+        var(--color-primary-300),   /* 浅色 */
+        var(--color-primary-100),   /* 最浅色 */
+        var(--color-primary-300),   /* 浅色 */
+        var(--color-primary-500),   /* 主色 */
+        var(--color-primary-700),   /* 深色 */
+        var(--color-primary-900)    /* 最深色 */
+      );
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+    }
+    
+    /* 渐变动画 keyframes */
+    @keyframes gradient {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+    
+    /* ========== 浮动按钮可见性增强 ========== */
+    
+    /* 主题色 RGB 值（用于阴影和发光效果） */
+    [data-theme="blue"],
+    [data-theme="blue-light"],
+    [data-theme="blue-dark"],
+    [data-theme="blue-gradient"] {
+      --color-primary-400-rgb: 96, 165, 250;
+      --color-primary-500-rgb: 59, 130, 246;
+    }
+    
+    [data-theme="purple"],
+    [data-theme="purple-light"],
+    [data-theme="purple-dark"],
+    [data-theme="purple-gradient"] {
+      --color-primary-400-rgb: 192, 132, 252;
+      --color-primary-500-rgb: 168, 85, 247;
+    }
+    
+    [data-theme="green"],
+    [data-theme="green-light"],
+    [data-theme="green-dark"],
+    [data-theme="green-gradient"] {
+      --color-primary-400-rgb: 74, 222, 128;
+      --color-primary-500-rgb: 34, 197, 94;
+    }
+    
+    [data-theme="orange"],
+    [data-theme="orange-light"],
+    [data-theme="orange-dark"],
+    [data-theme="orange-gradient"] {
+      --color-primary-400-rgb: 251, 146, 60;
+      --color-primary-500-rgb: 249, 115, 22;
+    }
+    
+    [data-theme="rose"],
+    [data-theme="rose-dark"],
+    [data-theme="rose-gradient"] {
+      --color-primary-400-rgb: 251, 113, 133;
+      --color-primary-500-rgb: 244, 63, 94;
+    }
+    
+    [data-theme="pink-light"] {
+      --color-primary-400-rgb: 244, 114, 182;
+      --color-primary-500-rgb: 236, 72, 153;
+    }
+    
+    [data-theme="rose"],
+    [data-theme="rose-gradient"] {
+      --color-primary-400-rgb: 251, 113, 133;
+      --color-primary-500-rgb: 244, 63, 94;
+    }
+    
+    /* 浮动按钮增强阴影和发光效果 */
+    .fab-enhanced {
+      position: relative;
+      transition: all 0.2s ease-out;
+    }
+    
+    .fab-enhanced:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 
+        0 12px 28px -5px rgba(var(--color-primary-500-rgb), 0.4),
+        0 0 24px rgba(var(--color-primary-400-rgb), 0.5),
+        0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* 暗色模式增强发光 */
+    html.dark .fab-enhanced:hover {
+      box-shadow: 
+        0 12px 28px -5px rgba(var(--color-primary-400-rgb), 0.6),
+        0 0 32px rgba(var(--color-primary-400-rgb), 0.7),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .fab-enhanced:active {
+      transform: translateY(-4px) scale(0.98);
+    }
+    
+    /* 浮动按钮图标增强 */
+    .fab-icon-enhanced {
+      transition: transform 0.2s ease-out;
+    }
+    
+    .fab-enhanced:hover .fab-icon-enhanced {
+      transform: scale(1.15);
+    }
+    
+    /* 卡片样式 */
+    .card-theme {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 6px -1px var(--shadow-color);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-theme:hover {
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+      transform: translateY(-4px);
+      border-color: var(--color-primary-500);
+    }
+    
+    /* 玻璃卡片样式增强 */
+    .glass-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* 联系卡片交互 */
+    .contact-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .contact-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* 输入框样式 */
+    .input-theme {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+    }
+    .input-theme:focus {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 3px var(--color-primary-100);
+      outline: none;
+    }
+    html.dark .input-theme:focus {
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-500), 0.2);
+    }
+    
+    /* 按钮样式 */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-500));
+      color: white;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--color-primary-700), var(--color-primary-600));
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--color-primary-400);
+    }
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px var(--color-primary-400);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-secondary, #f3f4f6);
+      color: var(--text-primary, #111827);
+      border: 1px solid var(--border-color, #e5e7eb);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .dark .btn-secondary {
+      background: var(--bg-secondary-dark, #2a2a2a);
+      color: var(--text-primary-dark, #f9fafb);
+      border-color: var(--border-color-dark, #374151);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--bg-hover, #e5e7eb);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dark .btn-secondary:hover {
+      background: var(--bg-hover-dark, #374151);
+    }
+    
+    .btn-secondary:active {
+      transform: translateY(0);
+    }
+    
+    /* 全局交互反馈样式 */
+    button:not(:disabled),
+    a:not([href="#"]):not([href=""]),
+    [role="button"] {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    button:not(:disabled):hover,
+    a:not([href="#"]):not([href=""]):hover,
+    [role="button"]:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    
+    button:not(:disabled):active,
+    a:not([href="#"]):not([href=""]):active,
+    [role="button"]:active {
+      transform: translateY(0) scale(0.98);
+    }
+    
+    /* 图标悬停反馈 */
+    button i,
+    a i,
+    [role="button"] i {
+      transition: transform 0.2s ease;
+    }
+    
+    /* 可点击元素的基础反馈 */
+    .clickable {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .clickable:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+    .clickable:active {
+      transform: translateY(0) scale(0.98);
+    }
+    
+    /* 增强的按钮交互样式 */
+    .btn-interactive {
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-interactive:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .btn-interactive:active {
+      transform: translateY(0) scale(0.98);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-interactive:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    /* 按钮涟漪效果 */
+    .btn-interactive::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+    .btn-interactive:active::before {
+      width: 300px;
+      height: 300px;
+    }
+    
+    /* 表格行交互 */
+    .table-row-interactive {
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+    }
+    .table-row-interactive:hover {
+      background-color: var(--bg-hover) !important;
+      transform: translateX(2px);
+      box-shadow: -2px 0 0 var(--color-primary-500);
+    }
+    .table-row-interactive:active {
+      transform: translateX(1px);
+      background-color: var(--bg-tertiary) !important;
+    }
+    
+    /* 表格行点击反馈 */
+    .table-row-interactive::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--color-primary-500);
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .table-row-interactive:active::after {
+      opacity: 0.1;
+    }
+    
+    /* 卡片交互增强 */
+    .card-interactive {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    .card-interactive:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+    .card-interactive:active {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 卡片悬停时的边框高亮 */
+    .card-interactive:hover {
+      border-color: var(--color-primary-500);
+    }
+    
+    /* 输入框焦点增强 */
+    /* 输入框焦点增强样式 */
+    .input-focus-enhanced:focus {
+      border-color: var(--color-primary-500) !important;
+      box-shadow: 0 0 0 3px var(--color-primary-100) !important;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    html.dark .input-focus-enhanced:focus {
+      box-shadow: 0 0 0 3px rgba(var(--color-primary-500-rgb), 0.2) !important;
+    }
+    
+    /* 表单实时验证反馈 */
+    .form-field {
+      position: relative;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .form-field-valid .input-theme {
+      border-color: var(--color-success);
+      background-color: var(--color-success-light);
+    }
+    html.dark .form-field-valid .input-theme {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+    
+    .form-field-invalid .input-theme {
+      border-color: var(--color-error);
+      background-color: var(--color-error-light);
+    }
+    html.dark .form-field-invalid .input-theme {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+    
+    .form-field-validating .input-theme {
+      border-color: var(--color-info);
+      background-color: var(--color-info-light);
+    }
+    html.dark .form-field-validating .input-theme {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    /* 表单验证图标 */
+    .form-validation-icon {
+      position: absolute;
+      right: var(--spacing-md);
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 10;
+    }
+    
+    .form-validation-icon.valid {
+      color: var(--color-success);
+    }
+    
+    .form-validation-icon.invalid {
+      color: var(--color-error);
+    }
+    
+    .form-validation-icon.validating {
+      color: var(--color-info);
+      animation: spin 1s linear infinite;
+    }
+    
+    /* 表单错误消息 */
+    .form-error-message {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      margin-top: var(--spacing-xs);
+      font-size: 0.875rem;
+      color: var(--color-error);
+    }
+    
+    .form-success-message {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      margin-top: var(--spacing-xs);
+      font-size: 0.875rem;
+      color: var(--color-success);
+    }
+    
+    /* 表单提交反馈 */
+    .form-submitting {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    
+    .form-submit-success {
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .form-submit-error {
+      animation: shake 0.5s ease;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    /* 加载状态 */
+    .loading-state {
+      position: relative;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+    .loading-state::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* 涟漪效果 */
+    .ripple-effect {
+      position: relative;
+      overflow: hidden;
+    }
+    .ripple-effect::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s;
+    }
+    .ripple-effect:active::after {
+      width: 300px;
+      height: 300px;
+    }
+    
+    /* 响应式表格 */
+    .table-responsive {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    
+    .table-responsive table {
+      width: 100%;
+      min-width: 600px;
+    }
+    
+    @media (max-width: 768px) {
+      .table-responsive::after {
+        content: '← 滑动查看更多 →';
+        display: block;
+        text-align: center;
+        padding: 8px;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        position: sticky;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
+      }
+      
+      /* 表格滚动提示动画 */
+      .table-responsive::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 30px;
+        height: 100%;
+        background: linear-gradient(to left, var(--bg-primary), transparent);
+        pointer-events: none;
+        z-index: 1;
+      }
+    }
+    
+    /* 表格列宽优化 */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .table-responsive table {
+        min-width: 800px;
+      }
+    }
+    
+    /* 响应式卡片网格 */
+    @media (max-width: 640px) {
+      .grid-responsive {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    @media (min-width: 641px) and (max-width: 1024px) {
+      .grid-responsive {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+    
+    /* 模态框动画增强 */
+    .modal-enter {
+      animation: modalEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .modal-exit {
+      animation: modalExit 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes modalEnter {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    @keyframes modalExit {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.95) translateY(-5px);
+      }
+    }
+    
+    /* 背景遮罩动画 */
+    .backdrop-enter {
+      animation: backdropEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .backdrop-exit {
+      animation: backdropExit 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    .backdrop-exit {
+      animation: backdropExit 0.2s ease forwards;
+    }
+    @keyframes backdropEnter {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes backdropExit {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    
+    /* 统一状态指示样式 */
+    :root {
+      --color-success: #10b981;
+      --color-success-light: #d1fae5;
+      --color-success-dark: #059669;
+      --color-error: #ef4444;
+      --color-error-light: #fee2e2;
+      --color-error-dark: #dc2626;
+      --color-warning: #f59e0b;
+      --color-warning-light: #fef3c7;
+      --color-warning-dark: #d97706;
+      --color-info: #3b82f6;
+      --color-info-light: #dbeafe;
+      --color-info-dark: #2563eb;
+    }
+    
+    /* 输入框状态样式 */
+    .input-success {
+      border-color: var(--color-success) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+      background-color: var(--color-success-light);
+    }
+    html.dark .input-success {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+    
+    .input-error {
+      border-color: var(--color-error) !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+      background-color: var(--color-error-light);
+    }
+    html.dark .input-error {
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+    
+    .input-warning {
+      border-color: var(--color-warning) !important;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1) !important;
+      background-color: var(--color-warning-light);
+    }
+    html.dark .input-warning {
+      background-color: rgba(245, 158, 11, 0.1);
+    }
+    
+    .input-info {
+      border-color: var(--color-info) !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+      background-color: var(--color-info-light);
+    }
+    html.dark .input-info {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    /* 状态消息样式 */
+    .status-message {
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      transition: all 0.2s ease;
+    }
+    
+    .status-message-success {
+      background-color: var(--color-success-light);
+      color: var(--color-success-dark);
+      border: 1px solid var(--color-success);
+    }
+    html.dark .status-message-success {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border-color: var(--color-success);
+    }
+    
+    .status-message-error {
+      background-color: var(--color-error-light);
+      color: var(--color-error-dark);
+      border: 1px solid var(--color-error);
+    }
+    html.dark .status-message-error {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border-color: var(--color-error);
+    }
+    
+    .status-message-warning {
+      background-color: var(--color-warning-light);
+      color: var(--color-warning-dark);
+      border: 1px solid var(--color-warning);
+    }
+    html.dark .status-message-warning {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: #fcd34d;
+      border-color: var(--color-warning);
+    }
+    
+    .status-message-info {
+      background-color: var(--color-info-light);
+      color: var(--color-info-dark);
+      border: 1px solid var(--color-info);
+    }
+    html.dark .status-message-info {
+      background-color: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border-color: var(--color-info);
+    }
+    
+    /* 状态图标 */
+    .status-icon {
+      flex-shrink: 0;
+      width: 1.25rem;
+      height: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .status-icon-success::before {
+      content: '✓';
+      color: var(--color-success);
+      font-weight: bold;
+    }
+    
+    .status-icon-error::before {
+      content: '✕';
+      color: var(--color-error);
+      font-weight: bold;
+    }
+    
+    .status-icon-warning::before {
+      content: '⚠';
+      color: var(--color-warning);
+      font-weight: bold;
+    }
+    
+    .status-icon-info::before {
+      content: 'ℹ';
+      color: var(--color-info);
+      font-weight: bold;
+    }
+    
+    /* 状态标签动画 */
+    .badge-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    /* 骨架屏加载 */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-tertiary) 50%, var(--bg-secondary) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s ease-in-out infinite;
+    }
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    /* 统一加载状态组件 */
+    .loading-spinner {
+      display: inline-block;
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 3px solid var(--bg-tertiary);
+      border-top-color: var(--color-primary-500, #6366f1);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    .loading-content {
+      background: var(--bg-card);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      min-width: 200px;
+    }
+    
+    .loading-text {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* 滚动条 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--color-primary-400);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--color-primary-500);
+    }
+    
+    /* 玻璃态效果 */
+    .glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    html.dark .glass {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
+    /* 数字动画字体 */
+    .font-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+  
+  {# 公共样式扩展 #}
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .transition-all-300 {
+        transition: all 300ms ease-in-out;
+      }
+      .icon-container {
+        min-width: 3rem;
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  </style>
+  
+  {# 车牌号输入组件样式 #}
+  <link rel="stylesheet" href="{% static 'parking/css/license_plate_input.css' %}">
+  
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}min-h-screen{% endblock %}">
+  {# 页面内容 #}
+  {% block content %}{% endblock %}
+  
+  {# 浮动按钮组 #}
+  <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+    {# 联系我们按钮 #}
+    <button onclick="window.location.href='/parking/contact/'" 
+            class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg fab-enhanced flex items-center justify-center"
+            title="联系我们">
+      <i class="fas fa-headset text-xl fab-icon-enhanced"></i>
+    </button>
+    
+    {# 主题切换器 #}
+    <div id="theme-switcher">
+      {# 主按钮 #}
+      <button id="theme-toggle-btn" 
+              class="w-14 h-14 rounded-full bg-gradient-theme text-white shadow-lg fab-enhanced flex items-center justify-center"
+              onclick="toggleThemePanel()"
+              title="主题设置">
+        <i class="fas fa-palette text-xl fab-icon-enhanced"></i>
+      </button>
+    
+    {# 主题面板 #}
+    <div id="theme-panel" 
+         class="absolute bottom-16 right-0 w-72 card-theme rounded-2xl p-4 opacity-0 invisible transform translate-y-4 transition-all duration-300">
+      <h3 class="text-theme-primary font-semibold mb-4 flex items-center gap-2">
+        <i class="fas fa-swatchbook text-primary-500"></i>
+        主题设置
+      </h3>
+      
+      {# 亮暗切换 #}
+      <div class="mb-4">
+        <p class="text-theme-muted text-sm mb-2">显示模式</p>
+        <div class="flex gap-2">
+          <button onclick="setMode('light')" 
+                  class="mode-btn flex-1 py-2 px-3 rounded-lg border border-theme text-sm transition-all flex items-center justify-center gap-2 hover:bg-theme-hover"
+                  data-mode="light">
+            <i class="fas fa-sun text-amber-500"></i>
+            <span>亮色</span>
+          </button>
+          <button onclick="setMode('dark')" 
+                  class="mode-btn flex-1 py-2 px-3 rounded-lg border border-theme text-sm transition-all flex items-center justify-center gap-2 hover:bg-theme-hover"
+                  data-mode="dark">
+            <i class="fas fa-moon text-indigo-400"></i>
+            <span>暗色</span>
+          </button>
+          <button onclick="setMode('system')" 
+                  class="mode-btn flex-1 py-2 px-3 rounded-lg border border-theme text-sm transition-all flex items-center justify-center gap-2 hover:bg-theme-hover"
+                  data-mode="system">
+            <i class="fas fa-desktop text-theme-secondary"></i>
+            <span>跟随</span>
+          </button>
+        </div>
+      </div>
+      
+      {# 主题色选择 #}
+      <div>
+        <p class="text-theme-muted text-sm mb-2">主题色</p>
+        {# 色系选择器 #}
+        <div class="flex gap-2 mb-3">
+          <button onclick="selectColorTone('light')" 
+                  class="color-tone-btn flex-1 px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 border-theme hover:bg-theme-hover" 
+                  data-tone="light" 
+                  title="浅色（默认）">
+            浅色
+          </button>
+          <button onclick="selectColorTone('standard')" 
+                  class="color-tone-btn flex-1 px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 border-theme hover:bg-theme-hover" 
+                  data-tone="standard" 
+                  title="标准色">
+            标准
+          </button>
+          <button onclick="selectColorTone('dark')" 
+                  class="color-tone-btn flex-1 px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 border-theme hover:bg-theme-hover" 
+                  data-tone="dark" 
+                  title="深色">
+            深色
+          </button>
+          <button onclick="selectColorTone('gradient')" 
+                  class="color-tone-btn flex-1 px-3 py-1.5 text-xs rounded-lg border transition-all duration-200 border-theme hover:bg-theme-hover" 
+                  data-tone="gradient" 
+                  title="渐变">
+            渐变
+          </button>
+        </div>
+        {# 主题颜色网格 #}
+        <div id="theme-colors-container" class="grid grid-cols-5 gap-2">
+          {# 浅色系（默认） #}
+          <button onclick="setTheme('blue-light')" class="theme-color-btn w-10 h-10 rounded-full bg-sky-400 hover:scale-110 transition-transform flex items-center justify-center" data-theme="blue-light" data-tone="light" title="浅蓝色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('green-light')" class="theme-color-btn w-10 h-10 rounded-full bg-emerald-400 hover:scale-110 transition-transform flex items-center justify-center" data-theme="green-light" data-tone="light" title="浅绿色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('pink-light')" class="theme-color-btn w-10 h-10 rounded-full bg-pink-400 hover:scale-110 transition-transform flex items-center justify-center" data-theme="pink-light" data-tone="light" title="浅粉色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('purple-light')" class="theme-color-btn w-10 h-10 rounded-full bg-purple-400 hover:scale-110 transition-transform flex items-center justify-center" data-theme="purple-light" data-tone="light" title="浅紫色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('orange-light')" class="theme-color-btn w-10 h-10 rounded-full bg-orange-400 hover:scale-110 transition-transform flex items-center justify-center" data-theme="orange-light" data-tone="light" title="浅橙色"><i class="fas fa-check text-white opacity-0"></i></button>
+          {# 标准色系 #}
+          <button onclick="setTheme('blue')" class="theme-color-btn w-10 h-10 rounded-full bg-blue-500 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="blue" data-tone="standard" title="蓝色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('purple')" class="theme-color-btn w-10 h-10 rounded-full bg-purple-500 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="purple" data-tone="standard" title="紫色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('green')" class="theme-color-btn w-10 h-10 rounded-full bg-green-500 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="green" data-tone="standard" title="绿色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('orange')" class="theme-color-btn w-10 h-10 rounded-full bg-orange-500 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="orange" data-tone="standard" title="橙色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('rose')" class="theme-color-btn w-10 h-10 rounded-full bg-rose-500 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="rose" data-tone="standard" title="玫瑰"><i class="fas fa-check text-white opacity-0"></i></button>
+          {# 深色系 #}
+          <button onclick="setTheme('blue-dark')" class="theme-color-btn w-10 h-10 rounded-full bg-blue-700 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="blue-dark" data-tone="dark" title="深蓝色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('green-dark')" class="theme-color-btn w-10 h-10 rounded-full bg-green-700 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="green-dark" data-tone="dark" title="深绿色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('purple-dark')" class="theme-color-btn w-10 h-10 rounded-full bg-purple-700 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="purple-dark" data-tone="dark" title="深紫色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('orange-dark')" class="theme-color-btn w-10 h-10 rounded-full bg-orange-700 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="orange-dark" data-tone="dark" title="深橙色"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('rose-dark')" class="theme-color-btn w-10 h-10 rounded-full bg-rose-700 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="rose-dark" data-tone="dark" title="深玫瑰"><i class="fas fa-check text-white opacity-0"></i></button>
+          {# 渐变色系（第四类） #}
+          <button onclick="setTheme('blue-gradient')" class="theme-color-btn w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-400 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="blue-gradient" data-tone="gradient" title="蓝色渐变"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('green-gradient')" class="theme-color-btn w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-400 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="green-gradient" data-tone="gradient" title="绿色渐变"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('purple-gradient')" class="theme-color-btn w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-400 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="purple-gradient" data-tone="gradient" title="紫色渐变"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('orange-gradient')" class="theme-color-btn w-10 h-10 rounded-full bg-gradient-to-br from-orange-600 to-orange-400 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="orange-gradient" data-tone="gradient" title="橙色渐变"><i class="fas fa-check text-white opacity-0"></i></button>
+          <button onclick="setTheme('rose-gradient')" class="theme-color-btn w-10 h-10 rounded-full bg-gradient-to-br from-rose-600 to-rose-400 hover:scale-110 transition-transform flex items-center justify-center hidden" data-theme="rose-gradient" data-tone="gradient" title="玫瑰渐变"><i class="fas fa-check text-white opacity-0"></i></button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+  
+  {# 主题系统脚本 #}
+  <script>
+    // 主题系统管理
+    const ThemeManager = {
+      // 初始化
+      init() {
+        this.loadSavedTheme();
+        this.loadSavedMode();
+        this.updateUI();
+        this.watchSystemTheme();
+      },
+      
+      // 加载保存的主题色
+      loadSavedTheme() {
+        const saved = localStorage.getItem('theme-color') || 'blue-light';
+        this.setTheme(saved, false);
+        // 根据主题确定色系并显示对应颜色
+        this.selectColorToneByTheme(saved);
+      },
+      
+      // 加载保存的显示模式
+      loadSavedMode() {
+        const saved = localStorage.getItem('theme-mode') || 'system';
+        this.setMode(saved, false);
+      },
+      
+      // 设置主题色
+      setTheme(theme, save = true) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (save) localStorage.setItem('theme-color', theme);
+        this.updateThemeColorUI(theme);
+        // 根据主题更新色系显示
+        this.selectColorToneByTheme(theme);
+      },
+      
+      // 设置显示模式
+      setMode(mode, save = true) {
+        if (save) localStorage.setItem('theme-mode', mode);
+        
+        if (mode === 'system') {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', prefersDark);
+          document.documentElement.classList.toggle('light', !prefersDark);
+        } else {
+          document.documentElement.classList.toggle('dark', mode === 'dark');
+          document.documentElement.classList.toggle('light', mode === 'light');
+        }
+        
+        this.updateModeUI(mode);
+      },
+      
+      // 监听系统主题变化
+      watchSystemTheme() {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (localStorage.getItem('theme-mode') === 'system') {
+            document.documentElement.classList.toggle('dark', e.matches);
+            document.documentElement.classList.toggle('light', !e.matches);
+          }
+        });
+      },
+      
+      // 更新UI状态
+      updateUI() {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const mode = localStorage.getItem('theme-mode') || 'system';
+        this.updateThemeColorUI(theme);
+        this.updateModeUI(mode);
+        // 根据主题确定色系
+        this.selectColorToneByTheme(theme);
+      },
+      
+      // 根据主题确定色系
+      selectColorToneByTheme(theme) {
+        let tone = 'light'; // 默认浅色
+        if (theme.includes('-light')) {
+          tone = 'light';
+        } else if (theme.includes('-dark')) {
+          tone = 'dark';
+        } else if (theme.includes('-gradient')) {
+          tone = 'gradient';
+        } else {
+          tone = 'standard';
+        }
+        this.showColorTone(tone);
+      },
+      
+      // 显示指定色系的颜色
+      showColorTone(tone) {
+        // 隐藏所有颜色按钮
+        document.querySelectorAll('.theme-color-btn').forEach(btn => {
+          btn.classList.add('hidden');
+        });
+        // 显示指定色系的颜色
+        document.querySelectorAll(`.theme-color-btn[data-tone="${tone}"]`).forEach(btn => {
+          btn.classList.remove('hidden');
+        });
+        // 更新色系按钮UI
+        this.updateColorToneUI(tone);
+      },
+      
+      // 更新色系按钮UI
+      updateColorToneUI(activeTone) {
+        document.querySelectorAll('.color-tone-btn').forEach(btn => {
+          if (btn.dataset.tone === activeTone) {
+            btn.classList.add('bg-primary-100', 'border-primary-500', 'text-primary-700');
+            btn.classList.remove('border-theme');
+          } else {
+            btn.classList.remove('bg-primary-100', 'border-primary-500', 'text-primary-700');
+            btn.classList.add('border-theme');
+          }
+        });
+      },
+      
+      // 更新主题色按钮UI
+      updateThemeColorUI(theme) {
+        document.querySelectorAll('.theme-color-btn').forEach(btn => {
+          const icon = btn.querySelector('i');
+          if (btn.dataset.theme === theme) {
+            icon.classList.remove('opacity-0');
+            btn.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400');
+          } else {
+            icon.classList.add('opacity-0');
+            btn.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400');
+          }
+        });
+      },
+      
+      // 更新模式按钮UI
+      updateModeUI(mode) {
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+          if (btn.dataset.mode === mode) {
+            btn.classList.add('bg-primary-100', 'border-primary-500', 'text-primary-700');
+            btn.classList.remove('border-theme');
+          } else {
+            btn.classList.remove('bg-primary-100', 'border-primary-500', 'text-primary-700');
+            btn.classList.add('border-theme');
+          }
+        });
+      }
+    };
+    
+    // 全局函数
+    function setTheme(theme) { ThemeManager.setTheme(theme); }
+    function setMode(mode) { ThemeManager.setMode(mode); }
+    function selectColorTone(tone) { ThemeManager.showColorTone(tone); }
+    
+    let themePanelOpen = false;
+    function toggleThemePanel() {
+      const panel = document.getElementById('theme-panel');
+      themePanelOpen = !themePanelOpen;
+      
+      if (themePanelOpen) {
+        panel.classList.remove('opacity-0', 'invisible', 'translate-y-4');
+        panel.classList.add('opacity-100', 'visible', 'translate-y-0');
+      } else {
+        panel.classList.add('opacity-0', 'invisible', 'translate-y-4');
+        panel.classList.remove('opacity-100', 'visible', 'translate-y-0');
+      }
+    }
+    
+    // 点击外部关闭面板
+    document.addEventListener('click', (e) => {
+      const switcher = document.getElementById('theme-switcher');
+      if (!switcher.contains(e.target) && themePanelOpen) {
+        toggleThemePanel();
+      }
+    });
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => ThemeManager.init());
+  </script>
+  
+  {# 车牌号输入组件脚本 #}
+  <script src="{% static 'parking/js/license_plate_input.js' %}"></script>
+  {# 表单验证工具 #}
+  <script src="{% static 'parking/js/form_validation.js' %}"></script>
+  {# 网络资源优化工具 #}
+  <script src="{% static 'parking/js/network_optimization.js' %}"></script>
+  {# 统一组件库 #}
+  <link rel="stylesheet" href="{% static 'parking/css/components.css' %}">
+  <script src="{% static 'parking/js/components.js' %}"></script>
+  {# 图片懒加载 #}
+  <link rel="stylesheet" href="{% static 'parking/css/image_lazy_load.css' %}">
+  <script src="{% static 'parking/js/image_lazy_load.js' %}"></script>
+  {# 骨架屏 #}
+  <link rel="stylesheet" href="{% static 'parking/css/skeleton.css' %}">
+  <script src="{% static 'parking/js/skeleton.js' %}"></script>
+  {# 键盘导航 #}
+  <script src="{% static 'parking/js/keyboard_navigation.js' %}"></script>
+  {# 面包屑导航 #}
+  <script src="{% static 'parking/js/breadcrumb.js' %}"></script>
+  {# 表单自动保存 #}
+  <script src="{% static 'parking/js/form_autosave.js' %}"></script>
+  {# 全局搜索 #}
+  <script src="{% static 'parking/js/search.js' %}"></script>
+  {# 语言切换器 #}
+  <script src="{% static 'parking/js/language_switcher.js' %}"></script>
+  {# 移动端优化 #}
+  <link rel="stylesheet" href="{% static 'parking/css/mobile.css' %}">
+  <script src="{% static 'parking/js/mobile.js' %}"></script>
+  {# 动画效果 #}
+  <link rel="stylesheet" href="{% static 'parking/css/animations.css' %}">
+  {# UI组件样式 #}
+  <link rel="stylesheet" href="{% static 'parking/css/ui_components.css' %}">
+  {# 图片优化样式 #}
+  <link rel="stylesheet" href="{% static 'parking/css/image_optimization.css' %}">
+  {# UI组件脚本 #}
+  <script src="{% static 'parking/js/ui_components.js' %}"></script>
+  {# 虚拟滚动 #}
+  <script src="{% static 'parking/js/virtual_scroll.js' %}"></script>
+  {# 图片优化 #}
+  <script src="{% static 'parking/js/image_optimization.js' %}"></script>
+  {# Service Worker #}
+  <script src="{% static 'parking/js/service_worker.js' %}"></script>
+  {# 缓存预热 #}
+  <script src="{% static 'parking/js/cache_warmup.js' %}"></script>
+  {# 智能填充 #}
+  <script src="{% static 'parking/js/smart_fill.js' %}"></script>
+  {# 无障碍功能 #}
+  <link rel="stylesheet" href="{% static 'parking/css/accessibility.css' %}">
+  <script src="{% static 'parking/js/accessibility.js' %}"></script>
+  {# 资源合并 #}
+  <script src="{% static 'parking/js/resource_bundler.js' %}"></script>
+  {# Web Workers #}
+  <script src="{% static 'parking/js/web_workers.js' %}"></script>
+  {# 预渲染 #}
+  <script src="{% static 'parking/js/prerender.js' %}"></script>
+  {# 图标系统 #}
+  <link rel="stylesheet" href="{% static 'parking/css/icon_system.css' %}">
+  <script src="{% static 'parking/js/icon_system.js' %}"></script>
+  {# 布局系统 #}
+  <link rel="stylesheet" href="{% static 'parking/css/layout_system.css' %}">
+  <script src="{% static 'parking/js/layout_system.js' %}"></script>
+  {# 错误恢复 #}
+  <script src="{% static 'parking/js/error_recovery.js' %}"></script>
+  {# 语言包管理 #}
+  <script src="{% static 'parking/js/language_manager.js' %}"></script>
+  
+  {# 国际手机号输入组件样式定制（与主题系统兼容） #}
+  <style>
+    /* 确保 intl-tel-input 与主题系统兼容 */
+    .iti {
+      width: 100%;
+    }
+    
+    .iti__selected-flag {
+      background-color: var(--bg-card-light, #ffffff);
+      border-right: 1px solid var(--border-color, #e5e7eb);
+      padding: 0 8px;
+      width: auto !important;
+    }
+    
+    .dark .iti__selected-flag {
+      background-color: var(--bg-card-dark, #1e1e1e);
+      border-right-color: var(--border-color-dark, #374151);
+    }
+    
+    .iti__selected-flag:hover {
+      background-color: var(--bg-hover, #f3f4f6);
+    }
+    
+    .dark .iti__selected-flag:hover {
+      background-color: var(--bg-hover-dark, #2a2a2a);
+    }
+    
+    /* 区号显示在国旗区域（国旗旁边） */
+    .iti__selected-dial-code {
+      display: inline-block !important;
+      margin-left: 6px !important;
+      font-weight: 500 !important;
+      color: var(--text-primary, #111827) !important;
+      font-size: 14px !important;
+      line-height: 1.5 !important;
+    }
+    
+    .dark .iti__selected-dial-code {
+      color: var(--text-primary-dark, #f9fafb) !important;
+    }
+    
+    .iti__country-list {
+      background-color: var(--bg-card-light, #ffffff);
+      border: 1px solid var(--border-color, #e5e7eb);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dark .iti__country-list {
+      background-color: var(--bg-card-dark, #1e1e1e);
+      border-color: var(--border-color-dark, #374151);
+    }
+    
+    .iti__country {
+      color: var(--text-primary, #111827);
+    }
+    
+    .dark .iti__country {
+      color: var(--text-primary-dark, #f9fafb);
+    }
+    
+    .iti__country:hover,
+    .iti__country.iti__highlight {
+      background-color: var(--bg-hover, #f3f4f6);
+    }
+    
+    .dark .iti__country:hover,
+    .dark .iti__country.iti__highlight {
+      background-color: var(--bg-hover-dark, #2a2a2a);
+    }
+    
+    .iti__search-input {
+      background-color: var(--bg-card-light, #ffffff);
+      color: var(--text-primary, #111827);
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
+    }
+    
+    .dark .iti__search-input {
+      background-color: var(--bg-card-dark, #1e1e1e);
+      color: var(--text-primary-dark, #f9fafb);
+      border-bottom-color: var(--border-color-dark, #374151);
+    }
+    
+    .iti__search-input::placeholder {
+      color: var(--text-muted, #6b7280);
+    }
+    
+    .dark .iti__search-input::placeholder {
+      color: var(--text-muted-dark, #9ca3af);
+    }
+  </style>
+  
+  {# 公共脚本 #}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

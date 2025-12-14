@@ -1,0 +1,215 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}通缉车辆详情{% endblock %}
+{% block page_title %}通缉车辆详情 - {{ vehicle.license_plate }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <a href="{% url 'parking:admin_wanted_vehicle_list' %}" class="hover:text-white" aria-label="通缉车辆管理">通缉车辆管理</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">详情</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 车辆信息卡片 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6" role="region" aria-labelledby="wanted-detail-title">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-red-500/20 rounded-xl flex items-center justify-center" aria-hidden="true">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+                </div>
+                <div>
+                    <h3 id="wanted-detail-title" class="text-2xl font-bold text-white font-mono">{{ vehicle.license_plate }}</h3>
+                    <p class="text-slate-400 mt-1" aria-live="polite">{{ vehicle.get_status_display }}</p>
+                </div>
+            </div>
+            <div class="flex gap-3" role="group" aria-label="操作按钮">
+                <a href="{% url 'parking:admin_wanted_vehicle_edit' vehicle.pk %}" 
+                   class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                   aria-label="编辑通缉车辆 {{ vehicle.license_plate }}">
+                    <i class="fas fa-edit mr-2" aria-hidden="true"></i>
+                    编辑
+                </a>
+                {% if vehicle.status == 'active' %}
+                <button type="button"
+                        onclick="cancelWanted({{ vehicle.pk }})" 
+                        class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                        aria-label="取消通缉车辆 {{ vehicle.license_plate }}">
+                    <i class="fas fa-ban mr-2" aria-hidden="true"></i>
+                    取消通缉
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div role="region" aria-labelledby="basic-info-detail-title">
+                <h4 id="basic-info-detail-title" class="text-sm font-medium text-slate-400 mb-3">基本信息</h4>
+                <dl class="space-y-3">
+                    <div class="flex justify-between">
+                        <dt class="text-slate-400">车辆类型：</dt>
+                        <dd class="text-white">{{ vehicle.vehicle_type|default:"-" }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-slate-400">优先级：</dt>
+                        <dd class="text-white">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                                {% if vehicle.priority >= 8 %}bg-red-500/20 text-red-400
+                                {% elif vehicle.priority >= 5 %}bg-orange-500/20 text-orange-400
+                                {% else %}bg-yellow-500/20 text-yellow-400{% endif %}"
+                                  aria-label="优先级：{{ vehicle.priority }}">
+                                {{ vehicle.priority }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-slate-400">状态：</dt>
+                        <dd class="text-white">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs
+                                {% if vehicle.status == 'active' %}bg-red-500/20 text-red-400
+                                {% elif vehicle.status == 'caught' %}bg-emerald-500/20 text-emerald-400
+                                {% else %}bg-slate-500/20 text-slate-400{% endif %}"
+                                  aria-label="状态：{{ vehicle.get_status_display }}">
+                                {{ vehicle.get_status_display }}
+                            </span>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+            
+            <div role="region" aria-labelledby="case-info-detail-title">
+                <h4 id="case-info-detail-title" class="text-sm font-medium text-slate-400 mb-3">案件信息</h4>
+                <dl class="space-y-3">
+                    <div class="flex justify-between">
+                        <dt class="text-slate-400">案件编号：</dt>
+                        <dd class="text-white">{{ vehicle.case_number|default:"-" }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-slate-400">联系人：</dt>
+                        <dd class="text-white">{{ vehicle.contact_police|default:"-" }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="text-slate-400">联系电话：</dt>
+                        <dd class="text-white">{{ vehicle.contact_phone|default:"-" }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+        
+        <div class="mt-6 pt-6 border-t border-slate-700/50" role="region" aria-labelledby="description-title">
+            <h4 id="description-title" class="text-sm font-medium text-slate-400 mb-3">通缉描述</h4>
+            <p class="text-white leading-relaxed">{{ vehicle.description|linebreaks }}</p>
+        </div>
+        
+        <div class="mt-6 pt-6 border-t border-slate-700/50 grid grid-cols-2 gap-4 text-sm text-slate-400" role="region" aria-label="元数据信息">
+            <div>
+                <span class="text-slate-500">创建时间：</span>
+                <time datetime="{{ vehicle.created_at|date:'Y-m-d\TH:i:s' }}">{{ vehicle.created_at|date:"Y-m-d H:i:s" }}</time>
+            </div>
+            <div>
+                <span class="text-slate-500">创建人：</span>
+                {{ vehicle.created_by.username|default:"-" }}
+            </div>
+            {% if vehicle.cancelled_at %}
+            <div>
+                <span class="text-slate-500">取消时间：</span>
+                <time datetime="{{ vehicle.cancelled_at|date:'Y-m-d\TH:i:s' }}">{{ vehicle.cancelled_at|date:"Y-m-d H:i:s" }}</time>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 警报记录 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="alert-logs-title">
+        <div class="p-5 border-b border-slate-700/50 flex items-center justify-between">
+            <h3 id="alert-logs-title" class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="fas fa-bell text-red-400" aria-hidden="true"></i>
+                警报记录 <span aria-live="polite">({{ alert_logs|length }})</span>
+            </h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full" role="table" aria-label="警报记录列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th scope="col" class="px-5 py-3 font-medium">警报时间</th>
+                        <th scope="col" class="px-5 py-3 font-medium">停车场</th>
+                        <th scope="col" class="px-5 py-3 font-medium">车位</th>
+                        <th scope="col" class="px-5 py-3 font-medium">入场时间</th>
+                        <th scope="col" class="px-5 py-3 font-medium">状态</th>
+                        <th scope="col" class="px-5 py-3 font-medium">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for log in alert_logs %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ log.alert_time|date:"Y-m-d H:i:s" }}
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">
+                            {{ log.parking_record.parking_space.parking_lot.name }}
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">
+                            {{ log.parking_record.parking_space.space_number }}
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ log.parking_record.entry_time|date:"Y-m-d H:i:s" }}
+                        </td>
+                        <td class="px-5 py-4">
+                            {% if log.is_handled %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full" aria-label="状态：已处理">
+                                已处理
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full animate-pulse" aria-label="状态：未处理">
+                                未处理
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4">
+                            <a href="{% url 'parking:admin_parking_record_detail' log.parking_record.pk %}" 
+                               class="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-sm transition-colors"
+                               aria-label="查看停车记录详情">
+                                查看记录
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-12 text-center text-slate-400" role="status" aria-live="polite">
+                            <i class="fas fa-bell-slash text-4xl mb-3 opacity-50" aria-hidden="true"></i>
+                            <p>暂无警报记录</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelWanted(id) {
+    if (!confirm('确定要取消此通缉吗？')) return;
+    
+    fetch(`/parking/manage/alert/wanted/${id}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+        },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('操作失败：' + data.message);
+        }
+    });
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,210 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}停车场管理{% endblock %}
+{% block page_title %}停车场管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">停车场管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 操作栏 -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div class="flex items-center gap-4">
+            <!-- 搜索 -->
+            <form method="get" class="relative">
+                <input type="text" name="search" value="{{ search }}" 
+                       placeholder="搜索名称或地址..." 
+                       class="input-focus-enhanced w-full sm:w-64 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-400 transition-all">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+            </form>
+            
+            <!-- 状态筛选 -->
+            <select onchange="location.href='?search={{ search }}&status=' + this.value" 
+                    class="input-focus-enhanced px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 transition-all cursor-pointer">
+                <option value="">全部状态</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>启用</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>禁用</option>
+            </select>
+        </div>
+        
+        <a href="{% url 'parking:admin_parking_lot_add' %}" 
+           class="btn-interactive ripple-effect inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium group">
+            <i class="fas fa-plus group-hover:rotate-90 transition-transform duration-300"></i>
+            <span>新增停车场</span>
+        </a>
+    </div>
+    
+    <!-- 统计信息 -->
+    <div class="text-sm text-slate-400" role="status" aria-live="polite">
+        共 <span class="text-white font-medium">{{ total_count }}</span> 个停车场
+    </div>
+    
+    <!-- 列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="parking-lot-list-title">
+        <h2 id="parking-lot-list-title" class="sr-only">停车场列表</h2>
+        <div class="overflow-x-auto table-responsive">
+            <table class="w-full min-w-[800px]" role="table" aria-label="停车场列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50 sticky top-0 z-10">
+                        <th scope="col" class="px-5 py-4 font-medium">停车场名称</th>
+                        <th scope="col" class="px-5 py-4 font-medium hidden md:table-cell">地址</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">车位情况</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right hidden lg:table-cell">小时费率</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">状态</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for lot in lots %}
+                    <tr class="table-row-interactive group">
+                        <td class="px-5 py-4">
+                            <div>
+                                <a href="{% url 'parking:admin_parking_lot_detail' lot.pk %}" 
+                                   class="font-medium text-white hover:text-primary-400 transition-all inline-flex items-center gap-2 group/link"
+                                   aria-label="查看停车场 {{ lot.name }} 详情">
+                                    <span>{{ lot.name }}</span>
+                                    <i class="fas fa-external-link-alt text-xs opacity-0 group-hover/link:opacity-100 group-hover/link:translate-x-0.5 transition-all" aria-hidden="true"></i>
+                                </a>
+                                <div class="mt-1">
+                                    <span class="px-2 py-0.5 bg-primary-500/20 text-primary-400 text-xs rounded group-hover:bg-primary-500/30 transition-colors">
+                                        {{ lot.get_lot_type_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 text-sm max-w-xs truncate hidden md:table-cell">
+                            <span class="group-hover:text-slate-300 transition-colors">{{ lot.address|default:"-" }}</span>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <span class="text-emerald-400">{{ lot.occupied_count }}</span>
+                                <span class="text-slate-500">/</span>
+                                <span class="text-slate-300">{{ lot.space_count }}</span>
+                            </div>
+                            {% if lot.space_count > 0 %}
+                            <div class="w-20 h-1.5 bg-slate-700 rounded-full mt-1 mx-auto">
+                                <div class="h-full bg-emerald-500 rounded-full" 
+                                     style="width: {% widthratio lot.occupied_count lot.space_count 100 %}%"></div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-right hidden lg:table-cell">
+                            <span class="text-amber-400 font-mono group-hover:text-amber-300 transition-colors">¥{{ lot.hourly_rate }}/h</span>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            <button type="button"
+                                    onclick="toggleStatus({{ lot.pk }}, '{{ lot.name }}')"
+                                    class="btn-interactive inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all
+                                           {% if lot.is_active %}bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30
+                                           {% else %}bg-slate-500/20 text-slate-400 hover:bg-slate-500/30{% endif %}"
+                                    aria-label="切换停车场 {{ lot.name }} 的状态">
+                                <span class="w-1.5 h-1.5 rounded-full {% if lot.is_active %}bg-emerald-400 animate-pulse{% else %}bg-slate-400{% endif %}" aria-hidden="true"></span>
+                                {{ lot.is_active|yesno:"启用,禁用" }}
+                            </button>
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-2" role="group" aria-label="操作按钮">
+                                <a href="{% url 'parking:admin_parking_lot_detail' lot.pk %}" 
+                                   class="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700/50 rounded-lg transition-all btn-interactive group/btn"
+                                   title="查看详情"
+                                   aria-label="查看停车场 {{ lot.name }} 详情">
+                                    <i class="fas fa-eye group-hover/btn:scale-110 transition-transform" aria-hidden="true"></i>
+                                </a>
+                                <a href="{% url 'parking:admin_parking_lot_edit' lot.pk %}" 
+                                   class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 rounded-lg transition-all btn-interactive group/btn"
+                                   title="编辑"
+                                   aria-label="编辑停车场 {{ lot.name }}">
+                                    <i class="fas fa-edit group-hover/btn:scale-110 transition-transform" aria-hidden="true"></i>
+                                </a>
+                                <button type="button"
+                                        onclick="deleteItem('{% url 'parking:admin_parking_lot_delete' lot.pk %}', '{{ lot.name }}')" 
+                                        class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-lg transition-all btn-interactive group/btn"
+                                        title="删除"
+                                        aria-label="删除停车场 {{ lot.name }}">
+                                    <i class="fas fa-trash group-hover/btn:scale-110 transition-transform" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-16 text-center" role="status" aria-live="polite">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center" aria-hidden="true">
+                                    <i class="fas fa-warehouse text-2xl text-slate-500"></i>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400">暂无停车场数据</p>
+                                    <a href="{% url 'parking:admin_parking_lot_add' %}" 
+                                       class="text-primary-400 hover:text-primary-300 text-sm mt-1 inline-block"
+                                       aria-label="添加第一个停车场">
+                                        点击添加第一个停车场
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if lots.has_other_pages %}
+        <nav class="px-5 py-4 border-t border-slate-700/50 flex items-center justify-between" role="navigation" aria-label="分页导航">
+            <p class="text-sm text-slate-400" aria-live="polite">
+                显示 {{ lots.start_index }}-{{ lots.end_index }} 条，共 {{ lots.paginator.count }} 条
+            </p>
+            <div class="flex items-center gap-1" role="group" aria-label="分页控件">
+                {% if lots.has_previous %}
+                <a href="?page={{ lots.previous_page_number }}&search={{ search }}&status={{ status }}" 
+                   class="btn-interactive px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-all group"
+                   aria-label="上一页">
+                    <i class="fas fa-chevron-left group-hover:-translate-x-0.5 transition-transform" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in lots.paginator.page_range %}
+                    {% if num == lots.number %}
+                    <span class="px-3 py-1.5 bg-primary-600 text-white rounded font-medium" aria-current="page" aria-label="当前页：第 {{ num }} 页">{{ num }}</span>
+                    {% elif num > lots.number|add:'-3' and num < lots.number|add:'3' %}
+                    <a href="?page={{ num }}&search={{ search }}&status={{ status }}" 
+                       class="btn-interactive px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-all"
+                       aria-label="第 {{ num }} 页">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if lots.has_next %}
+                <a href="?page={{ lots.next_page_number }}&search={{ search }}&status={{ status }}" 
+                   class="btn-interactive px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-all group"
+                   aria-label="下一页">
+                    <i class="fas fa-chevron-right group-hover:translate-x-0.5 transition-transform" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function toggleStatus(pk, name) {
+    const result = await apiRequest(`/manage/lots/${pk}/toggle/`, { method: 'POST' });
+    if (result.success) {
+        setTimeout(() => location.reload(), 500);
+    }
+}
+</script>
+{% endblock %}
+

@@ -1,0 +1,514 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}排班管理{% endblock %}
+{% block page_title %}排班管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">排班管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 操作栏 -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" role="toolbar" aria-label="排班管理操作栏">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'parking:admin_schedule_template' %}" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+               aria-label="下载排班表模板">
+                <i class="fas fa-download" aria-hidden="true"></i>
+                下载模板
+            </a>
+            
+            <label class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors cursor-pointer"
+                   aria-label="上传排班表">
+                <i class="fas fa-upload" aria-hidden="true"></i>
+                上传排班表
+                <input type="file" 
+                       id="schedule-file" 
+                       accept=".xlsx,.xls" 
+                       class="hidden" 
+                       onchange="uploadSchedule()"
+                       aria-label="选择排班表文件">
+            </label>
+        </div>
+    </div>
+    
+    <!-- 视图切换 -->
+    <div class="flex items-center gap-2 mb-4" role="tablist" aria-label="视图切换">
+        <button type="button"
+                onclick="switchScheduleView('table')" 
+                id="view-table-btn"
+                class="px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors"
+                role="tab"
+                aria-selected="true"
+                aria-controls="schedule-table-view"
+                aria-label="表格视图">
+            <i class="fas fa-table mr-2" aria-hidden="true"></i>表格视图
+        </button>
+        <button type="button"
+                onclick="switchScheduleView('week')" 
+                id="view-week-btn"
+                class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                role="tab"
+                aria-selected="false"
+                aria-controls="schedule-week-view"
+                aria-label="周视图">
+            <i class="fas fa-calendar-week mr-2" aria-hidden="true"></i>周视图
+        </button>
+        <button type="button"
+                onclick="switchScheduleView('stats')" 
+                id="view-stats-btn"
+                class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                role="tab"
+                aria-selected="false"
+                aria-controls="schedule-stats-view"
+                aria-label="统计视图">
+            <i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>统计视图
+        </button>
+        <button type="button"
+                onclick="switchScheduleView('timeline')" 
+                id="view-timeline-btn"
+                class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                role="tab"
+                aria-selected="false"
+                aria-controls="schedule-timeline-view"
+                aria-label="时间轴视图">
+            <i class="fas fa-clock mr-2" aria-hidden="true"></i>时间轴视图
+        </button>
+    </div>
+    
+    <!-- 表格视图 -->
+    <div id="schedule-table-view" 
+         class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden"
+         role="tabpanel"
+         aria-labelledby="view-table-btn">
+        <div class="p-6 border-b border-slate-700/50">
+            <h3 class="text-lg font-semibold text-white">
+                <i class="fas fa-calendar-alt text-primary-400 mr-2" aria-hidden="true"></i>
+                排班表
+            </h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full" role="table" aria-label="排班表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th scope="col" class="px-5 py-4 font-medium">工作人员</th>
+                        <th scope="col" class="px-5 py-4 font-medium">停车场</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">星期</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">开始时间</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">结束时间</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">状态</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for lot_name, schedules in grouped_schedules.items %}
+                    {% for schedule in schedules %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-primary-500/20 rounded-full flex items-center justify-center" aria-hidden="true">
+                                    <i class="fas fa-user text-primary-400 text-sm"></i>
+                                </div>
+                                <span class="text-white font-medium">{{ schedule.user.username }}</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">{{ schedule.parking_lot.name }}</td>
+                        <td class="px-5 py-4 text-center">
+                            <span class="px-3 py-1 bg-primary-500/20 text-primary-400 rounded-full text-sm" aria-label="星期：{{ schedule.get_weekday_display }}">
+                                {{ schedule.get_weekday_display }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-center text-white font-mono">{{ schedule.start_time|date:"H:i" }}</td>
+                        <td class="px-5 py-4 text-center text-white font-mono">{{ schedule.end_time|date:"H:i" }}</td>
+                        <td class="px-5 py-4 text-center">
+                            {% if schedule.is_active %}
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-sm" aria-label="状态：启用">启用</span>
+                            {% else %}
+                            <span class="px-3 py-1 bg-slate-500/20 text-slate-400 rounded-full text-sm" aria-label="状态：禁用">禁用</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-12 text-center text-slate-500" role="status" aria-live="polite">
+                            <i class="fas fa-calendar-times text-4xl mb-4" aria-hidden="true"></i>
+                            <p>暂无排班记录</p>
+                            <p class="text-sm mt-2">请下载模板并上传排班表</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- 周视图 -->
+    <div id="schedule-week-view" 
+         class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hidden"
+         role="tabpanel"
+         aria-labelledby="view-week-btn">
+        <div class="p-6 border-b border-slate-700/50">
+            <h3 class="text-lg font-semibold text-white">
+                <i class="fas fa-calendar-week text-primary-400 mr-2" aria-hidden="true"></i>
+                周视图
+            </h3>
+        </div>
+        <div class="p-6">
+                <div class="grid grid-cols-7 gap-2" role="row">
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周一</div>
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周二</div>
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周三</div>
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周四</div>
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周五</div>
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周六</div>
+                <div class="text-center text-sm font-medium text-slate-400 py-2" role="columnheader">周日</div>
+                
+                {% for day in '0123456'|make_list %}
+                <div class="min-h-32 bg-slate-900/50 rounded-lg p-2 border border-slate-700/50">
+                    <div class="text-xs text-slate-500 mb-2 font-medium">
+                        {% if day == '0' %}周一{% elif day == '1' %}周二{% elif day == '2' %}周三{% elif day == '3' %}周四{% elif day == '4' %}周五{% elif day == '5' %}周六{% else %}周日{% endif %}
+                    </div>
+                    <div class="space-y-1" id="schedule-day-{{ day }}">
+                        {% for lot_name, schedules in grouped_schedules.items %}
+                        {% for schedule in schedules %}
+                        {% if schedule.weekday == day|add:0 %}
+                        <div class="text-xs bg-primary-500/20 text-primary-400 rounded px-2 py-1 border border-primary-500/30">
+                            <div class="font-medium">{{ schedule.user.username }}</div>
+                            <div class="text-slate-500 text-xs">{{ schedule.parking_lot.name }}</div>
+                            <div class="text-slate-400 text-xs">{{ schedule.start_time|date:"H:i" }}-{{ schedule.end_time|date:"H:i" }}</div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- 统计视图 -->
+    <div id="schedule-stats-view" 
+         class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hidden"
+         role="tabpanel"
+         aria-labelledby="view-stats-btn">
+        <div class="p-6 border-b border-slate-700/50">
+            <h3 class="text-lg font-semibold text-white">
+                <i class="fas fa-chart-bar text-primary-400 mr-2" aria-hidden="true"></i>
+                排班统计
+            </h3>
+        </div>
+        <div class="p-6">
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" aria-label="排班统计概览" role="region">
+                <article class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50" role="article" aria-labelledby="total-schedules-label">
+                    <p id="total-schedules-label" class="text-sm text-slate-400">总排班数</p>
+                    <p class="text-2xl font-bold text-white mt-1" aria-live="polite">{{ schedules|length }}</p>
+                </article>
+                <article class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50" role="article" aria-labelledby="total-staff-label">
+                    <p id="total-staff-label" class="text-sm text-slate-400">工作人员数</p>
+                    <p class="text-2xl font-bold text-white mt-1" aria-live="polite">
+                        {% regroup schedules by user as user_groups %}
+                        {{ user_groups|length }}
+                    </p>
+                </article>
+                <article class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50" role="article" aria-labelledby="total-lots-label">
+                    <p id="total-lots-label" class="text-sm text-slate-400">停车场数</p>
+                    <p class="text-2xl font-bold text-white mt-1" aria-live="polite">{{ grouped_schedules|length }}</p>
+                </article>
+            </section>
+            
+            <div class="space-y-4" role="region" aria-labelledby="work-hours-title">
+                <h4 id="work-hours-title" class="text-sm font-medium text-slate-300">每周工时统计</h4>
+                <div class="space-y-2" role="list" aria-label="工作人员工时列表">
+                    {% regroup schedules by user as user_groups %}
+                    {% for user_group in user_groups %}
+                    <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50" role="listitem">
+                        <div class="flex items-center justify-between">
+                            <span class="text-white font-medium">{{ user_group.grouper.username }}</span>
+                            <span class="text-primary-400" aria-live="polite">
+                                {{ user_group.list|length }}个班次
+                            </span>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-400" role="list" aria-label="{{ user_group.grouper.username }} 的班次">
+                            {% for schedule in user_group.list %}
+                            <span class="inline-block mr-2 mb-1 px-2 py-1 bg-slate-800 rounded" role="listitem">
+                                {{ schedule.get_weekday_display }} {{ schedule.start_time|date:"H:i" }}-{{ schedule.end_time|date:"H:i" }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 时间轴视图 -->
+    <div id="schedule-timeline-view" 
+         class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hidden"
+         role="tabpanel"
+         aria-labelledby="view-timeline-btn">
+        <div class="p-6 border-b border-slate-700/50">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-clock text-primary-400 mr-2" aria-hidden="true"></i>
+                    时间轴视图
+                </h3>
+                <div id="conflict-alert" class="hidden">
+                    <span class="px-3 py-1 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm">
+                        <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
+                        <span id="conflict-count">0</span> 个冲突
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div id="timeline-container" class="space-y-4">
+                <!-- 时间轴内容将动态生成 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentScheduleView = 'table';
+
+function switchScheduleView(view) {
+    currentScheduleView = view;
+    
+    // 更新按钮状态
+    document.getElementById('view-table-btn').className = 
+        view === 'table' ? 'px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+        'px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+    document.getElementById('view-week-btn').className = 
+        view === 'week' ? 'px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+        'px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+    document.getElementById('view-stats-btn').className = 
+        view === 'stats' ? 'px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+        'px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+    
+    // 更新时间轴按钮状态
+    const timelineBtn = document.getElementById('view-timeline-btn');
+    if (timelineBtn) {
+        timelineBtn.className = 
+            view === 'timeline' ? 'px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+            'px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+        timelineBtn.setAttribute('aria-selected', view === 'timeline' ? 'true' : 'false');
+    }
+    
+    // 显示/隐藏对应视图
+    document.getElementById('schedule-table-view').classList.toggle('hidden', view !== 'table');
+    document.getElementById('schedule-week-view').classList.toggle('hidden', view !== 'week');
+    document.getElementById('schedule-stats-view').classList.toggle('hidden', view !== 'stats');
+    const timelineView = document.getElementById('schedule-timeline-view');
+    if (timelineView) {
+        timelineView.classList.toggle('hidden', view !== 'timeline');
+    }
+    
+    // 如果切换到时间轴视图，检测冲突
+    if (view === 'timeline') {
+        detectScheduleConflicts();
+    }
+}
+
+async function uploadSchedule() {
+    const fileInput = document.getElementById('schedule-file');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        alert('请选择Excel文件（.xlsx 或 .xls）');
+        fileInput.value = '';
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('{% url "parking:admin_schedule_upload" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            let message = `导入完成！\n成功：${result.success_count} 条`;
+            if (result.error_count > 0) {
+                message += `\n失败：${result.error_count} 条`;
+                if (result.errors && result.errors.length > 0) {
+                    message += '\n\n错误详情：\n' + result.errors.slice(0, 5).join('\n');
+                }
+            }
+            alert(message);
+            location.reload();
+        } else {
+            alert('上传失败：' + result.message);
+        }
+    } catch (error) {
+        alert('上传失败：' + error.message);
+    } finally {
+        fileInput.value = '';
+    }
+}
+
+// 时间轴视图数据
+const scheduleData = [
+    {% for schedule in schedules %}
+    {
+        id: {{ schedule.id }},
+        user: '{{ schedule.user.username }}',
+        lot: '{{ schedule.parking_lot.name }}',
+        weekday: {{ schedule.weekday }},
+        weekdayName: '{{ schedule.get_weekday_display }}',
+        startTime: '{{ schedule.start_time|date:"H:i" }}',
+        endTime: '{{ schedule.end_time|date:"H:i" }}',
+        startMinutes: {{ schedule.start_time.hour }} * 60 + {{ schedule.start_time.minute }},
+        endMinutes: {{ schedule.end_time.hour }} * 60 + {{ schedule.end_time.minute }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// 检测排班冲突
+function detectScheduleConflicts() {
+    const conflicts = [];
+    const conflictMap = new Map();
+    
+    // 按停车场和星期分组
+    const grouped = {};
+    scheduleData.forEach(s => {
+        const key = `${s.lot}_${s.weekday}`;
+        if (!grouped[key]) {
+            grouped[key] = [];
+        }
+        grouped[key].push(s);
+    });
+    
+    // 检测每个分组内的冲突
+    Object.values(grouped).forEach(group => {
+        // 按开始时间排序
+        group.sort((a, b) => a.startMinutes - b.startMinutes);
+        
+        for (let i = 0; i < group.length; i++) {
+            for (let j = i + 1; j < group.length; j++) {
+                const s1 = group[i];
+                const s2 = group[j];
+                
+                // 检查时间重叠
+                if (s1.endMinutes > s2.startMinutes && s1.startMinutes < s2.endMinutes) {
+                    const conflictKey = `${s1.lot}_${s1.weekday}_${Math.min(s1.id, s2.id)}_${Math.max(s1.id, s2.id)}`;
+                    if (!conflictMap.has(conflictKey)) {
+                        conflicts.push({
+                            lot: s1.lot,
+                            weekday: s1.weekdayName,
+                            schedule1: s1,
+                            schedule2: s2,
+                            overlapStart: Math.max(s1.startMinutes, s2.startMinutes),
+                            overlapEnd: Math.min(s1.endMinutes, s2.endMinutes)
+                        });
+                        conflictMap.set(conflictKey, true);
+                    }
+                }
+            }
+        }
+    });
+    
+    // 显示冲突提示
+    const conflictAlert = document.getElementById('conflict-alert');
+    const conflictCount = document.getElementById('conflict-count');
+    if (conflicts.length > 0) {
+        conflictAlert.classList.remove('hidden');
+        conflictCount.textContent = conflicts.length;
+    } else {
+        conflictAlert.classList.add('hidden');
+    }
+    
+    // 渲染时间轴
+    renderTimeline(conflicts);
+}
+
+// 渲染时间轴视图
+function renderTimeline(conflicts) {
+    const container = document.getElementById('timeline-container');
+    container.innerHTML = '';
+    
+    // 按停车场分组
+    const lotGroups = {};
+    scheduleData.forEach(s => {
+        if (!lotGroups[s.lot]) {
+            lotGroups[s.lot] = [];
+        }
+        lotGroups[s.lot].push(s);
+    });
+    
+    // 创建冲突映射
+    const conflictMap = new Map();
+    conflicts.forEach(c => {
+        conflictMap.set(c.schedule1.id, true);
+        conflictMap.set(c.schedule2.id, true);
+    });
+    
+    // 渲染每个停车场的时间轴
+    Object.keys(lotGroups).sort().forEach(lotName => {
+        const schedules = lotGroups[lotName];
+        
+        // 按星期分组
+        const weekdayGroups = {};
+        schedules.forEach(s => {
+            if (!weekdayGroups[s.weekday]) {
+                weekdayGroups[s.weekday] = [];
+            }
+            weekdayGroups[s.weekday].push(s);
+        });
+        
+        // 创建停车场卡片
+        const lotCard = document.createElement('div');
+        lotCard.className = 'bg-slate-900/50 rounded-lg p-4 border border-slate-700/50';
+        lotCard.innerHTML = `
+            <h4 class="text-lg font-semibold text-white mb-4">${lotName}</h4>
+            <div class="space-y-4">
+                ${Object.keys(weekdayGroups).sort().map(weekday => {
+                    const daySchedules = weekdayGroups[weekday].sort((a, b) => a.startMinutes - b.startMinutes);
+                    const weekdayName = daySchedules[0].weekdayName;
+                    return `
+                        <div>
+                            <h5 class="text-sm font-medium text-slate-300 mb-2">${weekdayName}</h5>
+                            <div class="relative" style="height: ${daySchedules.length * 60}px;">
+                                ${daySchedules.map((s, idx) => {
+                                    const left = (s.startMinutes / (24 * 60)) * 100;
+                                    const width = ((s.endMinutes - s.startMinutes) / (24 * 60)) * 100;
+                                    const hasConflict = conflictMap.has(s.id);
+                                    return `
+                                        <div class="absolute ${hasConflict ? 'bg-red-500/30 border-red-500' : 'bg-primary-500/30 border-primary-500'} border rounded-lg p-2" 
+                                             style="left: ${left}%; width: ${width}%; top: ${idx * 60}px; height: 50px;"
+                                             title="${s.user} ${s.startTime}-${s.endTime}${hasConflict ? ' (冲突)' : ''}">
+                                            <div class="text-xs text-white font-medium">${s.user}</div>
+                                            <div class="text-xs text-slate-300">${s.startTime}-${s.endTime}</div>
+                                            ${hasConflict ? '<i class="fas fa-exclamation-triangle text-red-400 text-xs mt-1"></i>' : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        container.appendChild(lotCard);
+    });
+}
+</script>
+{% endblock %}
+

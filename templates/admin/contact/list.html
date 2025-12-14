@@ -1,0 +1,356 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}联系消息管理{% endblock %}
+{% block page_title %}联系消息管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">联系消息管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 筛选栏 -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" role="toolbar" aria-label="联系消息筛选">
+        <div class="flex items-center gap-4">
+            <!-- 状态筛选 -->
+            <label for="status-filter-contact" class="sr-only">状态筛选</label>
+            <select id="status-filter-contact"
+                    onchange="location.href='?status=' + this.value + '&message_type={{ request.GET.message_type }}'" 
+                    class="px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-primary-500"
+                    aria-label="筛选消息状态">
+                <option value="">全部状态</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            
+            <!-- 类型筛选 -->
+            <label for="type-filter-contact" class="sr-only">类型筛选</label>
+            <select id="type-filter-contact"
+                    onchange="location.href='?status={{ request.GET.status }}&message_type=' + this.value" 
+                    class="px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-primary-500"
+                    aria-label="筛选消息类型">
+                <option value="">全部类型</option>
+                {% for value, label in type_choices %}
+                <option value="{{ value }}" {% if request.GET.message_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    
+    <!-- 消息列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="message-list-title">
+        <h2 id="message-list-title" class="sr-only">联系消息列表</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full" role="table" aria-label="联系消息列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th scope="col" class="px-5 py-4 font-medium">发送人</th>
+                        <th scope="col" class="px-5 py-4 font-medium">联系方式</th>
+                        <th scope="col" class="px-5 py-4 font-medium">类型</th>
+                        <th scope="col" class="px-5 py-4 font-medium">主题</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">状态</th>
+                        <th scope="col" class="px-5 py-4 font-medium">时间</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for message in messages %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-primary-500/20 rounded-full flex items-center justify-center" aria-hidden="true">
+                                    <i class="fas fa-user text-primary-400 text-sm"></i>
+                                </div>
+                                <span class="text-white font-medium">{{ message.name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="text-sm text-slate-300">
+                                <div class="flex items-center gap-1 mb-1">
+                                    <i class="fas fa-envelope text-xs text-slate-500" aria-hidden="true"></i>
+                                    <span>{{ message.email }}</span>
+                                </div>
+                                {% if message.phone %}
+                                <div class="flex items-center gap-1">
+                                    <i class="fas fa-phone text-xs text-slate-500" aria-hidden="true"></i>
+                                    <span>{{ message.phone }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-5 py-4">
+                            <span class="px-2 py-1 bg-primary-500/20 text-primary-400 rounded text-xs" aria-label="消息类型：{{ message.get_message_type_display }}">
+                                {{ message.get_message_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="max-w-xs">
+                                <p class="text-white font-medium truncate">{{ message.subject }}</p>
+                                <p class="text-sm text-slate-400 line-clamp-2 mt-1">{{ message.content|truncatewords:10 }}</p>
+                            </div>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            {% if message.status == 'pending' %}
+                            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 rounded-full text-sm" aria-label="状态：待处理">待处理</span>
+                            {% elif message.status == 'resolved' %}
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-sm" aria-label="状态：已回复">已回复</span>
+                            {% else %}
+                            <span class="px-3 py-1 bg-slate-500/20 text-slate-400 rounded-full text-sm" aria-label="状态：{{ message.get_status_display }}">{{ message.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ message.created_at|date:"Y-m-d H:i" }}
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-2" role="group" aria-label="操作按钮">
+                                <button type="button"
+                                        onclick="viewMessage({{ message.id }})"
+                                        class="px-3 py-1.5 bg-primary-600/20 hover:bg-primary-600/30 text-primary-400 rounded text-sm transition-colors"
+                                        aria-label="查看消息详情">
+                                    <i class="fas fa-eye mr-1" aria-hidden="true"></i>查看
+                                </button>
+                                {% if message.status == 'pending' %}
+                                <button type="button"
+                                        onclick="replyMessage({{ message.id }})"
+                                        class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded text-sm transition-colors"
+                                        aria-label="回复消息">
+                                    <i class="fas fa-reply mr-1" aria-hidden="true"></i>回复
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-12 text-center text-slate-500" role="status" aria-live="polite">
+                            <i class="fas fa-inbox text-4xl mb-4" aria-hidden="true"></i>
+                            <p>暂无联系消息</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 查看消息模态框 -->
+<div id="message-modal" 
+     class="fixed inset-0 bg-slate-900/80 modal-backdrop flex items-center justify-center z-50 hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="message-modal-title"
+     aria-describedby="message-modal-description">
+    <div class="modal-content bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center justify-between">
+                <h3 id="message-modal-title" class="text-lg font-semibold text-white">消息详情</h3>
+                <button type="button"
+                        onclick="closeMessageModal()" 
+                        class="text-slate-400 hover:text-white"
+                        aria-label="关闭消息详情对话框">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <p id="message-modal-description" class="sr-only">查看联系消息的详细信息</p>
+        </div>
+        <div class="p-6 space-y-4" id="message-content">
+            <!-- 内容动态加载 -->
+        </div>
+    </div>
+</div>
+
+<!-- 回复消息模态框 -->
+<div id="reply-modal" 
+     class="fixed inset-0 bg-slate-900/80 modal-backdrop flex items-center justify-center z-50 hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="reply-modal-title"
+     aria-describedby="reply-modal-description">
+    <div class="modal-content bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-lg mx-4">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center justify-between">
+                <h3 id="reply-modal-title" class="text-lg font-semibold text-white">回复消息</h3>
+                <button type="button"
+                        onclick="closeReplyModal()" 
+                        class="text-slate-400 hover:text-white"
+                        aria-label="关闭回复消息对话框">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <p id="reply-modal-description" class="sr-only">回复联系消息的对话框</p>
+        </div>
+        <div class="p-6">
+            <label for="reply-content" class="sr-only">回复内容</label>
+            <textarea id="reply-content" 
+                      rows="6" 
+                      placeholder="请输入回复内容..."
+                      class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                      aria-describedby="reply-content-hint"></textarea>
+            <p id="reply-content-hint" class="text-xs text-slate-500 mt-1 sr-only">输入回复内容</p>
+        </div>
+        <div class="flex border-t border-slate-700" role="group" aria-label="操作按钮">
+            <button type="button"
+                    onclick="closeReplyModal()" 
+                    class="flex-1 px-6 py-3 text-slate-300 hover:bg-slate-700/50 transition-colors"
+                    aria-label="取消回复">
+                取消
+            </button>
+            <button type="button"
+                    onclick="submitReply()" 
+                    class="flex-1 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+                    aria-label="发送回复">
+                发送回复
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentMessageId = null;
+
+let messageModalPreviousActiveElement = null;
+let replyModalPreviousActiveElement = null;
+
+async function viewMessage(id) {
+    // 保存当前焦点
+    messageModalPreviousActiveElement = document.activeElement;
+    
+    const modal = document.getElementById('message-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('message-content').innerHTML = '<p class="text-slate-400">加载中...</p>';
+    
+    // 聚焦到关闭按钮
+    setTimeout(() => {
+        const closeBtn = modal.querySelector('button[aria-label*="关闭"]');
+        if (closeBtn) closeBtn.focus();
+    }, 100);
+    
+    // 实际应该从服务器获取完整消息内容
+}
+
+function closeMessageModal() {
+    const modal = document.getElementById('message-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    
+    // 恢复焦点
+    if (messageModalPreviousActiveElement && messageModalPreviousActiveElement.focus) {
+        messageModalPreviousActiveElement.focus();
+    }
+    messageModalPreviousActiveElement = null;
+}
+
+function replyMessage(id) {
+    // 保存当前焦点
+    replyModalPreviousActiveElement = document.activeElement;
+    
+    currentMessageId = id;
+    document.getElementById('reply-content').value = '';
+    const modal = document.getElementById('reply-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // 聚焦到回复内容输入框
+    setTimeout(() => {
+        const textarea = document.getElementById('reply-content');
+        if (textarea) textarea.focus();
+    }, 100);
+}
+
+function closeReplyModal() {
+    const modal = document.getElementById('reply-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    currentMessageId = null;
+    
+    // 恢复焦点
+    if (replyModalPreviousActiveElement && replyModalPreviousActiveElement.focus) {
+        replyModalPreviousActiveElement.focus();
+    }
+    replyModalPreviousActiveElement = null;
+}
+
+async function submitReply() {
+    // ========== 前端验证（提交前） ==========
+    
+    // 1. 验证回复内容（必填）
+    const contentInput = document.getElementById('reply-content');
+    const content = contentInput.value.trim();
+    if (!content) {
+        alert('请输入回复内容');
+        contentInput.focus();
+        return;
+    }
+    if (content.length > 2000) {
+        alert('回复内容长度不能超过2000个字符');
+        contentInput.focus();
+        return;
+    }
+    
+    // 2. 验证当前消息ID
+    if (!currentMessageId) {
+        alert('未选择要回复的消息');
+        return;
+    }
+    
+    // 所有验证通过，准备提交
+    
+    try {
+        const response = await fetch(`{% url 'parking:admin_contact_message_reply' 0 %}`.replace('0', currentMessageId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reply: content })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('回复成功');
+            closeReplyModal();
+            location.reload();
+        } else {
+            alert('回复失败：' + result.message);
+        }
+    } catch (error) {
+        alert('回复失败：' + error.message);
+    }
+}
+
+// ESC键关闭模态框
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const messageModal = document.getElementById('message-modal');
+        const replyModal = document.getElementById('reply-modal');
+        if (messageModal && !messageModal.classList.contains('hidden')) {
+            closeMessageModal();
+        } else if (replyModal && !replyModal.classList.contains('hidden')) {
+            closeReplyModal();
+        }
+    }
+});
+
+// 点击背景关闭模态框
+document.getElementById('message-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'message-modal') {
+        closeMessageModal();
+    }
+});
+
+document.getElementById('reply-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'reply-modal') {
+        closeReplyModal();
+    }
+});
+</script>
+{% endblock %}
+

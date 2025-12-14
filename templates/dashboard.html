@@ -1,0 +1,687 @@
+{# 仪表盘页面 - 增强版 #}
+{% extends 'base.html' %}
+{% load parking_filters %}
+
+{% block title %}停车场管理系统 - 工作台{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 统计卡片动画 */
+  .stat-card {
+    animation: slideUp 0.5s ease-out forwards;
+    opacity: 0;
+  }
+  .stat-card:nth-child(1) { animation-delay: 0.1s; }
+  .stat-card:nth-child(2) { animation-delay: 0.2s; }
+  .stat-card:nth-child(3) { animation-delay: 0.3s; }
+  .stat-card:nth-child(4) { animation-delay: 0.4s; }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 数字滚动效果 */
+  .count-up {
+    transition: all 0.5s ease-out;
+  }
+  
+  /* 车位可视化网格 */
+  .space-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    gap: 4px;
+  }
+  
+  /* 脉冲动画 */
+  .pulse-ring {
+    animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  }
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1.2);
+      opacity: 0;
+    }
+  }
+  
+  /* 进度条动画 */
+  .progress-bar {
+    transition: width 1s ease-out;
+  }
+  
+  /* 表格行悬浮 */
+  .table-row {
+    transition: all 0.2s ease;
+  }
+  .table-row:hover {
+    transform: translateX(4px);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{# 加载动画 #}
+{% include 'components/loader.html' %}
+
+{# 导航栏 #}
+{% include 'components/navbar.html' %}
+
+{# 主要内容 #}
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  {# 消息提示 #}
+  {% include 'components/messages.html' %}
+
+  {# 欢迎横幅 #}
+  <section class="mb-6 bg-gradient-theme rounded-2xl p-6 text-white relative overflow-hidden" aria-labelledby="welcome-heading">
+    <div class="absolute inset-0 bg-black/10" aria-hidden="true"></div>
+    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" aria-hidden="true"></div>
+    <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" aria-hidden="true"></div>
+    <div class="relative z-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 id="welcome-heading" class="text-2xl font-bold mb-1">
+            <i class="fas fa-sun mr-2" id="greeting-icon" aria-hidden="true"></i>
+            <span id="greeting-text">您好</span>，{{ user.username }}！
+          </h1>
+          <p class="text-white/80">
+            今天是 <span id="current-date" aria-live="polite"></span>，系统运行正常
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right hidden sm:block" aria-label="当前时间">
+            <p class="text-white/70 text-sm">当前时间</p>
+            <p class="text-2xl font-bold font-number" id="current-time" aria-live="polite">--:--:--</p>
+          </div>
+          <div class="w-px h-12 bg-white/20 hidden sm:block" aria-hidden="true"></div>
+          <button onclick="updateDashboardData()" 
+                  type="button"
+                  class="btn-interactive p-3 bg-white/20 hover:bg-white/30 rounded-xl transition-all group"
+                  title="刷新数据"
+                  id="refresh-btn"
+                  aria-label="刷新数据">
+            <i class="fas fa-sync-alt group-hover:rotate-180 transition-transform duration-500" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# 统计卡片 #}
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" aria-label="统计概览" role="region">
+    {# 总车位 #}
+    <article class="stat-card card-theme rounded-2xl p-5 relative overflow-hidden group" role="article" aria-labelledby="total-spaces-label">
+      <div class="absolute top-0 right-0 w-20 h-20 bg-primary-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500" aria-hidden="true"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center" aria-hidden="true">
+            <i class="fas fa-parking text-primary-600 dark:text-primary-400 text-xl"></i>
+          </div>
+          <span class="text-xs px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full">
+            总览
+          </span>
+        </div>
+        <p id="total-spaces-label" class="text-theme-muted text-sm mb-1">总车位数</p>
+        <p class="text-3xl font-bold text-theme-primary font-number count-up" data-count="{{ total_spaces }}" aria-live="polite">0</p>
+      </div>
+    </article>
+    
+    {# 已占用 #}
+    <div class="stat-card card-theme rounded-2xl p-5 relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+            <i class="fas fa-car text-red-600 dark:text-red-400 text-xl"></i>
+          </div>
+          <span class="text-xs px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center gap-1">
+            <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+            实时
+          </span>
+        </div>
+        <p class="text-theme-muted text-sm mb-1">已占用</p>
+        <p class="text-3xl font-bold text-red-600 dark:text-red-400 font-number count-up" data-count="{{ occupied_spaces }}">0</p>
+      </div>
+    </div>
+    
+    {# 可用车位 #}
+    <div class="stat-card card-theme rounded-2xl p-5 relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+            <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400 text-xl"></i>
+          </div>
+          <span class="text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full">
+            可用
+          </span>
+        </div>
+        <p class="text-theme-muted text-sm mb-1">空闲车位</p>
+        <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-number count-up" data-count="{{ available_spaces }}">0</p>
+      </div>
+    </div>
+    
+    {# 今日收入 #}
+    <div class="stat-card card-theme rounded-2xl p-5 relative overflow-hidden group">
+      <div class="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full -mr-6 -mt-6 group-hover:scale-150 transition-transform duration-500"></div>
+      <div class="relative">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center">
+            <i class="fas fa-dollar-sign text-amber-600 dark:text-amber-400 text-xl"></i>
+          </div>
+          <span class="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full">
+            收入
+          </span>
+        </div>
+        <p class="text-theme-muted text-sm mb-1">今日收入</p>
+        <p class="text-3xl font-bold text-amber-600 dark:text-amber-400 font-number">
+          ¥<span class="count-up" data-count="{{ today_revenue|default:0 }}">0</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {# 详细信息区域 #}
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    {# 左侧 - 今日统计和快捷操作 #}
+    <div class="space-y-6">
+      {# 今日统计 #}
+      <div class="card-theme rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-theme-primary mb-4 flex items-center gap-2">
+          <i class="fas fa-calendar-day text-primary-500"></i>
+          今日统计
+        </h2>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-theme-secondary rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <i class="fas fa-car-side text-blue-500"></i>
+              </div>
+              <span class="text-theme-secondary">入场车辆</span>
+            </div>
+            <span class="text-xl font-bold text-theme-primary font-number">{{ today_count|default:0 }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-theme-secondary rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                <i class="fas fa-car text-emerald-500"></i>
+              </div>
+              <span class="text-theme-secondary">在场车辆</span>
+            </div>
+            <span class="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-number">{{ active_count|default:0 }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-theme-secondary rounded-xl">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
+                <i class="fas fa-coins text-amber-500"></i>
+              </div>
+              <span class="text-theme-secondary">今日收入</span>
+            </div>
+            <span class="text-xl font-bold text-amber-600 dark:text-amber-400 font-number">¥{{ today_revenue|default:0 }}</span>
+          </div>
+        </div>
+      </div>
+      
+      {# 快捷操作 #}
+      <div class="card-theme rounded-2xl p-5">
+        <h2 class="text-lg font-bold text-theme-primary mb-4 flex items-center gap-2">
+          <i class="fas fa-bolt text-amber-500"></i>
+          快捷操作
+        </h2>
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="openQuickEntry()" 
+                  class="btn-interactive card-interactive flex flex-col items-center gap-2 p-4 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-xl group">
+            <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-sign-in-alt text-white text-xl group-hover:translate-x-0.5 transition-transform duration-200"></i>
+            </div>
+            <span class="text-sm font-medium text-emerald-700 dark:text-emerald-400">车辆入场</span>
+          </button>
+          <button onclick="openQuickExit()" 
+                  class="btn-interactive card-interactive flex flex-col items-center gap-2 p-4 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-xl group">
+            <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-sign-out-alt text-white text-xl group-hover:-translate-x-0.5 transition-transform duration-200"></i>
+            </div>
+            <span class="text-sm font-medium text-blue-700 dark:text-blue-400">车辆出场</span>
+          </button>
+          <button onclick="openQuickSearch()" 
+                  class="btn-interactive card-interactive flex flex-col items-center gap-2 p-4 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-xl group">
+            <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-search text-white text-xl group-hover:rotate-90 transition-transform duration-300"></i>
+            </div>
+            <span class="text-sm font-medium text-purple-700 dark:text-purple-400">查询车辆</span>
+          </button>
+          {% if user.is_staff %}
+          <a href="{% url 'parking:admin_index' %}" 
+             class="btn-interactive card-interactive flex flex-col items-center gap-2 p-4 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 rounded-xl group">
+            <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-cog text-white text-xl group-hover:rotate-90 transition-transform duration-300"></i>
+            </div>
+            <span class="text-sm font-medium text-orange-700 dark:text-orange-400">管理后台</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    {# 中间 - 车位可视化 #}
+    <div class="card-theme rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-theme-primary flex items-center gap-2">
+          <i class="fas fa-th text-primary-500"></i>
+          车位状态
+        </h2>
+        <div class="flex items-center gap-2 text-sm">
+          <span class="flex items-center gap-1">
+            <span class="w-3 h-3 bg-emerald-500 rounded"></span>
+            <span class="text-theme-muted">空闲</span>
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="w-3 h-3 bg-red-500 rounded"></span>
+            <span class="text-theme-muted">占用</span>
+          </span>
+        </div>
+      </div>
+      
+      {# 使用率环形图 #}
+      <div class="flex items-center justify-center mb-6">
+        <div class="relative w-32 h-32">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+            <path
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              fill="none"
+              stroke="var(--bg-tertiary)"
+              stroke-width="3"
+            />
+            <path
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+              fill="none"
+              stroke="var(--color-primary-500)"
+              stroke-width="3"
+              stroke-dasharray="{% widthratio occupied_spaces total_spaces 100 %}, 100"
+              stroke-linecap="round"
+              class="transition-all duration-1000"
+            />
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold text-theme-primary font-number">
+              {% widthratio occupied_spaces total_spaces 100 %}%
+            </span>
+            <span class="text-xs text-theme-muted">使用率</span>
+          </div>
+        </div>
+      </div>
+      
+      {# 停车场列表 #}
+      <div class="space-y-3 max-h-64 overflow-y-auto">
+        {% if parking_lots %}
+          {% for lot in parking_lots %}
+            <div class="btn-interactive card-interactive p-3 bg-theme-secondary rounded-xl hover:bg-theme-hover transition-all cursor-pointer" onclick="showLotDetail({{ lot.id }})">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-medium text-theme-primary">{{ lot.name }}</span>
+                <span class="text-xs px-2 py-1 rounded-full
+                            {% if lot.available_spaces > 0 %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400
+                            {% else %}bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400{% endif %}">
+                  {{ lot.available_spaces }}/{{ lot.total_spaces }}
+                </span>
+              </div>
+              {% if lot.total_spaces > 0 %}
+              <div class="w-full h-2 bg-theme-tertiary rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-primary-500 to-primary-400 progress-bar rounded-full lot-progress"
+                     data-occupied="{{ lot.occupied_spaces }}" data-total="{{ lot.total_spaces }}"></div>
+              </div>
+              {% endif %}
+              <p class="text-xs text-theme-muted mt-2">
+                <i class="fas fa-map-marker-alt mr-1"></i>{{ lot.address|default:"暂无地址" }}
+              </p>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-theme-muted text-center py-8">暂无停车场数据</p>
+        {% endif %}
+      </div>
+    </div>
+    
+    {# 右侧 - 实时动态 #}
+    <div class="card-theme rounded-2xl p-5">
+      <h2 class="text-lg font-bold text-theme-primary mb-4 flex items-center gap-2">
+        <i class="fas fa-stream text-primary-500"></i>
+        实时动态
+        <span class="ml-auto flex items-center gap-1 text-xs text-emerald-500">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          实时
+        </span>
+      </h2>
+      
+      <div class="space-y-3 max-h-96 overflow-y-auto" id="activity-feed">
+        {% for record in recent_records %}
+          <div class="flex items-start gap-3 p-3 bg-theme-secondary rounded-xl table-row">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
+                        {% if not record.exit_time %}bg-emerald-100 dark:bg-emerald-900/30
+                        {% elif not record.is_paid %}bg-amber-100 dark:bg-amber-900/30
+                        {% else %}bg-slate-100 dark:bg-slate-900/30{% endif %}">
+              <i class="fas {% if not record.exit_time %}fa-arrow-right{% elif not record.is_paid %}fa-clock{% else %}fa-check{% endif %}
+                        {% if not record.exit_time %}text-emerald-500
+                        {% elif not record.is_paid %}text-amber-500
+                        {% else %}text-slate-500{% endif %}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="font-mono font-medium text-theme-primary">{{ record.vehicle.license_plate }}</span>
+                {% if not record.exit_time %}
+                  <span class="text-xs px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded">停车中</span>
+                {% elif not record.is_paid %}
+                  <span class="text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded">待支付</span>
+                {% else %}
+                  <span class="text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 rounded">已完成</span>
+                {% endif %}
+              </div>
+              <p class="text-sm text-theme-muted truncate">
+                {{ record.parking_space.parking_lot.name }} · {{ record.parking_space.space_number }}
+              </p>
+              <p class="text-xs text-theme-muted mt-1">
+                <i class="far fa-clock mr-1"></i>{{ record.entry_time|date:"H:i" }}
+                {% if record.fee %}
+                  · <span class="text-amber-500">¥{{ record.fee }}</span>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="text-center py-12">
+            <div class="w-16 h-16 bg-theme-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fas fa-inbox text-2xl text-theme-muted"></i>
+            </div>
+            <p class="text-theme-muted">暂无停车记录</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# 最近停车记录表格 #}
+  <section class="card-theme rounded-2xl overflow-hidden">
+    <div class="p-5 border-b border-theme flex items-center justify-between">
+      <h2 class="text-lg font-bold text-theme-primary flex items-center gap-2">
+        <i class="fas fa-list text-primary-500"></i>
+        最近停车记录
+      </h2>
+      {% if user.is_staff %}
+      <a href="{% url 'parking:admin_parking_record_list' %}" 
+         class="btn-interactive text-sm text-primary-500 hover:text-primary-600 transition-all group flex items-center gap-1">
+        查看全部
+        <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-200"></i>
+      </a>
+      {% endif %}
+    </div>
+    
+    {% if recent_records %}
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-theme-secondary text-left">
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted">车牌号</th>
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted">停车场</th>
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted">车位</th>
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted">入场时间</th>
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted">出场时间</th>
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted text-right">费用</th>
+              <th class="px-5 py-3 text-sm font-medium text-theme-muted text-center">状态</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-theme">
+            {% for record in recent_records %}
+              <tr class="table-row-interactive hover:bg-theme-hover">
+                <td class="px-5 py-4">
+                  <span class="font-mono font-medium text-theme-primary bg-theme-secondary px-2 py-1 rounded">
+                    {{ record.vehicle.license_plate }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-theme-secondary">
+                  {{ record.parking_space.parking_lot.name }}
+                </td>
+                <td class="px-5 py-4 text-theme-secondary font-mono">
+                  {{ record.parking_space.space_number }}
+                </td>
+                <td class="px-5 py-4 text-theme-muted text-sm">
+                  {{ record.entry_time|date:"m-d H:i" }}
+                </td>
+                <td class="px-5 py-4 text-theme-muted text-sm">
+                  {% if record.exit_time %}
+                    {{ record.exit_time|date:"m-d H:i" }}
+                  {% else %}
+                    <span class="text-emerald-500">进行中</span>
+                  {% endif %}
+                </td>
+                <td class="px-5 py-4 text-right">
+                  {% if record.fee %}
+                    <span class="text-amber-600 dark:text-amber-400 font-mono font-medium">¥{{ record.fee }}</span>
+                  {% else %}
+                    <span class="text-theme-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="px-5 py-4 text-center">
+                  {% if not record.exit_time %}
+                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs rounded-full">
+                      <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                      停车中
+                    </span>
+                  {% elif not record.is_paid %}
+                    <span class="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs rounded-full">
+                      待支付
+                    </span>
+                  {% else %}
+                    <span class="px-2 py-1 bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 text-xs rounded-full">
+                      已完成
+                    </span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-16">
+        <div class="w-20 h-20 bg-theme-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-clipboard-list text-3xl text-theme-muted"></i>
+        </div>
+        <p class="text-theme-muted text-lg">暂无停车记录</p>
+        <p class="text-theme-muted text-sm mt-1">车辆入场后将在此显示</p>
+      </div>
+    {% endif %}
+  </section>
+</main>
+
+{# 页脚 #}
+{% include 'components/footer.html' %}
+
+{# 快捷操作模态框 #}
+{% include 'components/quick_modals.html' %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // 更新时间和问候语
+  function updateTimeAndGreeting() {
+    const now = new Date();
+    const hour = now.getHours();
+    
+    // 更新时间
+    document.getElementById('current-time').textContent = now.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    // 更新日期
+    document.getElementById('current-date').textContent = now.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+    
+    // 更新问候语
+    let greeting, icon;
+    if (hour < 6) {
+      greeting = '夜深了';
+      icon = 'fa-moon';
+    } else if (hour < 12) {
+      greeting = '早上好';
+      icon = 'fa-sun';
+    } else if (hour < 14) {
+      greeting = '中午好';
+      icon = 'fa-cloud-sun';
+    } else if (hour < 18) {
+      greeting = '下午好';
+      icon = 'fa-cloud-sun';
+    } else {
+      greeting = '晚上好';
+      icon = 'fa-moon';
+    }
+    
+    document.getElementById('greeting-text').textContent = greeting;
+    document.getElementById('greeting-icon').className = `fas ${icon} mr-2`;
+  }
+  
+  // 数字滚动动画
+  function animateCountUp() {
+    const elements = document.querySelectorAll('.count-up');
+    elements.forEach(el => {
+      const target = parseInt(el.dataset.count) || 0;
+      const duration = 1000;
+      const start = 0;
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = Math.floor(start + (target - start) * easeOut);
+        
+        el.textContent = current.toLocaleString();
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        } else {
+          el.textContent = target.toLocaleString();
+        }
+      }
+      
+      requestAnimationFrame(update);
+    });
+  }
+  
+  // 快捷操作函数
+  function openQuickEntry() {
+    document.getElementById('entry-modal').classList.remove('hidden');
+    document.getElementById('entry-plate').focus();
+  }
+  
+  function openQuickExit() {
+    document.getElementById('exit-modal').classList.remove('hidden');
+    document.getElementById('exit-plate').focus();
+  }
+  
+  function openQuickSearch() {
+    document.getElementById('search-modal').classList.remove('hidden');
+    document.getElementById('search-plate').focus();
+  }
+  
+  function closeModal(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+  
+  function showLotDetail(lotId) {
+    {% if user.is_staff %}
+    window.location.href = `/manage/lots/${lotId}/`;
+    {% else %}
+    alert('请联系管理员查看详情');
+    {% endif %}
+  }
+  
+  // 初始化进度条
+  function initProgressBars() {
+    document.querySelectorAll('.lot-progress').forEach(bar => {
+      const occupied = parseInt(bar.dataset.occupied) || 0;
+      const total = parseInt(bar.dataset.total) || 1;
+      const percentage = Math.round((occupied / total) * 100);
+      bar.style.width = percentage + '%';
+    });
+  }
+  
+  // 刷新按钮动画和更新函数
+  function updateDashboardData() {
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (refreshBtn) {
+      const icon = refreshBtn.querySelector('i');
+      if (icon) {
+        icon.classList.add('fa-spin');
+      }
+    }
+    
+    // 调用quick_modals中的更新函数
+    if (window.updateDashboardDataFromModal) {
+      window.updateDashboardDataFromModal().then(() => {
+        if (refreshBtn && icon) {
+          setTimeout(() => icon.classList.remove('fa-spin'), 1000);
+        }
+      });
+    } else {
+      // 如果quick_modals未加载，直接刷新页面
+      location.reload();
+    }
+  }
+  
+  // 全局更新函数（供其他模块调用）
+  window.updateDashboardData = updateDashboardData;
+  
+  const refreshBtn = document.getElementById('refresh-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', updateDashboardData);
+  }
+  
+  // 初始化
+  document.addEventListener('DOMContentLoaded', () => {
+    updateTimeAndGreeting();
+    setInterval(updateTimeAndGreeting, 1000);
+    
+    // 延迟执行数字动画
+    setTimeout(animateCountUp, 300);
+    
+    // 初始化进度条
+    setTimeout(initProgressBars, 500);
+    
+    // 隐藏加载动画
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      setTimeout(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 300);
+      }, 500);
+    }
+  });
+  
+  // ESC关闭模态框
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.add('hidden');
+      });
+    }
+  });
+</script>
+{% endblock %}

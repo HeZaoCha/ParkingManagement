@@ -1,0 +1,81 @@
+/**
+ * 图片优化样式
+ * 
+ * 响应式图片、占位符、加载动画等样式
+ * 
+ * Author: HeZaoCha
+ * Created: 2025-12-14
+ * Version: 1.0.0
+ */
+
+/* 响应式图片 */
+.responsive-image {
+    @apply max-w-full h-auto;
+}
+
+.responsive-image img {
+    @apply w-full h-auto object-cover;
+}
+
+/* 图片占位符 */
+.image-placeholder {
+    @apply bg-slate-200 dark:bg-slate-700 flex items-center justify-center;
+    background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0),
+                      linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+}
+
+/* 图片加载状态 */
+img[data-src] {
+    @apply opacity-0 transition-opacity duration-300;
+}
+
+img.image-loaded {
+    @apply opacity-100;
+}
+
+/* 图片懒加载模糊效果 */
+img[data-src] {
+    filter: blur(5px);
+    transition: filter 0.3s;
+}
+
+img.image-loaded {
+    filter: blur(0);
+}
+
+/* 图片容器 */
+.image-container {
+    @apply relative overflow-hidden;
+}
+
+.image-container::before {
+    content: '';
+    @apply absolute inset-0 bg-slate-200 dark:bg-slate-700;
+    transition: opacity 0.3s;
+}
+
+.image-container img.image-loaded ~ ::before {
+    @apply opacity-0;
+}
+
+/* 响应式图片尺寸 */
+@media (max-width: 640px) {
+    .responsive-image {
+        @apply w-full;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .responsive-image {
+        @apply w-1/2;
+    }
+}
+
+@media (min-width: 1025px) {
+    .responsive-image {
+        @apply w-1/3;
+    }
+}
+

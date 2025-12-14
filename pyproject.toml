@@ -1,14 +1,43 @@
 [project]
 name = "parkingmanagement"
 version = "0.1.0"
-description = "Add your description here"
+description = "停车场管理系统"
 readme = "README.md"
 requires-python = ">=3.13.9"
 dependencies = [
     "django>=5.2.8",
+    "django-extensions>=4.1",
+    "pyopenssl>=25.3.0",
+    "werkzeug>=3.1.4",
+    "openpyxl>=3.1.2",  # Excel处理
+    "django-cors-headers>=4.3.1",  # CORS支持（如需要）
+    "loguru>=0.7.0",  # 日志记录
+    "celery>=5.3.4",  # 异步任务队列
+    "redis>=5.0.1",  # Redis支持（Celery broker）
+    "pillow>=10.2.0",  # 图片处理
 ]
 
 [dependency-groups]
 dev = [
+    "factory-boy>=3.3.3",
+    "mcp-server-sqlite>=2025.4.25",
+    "pytest>=9.0.2",
+    "pytest-django>=4.11.1",
     "ruff>=0.14.7",
+    "django-debug-toolbar>=4.4.0",  # 开发工具：性能分析
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: 标记为慢速测试",
+    "integration: 集成测试",
 ]

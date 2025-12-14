@@ -1,0 +1,181 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}车辆管理{% endblock %}
+{% block page_title %}车辆管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">车辆管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 操作栏 -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" role="toolbar" aria-label="车辆管理操作栏">
+        <div class="flex items-center gap-4">
+            <!-- 搜索 -->
+            <form method="get" class="relative" role="search" aria-label="搜索车辆">
+                <label for="vehicle-search" class="sr-only">搜索车辆</label>
+                <input type="text" 
+                       id="vehicle-search"
+                       name="search" 
+                       value="{{ search }}" 
+                       placeholder="搜索车牌/车主..." 
+                       class="w-64 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:border-primary-500"
+                       aria-label="搜索车牌号或车主姓名">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+                {% if vehicle_type %}<input type="hidden" name="type" value="{{ vehicle_type }}">{% endif %}
+            </form>
+            
+            <!-- 类型筛选 -->
+            <label for="vehicle-type-filter" class="sr-only">车辆类型筛选</label>
+            <select id="vehicle-type-filter"
+                    onchange="location.href='?search={{ search }}&type=' + this.value" 
+                    class="px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-primary-500"
+                    aria-label="筛选车辆类型">
+                <option value="">全部类型</option>
+                {% for value, label in vehicle_types %}
+                <option value="{{ value }}" {% if vehicle_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <a href="{% url 'parking:admin_vehicle_add' %}" 
+           class="btn-ripple inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+           aria-label="登记新车辆">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            登记车辆
+        </a>
+    </div>
+    
+    <!-- 统计 -->
+    <div class="text-sm text-slate-400" role="status" aria-live="polite">
+        共 <span class="text-white font-medium">{{ total_count }}</span> 辆车
+    </div>
+    
+    <!-- 列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="vehicle-list-title">
+        <h2 id="vehicle-list-title" class="sr-only">车辆列表</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full" role="table" aria-label="车辆列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th scope="col" class="px-5 py-4 font-medium">车牌号</th>
+                        <th scope="col" class="px-5 py-4 font-medium">类型</th>
+                        <th scope="col" class="px-5 py-4 font-medium">车主姓名</th>
+                        <th scope="col" class="px-5 py-4 font-medium">联系电话</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">停车次数</th>
+                        <th scope="col" class="px-5 py-4 font-medium">注册时间</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for vehicle in vehicles %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-medium text-white bg-slate-700/50 px-2 py-1 rounded">
+                                {{ vehicle.license_plate }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4">
+                            <span class="inline-flex items-center gap-1.5 text-slate-300">
+                                {% if vehicle.vehicle_type == 'car' %}
+                                <i class="fas fa-car text-blue-400" aria-hidden="true"></i>
+                                {% elif vehicle.vehicle_type == 'suv' %}
+                                <i class="fas fa-truck-pickup text-emerald-400" aria-hidden="true"></i>
+                                {% elif vehicle.vehicle_type == 'motorcycle' %}
+                                <i class="fas fa-motorcycle text-amber-400" aria-hidden="true"></i>
+                                {% elif vehicle.vehicle_type == 'truck' %}
+                                <i class="fas fa-truck text-red-400" aria-hidden="true"></i>
+                                {% else %}
+                                <i class="fas fa-car-side text-slate-400" aria-hidden="true"></i>
+                                {% endif %}
+                                {{ vehicle.get_vehicle_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">{{ vehicle.owner_name|default:"-" }}</td>
+                        <td class="px-5 py-4 text-slate-400">{{ vehicle.owner_phone|default:"-" }}</td>
+                        <td class="px-5 py-4 text-center">
+                            <span class="px-2 py-1 bg-primary-500/20 text-primary-400 text-sm rounded" aria-label="停车次数：{{ vehicle.record_count }}">
+                                {{ vehicle.record_count }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">{{ vehicle.created_at|date:"Y-m-d" }}</td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-2" role="group" aria-label="操作按钮">
+                                <a href="{% url 'parking:admin_vehicle_edit' vehicle.pk %}" 
+                                   class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                   title="编辑"
+                                   aria-label="编辑车辆 {{ vehicle.license_plate }}">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>
+                                </a>
+                                <button type="button"
+                                        onclick="deleteItem('{% url 'parking:admin_vehicle_delete' vehicle.pk %}', '{{ vehicle.license_plate }}')" 
+                                        class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                        title="删除"
+                                        aria-label="删除车辆 {{ vehicle.license_plate }}">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-16 text-center" role="status" aria-live="polite">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center" aria-hidden="true">
+                                    <i class="fas fa-car text-2xl text-slate-500"></i>
+                                </div>
+                                <p class="text-slate-400">暂无车辆数据</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if vehicles.has_other_pages %}
+        <nav class="px-5 py-4 border-t border-slate-700/50 flex items-center justify-between" role="navigation" aria-label="分页导航">
+            <p class="text-sm text-slate-400" aria-live="polite">
+                显示 {{ vehicles.start_index }}-{{ vehicles.end_index }} 条，共 {{ vehicles.paginator.count }} 条
+            </p>
+            <div class="flex items-center gap-1" role="group" aria-label="分页控件">
+                {% if vehicles.has_previous %}
+                <a href="?page={{ vehicles.previous_page_number }}&search={{ search }}&type={{ vehicle_type }}" 
+                   class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded"
+                   aria-label="上一页">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in vehicles.paginator.page_range %}
+                    {% if num == vehicles.number %}
+                    <span class="px-3 py-1.5 bg-primary-600 text-white rounded" aria-current="page" aria-label="当前页：第 {{ num }} 页">{{ num }}</span>
+                    {% elif num > vehicles.number|add:'-3' and num < vehicles.number|add:'3' %}
+                    <a href="?page={{ num }}&search={{ search }}&type={{ vehicle_type }}" 
+                       class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded"
+                       aria-label="第 {{ num }} 页">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if vehicles.has_next %}
+                <a href="?page={{ vehicles.next_page_number }}&search={{ search }}&type={{ vehicle_type }}" 
+                   class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded"
+                   aria-label="下一页">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

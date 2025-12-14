@@ -1,0 +1,235 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{{ lot.name }} - 停车场详情{% endblock %}
+{% block page_title %}停车场详情{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <a href="{% url 'parking:admin_parking_lot_list' %}" class="hover:text-white" aria-label="停车场管理">停车场管理</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">{{ lot.name }}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 头部信息 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6" role="region" aria-labelledby="lot-header-title">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 bg-primary-500/20 rounded-2xl flex items-center justify-center" aria-hidden="true">
+                    <i class="fas fa-warehouse text-primary-400 text-2xl"></i>
+                </div>
+                <div>
+                    <h2 id="lot-header-title" class="text-2xl font-bold text-white">{{ lot.name }}</h2>
+                    <p class="text-slate-400 mt-1">
+                        <i class="fas fa-map-marker-alt mr-2" aria-hidden="true"></i>{{ lot.address|default:"暂无地址" }}
+                    </p>
+                    <div class="flex items-center gap-3 mt-2">
+                        <span class="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs rounded" aria-label="停车场类型：{{ lot.get_lot_type_display }}">
+                            <i class="fas fa-building mr-1" aria-hidden="true"></i>{{ lot.get_lot_type_display }}
+                        </span>
+                        {% if lot.floors %}
+                        <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded" aria-label="楼层数：{{ lot.floors|length }}层">
+                            <i class="fas fa-layer-group mr-1" aria-hidden="true"></i>{{ lot.floors|length }}层
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3" role="group" aria-label="操作按钮">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                             {% if lot.is_active %}bg-emerald-500/20 text-emerald-400
+                             {% else %}bg-slate-500/20 text-slate-400{% endif %}"
+                      aria-label="状态：{% if lot.is_active %}运营中{% else %}已停用{% endif %}">
+                    <span class="w-2 h-2 rounded-full {% if lot.is_active %}bg-emerald-400 animate-pulse{% else %}bg-slate-400{% endif %}" aria-hidden="true"></span>
+                    {{ lot.is_active|yesno:"运营中,已停用" }}
+                </span>
+                <a href="{% url 'parking:admin_parking_lot_edit' lot.pk %}" 
+                   class="btn-ripple inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                   aria-label="编辑停车场 {{ lot.name }}">
+                    <i class="fas fa-edit" aria-hidden="true"></i>
+                    编辑
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 统计卡片 -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4" aria-label="停车场统计" role="region">
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="total-spaces-label">
+            <p id="total-spaces-label" class="text-slate-400 text-sm">总车位</p>
+            <p class="text-2xl font-bold text-white number-animate mt-1" aria-live="polite">{{ space_stats.total }}</p>
+        </article>
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="occupied-spaces-label">
+            <p id="occupied-spaces-label" class="text-slate-400 text-sm">已占用</p>
+            <p class="text-2xl font-bold text-red-400 number-animate mt-1" aria-live="polite">{{ space_stats.occupied }}</p>
+        </article>
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="available-spaces-label">
+            <p id="available-spaces-label" class="text-slate-400 text-sm">空闲车位</p>
+            <p class="text-2xl font-bold text-emerald-400 number-animate mt-1" aria-live="polite">{{ space_stats.available }}</p>
+        </article>
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="hourly-rate-label">
+            <p id="hourly-rate-label" class="text-slate-400 text-sm">小时费率</p>
+            <p class="text-2xl font-bold text-amber-400 number-animate mt-1" aria-live="polite">¥{{ lot.hourly_rate }}</p>
+        </article>
+    </section>
+    
+    <!-- 停车场结构信息 -->
+    {% if lot.floors or lot.areas %}
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6" role="region" aria-labelledby="structure-title">
+        <h3 id="structure-title" class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <i class="fas fa-sitemap text-primary-400" aria-hidden="true"></i>
+            停车场结构
+        </h3>
+        
+        {% if lot.floors %}
+        <div class="mb-4">
+            <h4 class="text-sm font-medium text-slate-300 mb-2">楼层信息</h4>
+            <div class="flex flex-wrap gap-2" role="list" aria-label="楼层列表">
+                {% for floor in lot.floors %}
+                <span class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-mono" role="listitem">{{ floor }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if lot.areas %}
+        <div>
+            <h4 class="text-sm font-medium text-slate-300 mb-2">区域划分</h4>
+            <div class="space-y-2" role="list" aria-label="区域列表">
+                {% for floor, floor_areas in lot.areas.items %}
+                <div role="listitem">
+                    <span class="text-slate-400 text-sm font-mono mr-2">{{ floor }}:</span>
+                    {% for area in floor_areas %}
+                    <span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs mr-1">{{ area }}</span>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- 车位列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="spaces-list-title">
+        <div class="p-5 border-b border-slate-700/50 flex items-center justify-between">
+            <h3 id="spaces-list-title" class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="fas fa-square-parking text-slate-400" aria-hidden="true"></i>
+                车位列表
+            </h3>
+            <a href="{% url 'parking:admin_parking_space_add' %}?lot={{ lot.pk }}" 
+               class="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+               aria-label="为停车场 {{ lot.name }} 添加车位">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i>添加车位
+            </a>
+        </div>
+        
+        {% if spaces %}
+        <div class="p-5">
+            <div class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2" role="list" aria-label="车位列表">
+                {% for space in spaces %}
+                <div class="aspect-square rounded-lg flex items-center justify-center text-xs font-medium cursor-pointer transition-all
+                            {% if space.is_occupied %}bg-red-500/30 text-red-300 border border-red-500/30
+                            {% elif space.is_reserved %}bg-amber-500/30 text-amber-300 border border-amber-500/30
+                            {% else %}bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/40{% endif %}"
+                     title="{{ space.space_number }}{% if space.is_occupied %} (已占用){% elif space.is_reserved %} (已预约){% else %} (空闲){% endif %}"
+                     role="listitem"
+                     aria-label="车位 {{ space.space_number }}，状态：{% if space.is_occupied %}已占用{% elif space.is_reserved %}已预约{% else %}空闲{% endif %}">
+                    {{ space.space_number }}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="flex items-center justify-center gap-6 mt-6 text-sm" role="list" aria-label="图例">
+                <div class="flex items-center gap-2" role="listitem">
+                    <div class="w-4 h-4 bg-emerald-500/30 border border-emerald-500/30 rounded" aria-hidden="true"></div>
+                    <span class="text-slate-400">空闲</span>
+                </div>
+                <div class="flex items-center gap-2" role="listitem">
+                    <div class="w-4 h-4 bg-red-500/30 border border-red-500/30 rounded" aria-hidden="true"></div>
+                    <span class="text-slate-400">占用</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 bg-amber-500/30 border border-amber-500/30 rounded"></div>
+                    <span class="text-slate-400">预约</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="p-12 text-center" role="status" aria-live="polite">
+            <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                <i class="fas fa-square-parking text-2xl text-slate-500"></i>
+            </div>
+            <p class="text-slate-400 mb-2">暂无车位数据</p>
+            <a href="{% url 'parking:admin_parking_space_add' %}?lot={{ lot.pk }}" 
+               class="text-primary-400 hover:text-primary-300 text-sm"
+               aria-label="为停车场 {{ lot.name }} 添加车位">
+                点击添加车位
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 最近停车记录 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="recent-records-title">
+        <div class="p-5 border-b border-slate-700/50">
+            <h3 id="recent-records-title" class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="fas fa-history text-slate-400" aria-hidden="true"></i>
+                最近停车记录
+            </h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th class="px-5 py-3 font-medium">车牌号</th>
+                        <th class="px-5 py-3 font-medium">车位</th>
+                        <th class="px-5 py-3 font-medium">入场时间</th>
+                        <th class="px-5 py-3 font-medium">出场时间</th>
+                        <th class="px-5 py-3 font-medium text-right">费用</th>
+                        <th class="px-5 py-3 font-medium text-center">状态</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for record in recent_records %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-medium text-white">{{ record.vehicle.license_plate }}</span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">{{ record.parking_space.space_number }}</td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">{{ record.entry_time|date:"Y-m-d H:i" }}</td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">{{ record.exit_time|date:"Y-m-d H:i"|default:"-" }}</td>
+                        <td class="px-5 py-4 text-right text-amber-400 font-mono">
+                            {% if record.fee %}¥{{ record.fee }}{% else %}-{% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            {% if not record.exit_time %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+                                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                停车中
+                            </span>
+                            {% elif not record.is_paid %}
+                            <span class="px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full">待支付</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-slate-500/20 text-slate-400 text-xs rounded-full">已完成</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+                            暂无停车记录
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

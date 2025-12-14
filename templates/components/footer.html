@@ -1,0 +1,18 @@
+{# 页脚组件 - 支持主题系统 #}
+<footer class="mt-auto py-6 border-t border-theme" role="contentinfo">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2 text-theme-muted">
+        <i class="fas fa-parking text-primary-500" aria-hidden="true"></i>
+        <span>&copy; {{ current_year|default:"2025" }} 停车场管理系统</span>
+      </div>
+      <nav class="flex items-center gap-4 text-sm text-theme-muted" aria-label="页脚导航">
+        <a href="#" class="hover:text-primary-500 transition-colors" aria-label="帮助中心">帮助中心</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" class="hover:text-primary-500 transition-colors" aria-label="关于我们">关于我们</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" class="hover:text-primary-500 transition-colors" aria-label="隐私政策">隐私政策</a>
+      </nav>
+    </div>
+  </div>
+</footer>

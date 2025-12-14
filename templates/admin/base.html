@@ -1,0 +1,742 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="停车场管理系统 - 管理后台">
+    <title>{% block title %}管理后台{% endblock %} - 停车场管理系统</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        },
+                        slate: {
+                            850: '#172033',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans SC', 'Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* 导入字体 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        /* 全局滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* 侧边栏菜单动画 - 使用主题变量 */
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        .sidebar-link:hover {
+            transform: translateX(4px);
+        }
+        .sidebar-link.active {
+            background: linear-gradient(90deg, rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.15) 0%, transparent 100%);
+            border-left: 3px solid var(--color-primary-500, #6366f1);
+        }
+        
+        /* 卡片悬浮效果 */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 表格行悬浮增强 - 使用主题变量 */
+        .table-row-hover {
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .table-row-hover:hover {
+            background-color: rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.08);
+            transform: translateX(2px);
+            box-shadow: -2px 0 0 rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.5);
+        }
+        
+        /* 按钮涟漪效果 */
+        .btn-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        .btn-ripple:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        
+        /* Toast 通知动画 */
+        .toast-enter {
+            animation: toastEnter 0.3s ease forwards;
+        }
+        .toast-exit {
+            animation: toastExit 0.3s ease forwards;
+        }
+        @keyframes toastEnter {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes toastExit {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+        
+        /* 加载动画 - 使用主题变量 */
+        .loading-spinner {
+            border: 2px solid rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.2);
+            border-top-color: var(--color-primary-500, #6366f1);
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 数字跳动效果 */
+        .number-animate {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* 渐变背景 - 使用主题变量 */
+        .gradient-bg {
+            background: linear-gradient(135deg, 
+                var(--bg-primary-dark, #121212) 0%, 
+                var(--bg-secondary-dark, #1e1e1e) 50%, 
+                var(--bg-primary-dark, #121212) 100%);
+        }
+        
+        /* 模态框动画增强 */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+            transition: opacity 0.2s ease;
+        }
+        .modal-content {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-enter {
+            animation: modalEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .modal-exit {
+            animation: modalExit 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        @keyframes modalExit {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+        }
+        
+        /* 输入框焦点增强 - 使用主题变量 */
+        .input-focus-enhanced:focus {
+            border-color: var(--color-primary-500, #6366f1) !important;
+            box-shadow: 0 0 0 3px rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.1) !important;
+            outline: none;
+        }
+        
+        /* 按钮交互增强 */
+        .btn-interactive {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .btn-interactive:hover {
+            transform: translateY(-1px);
+        }
+        .btn-interactive:active {
+            transform: translateY(0);
+        }
+        .btn-interactive:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* 响应式表格 */
+        @media (max-width: 768px) {
+            .table-responsive {
+                position: relative;
+            }
+            .table-responsive::after {
+                content: '← 滑动查看更多 →';
+                display: block;
+                text-align: center;
+                padding: 8px;
+                color: #64748b;
+                font-size: 0.75rem;
+                background: rgba(30, 41, 59, 0.5);
+                border-top: 1px solid rgba(71, 85, 105, 0.5);
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="h-full gradient-bg text-slate-200 font-sans">
+    <div class="flex h-full">
+        <!-- 移动端侧边栏遮罩 -->
+        <div id="sidebar-overlay" 
+             class="fixed inset-0 bg-black/50 z-40 lg:hidden hidden backdrop-blur-sm transition-opacity"
+             onclick="toggleSidebar()"
+             aria-hidden="true"></div>
+        
+        <!-- 侧边栏 -->
+        <aside id="admin-sidebar" 
+               class="fixed lg:static inset-y-0 left-0 w-64 bg-slate-900/50 border-r border-slate-700/50 flex flex-col z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300" 
+               role="complementary" 
+               aria-label="管理后台侧边栏">
+            <!-- Logo -->
+            <div class="p-5 border-b border-slate-700/50">
+                <a href="{% url 'parking:admin_index' %}" class="flex items-center gap-3" aria-label="返回管理后台首页">
+                    <div class="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-parking text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-white">停车管理</h1>
+                        <p class="text-xs text-slate-400">Management System</p>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- 导航菜单 -->
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto" role="navigation" aria-label="管理后台导航">
+                <a href="{% url 'parking:admin_index' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if request.resolver_match.url_name == 'admin_index' %}active{% endif %}"
+                   aria-label="数据概览"
+                   {% if request.resolver_match.url_name == 'admin_index' %}aria-current="page"{% endif %}>
+                    <i class="fas fa-chart-pie w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>数据概览</span>
+                </a>
+                
+                <div class="pt-4 pb-2" role="separator" aria-label="业务管理">
+                    <p class="px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">业务管理</p>
+                </div>
+                
+                <a href="{% url 'parking:admin_parking_lot_list' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'parking_lot' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="停车场管理"
+                   {% if 'parking_lot' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-warehouse w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>停车场管理</span>
+                </a>
+                
+                <a href="{% url 'parking:admin_parking_space_list' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'parking_space' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="车位管理"
+                   {% if 'parking_space' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-square-parking w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>车位管理</span>
+                </a>
+                
+                <a href="{% url 'parking:admin_vehicle_list' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'vehicle' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="车辆管理"
+                   {% if 'vehicle' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-car w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>车辆管理</span>
+                </a>
+                
+                <a href="{% url 'parking:admin_parking_record_list' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'parking_record' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="停车记录"
+                   {% if 'parking_record' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-clipboard-list w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>停车记录</span>
+                </a>
+                
+                <div class="pt-4 pb-2" role="separator" aria-label="安全功能">
+                    <p class="px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">安全功能</p>
+                </div>
+                
+                <a href="{% url 'parking:admin_police_query' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'police' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="公安查询"
+                   {% if 'police' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-shield-alt w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>公安查询</span>
+                </a>
+                
+                <a href="{% url 'parking:admin_wanted_vehicle_list' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'wanted' in request.resolver_match.url_name or 'alert' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="通缉警报"
+                   {% if 'wanted' in request.resolver_match.url_name or 'alert' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-exclamation-triangle w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>通缉警报</span>
+                </a>
+                
+                <div class="pt-4 pb-2" role="separator" aria-label="费率管理">
+                    <p class="px-4 text-xs font-medium text-slate-500 uppercase tracking-wider">费率管理</p>
+                </div>
+                <a href="{% url 'parking:admin_pricing_template_list' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group {% if 'pricing_template' in request.resolver_match.url_name %}active{% endif %}"
+                   aria-label="费率模板"
+                   {% if 'pricing_template' in request.resolver_match.url_name %}aria-current="page"{% endif %}>
+                    <i class="fas fa-coins w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>费率模板</span>
+                </a>
+                <a href="{% url 'parking:dashboard' %}" 
+                   class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all group"
+                   aria-label="前台工作站">
+                    <i class="fas fa-desktop w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                    <span>前台工作站</span>
+                </a>
+            </nav>
+            
+            <!-- 用户信息 -->
+            <div class="p-4 border-t border-slate-700/50" role="region" aria-label="用户信息">
+                <div class="flex items-center gap-3 px-3 py-2">
+                    <div class="w-9 h-9 bg-primary-600/20 rounded-full flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-user-shield text-primary-400"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-white truncate" aria-label="当前用户">{{ user.username }}</p>
+                        <p class="text-xs text-slate-400">管理员</p>
+                    </div>
+                    <form method="post" action="{% url 'parking:logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="btn-interactive p-2 text-slate-400 hover:text-red-400 transition-all group"
+                                title="退出登录"
+                                aria-label="退出登录">
+                            <i class="fas fa-sign-out-alt group-hover:translate-x-0.5 transition-transform" aria-hidden="true"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="flex-1 flex flex-col overflow-hidden" role="main">
+            <!-- 顶部栏 -->
+            <header class="h-16 bg-slate-900/30 border-b border-slate-700/50 flex items-center justify-between px-6" role="banner">
+                <div class="flex items-center gap-4">
+                    <!-- 移动端汉堡菜单按钮 -->
+                    <button type="button"
+                            onclick="toggleSidebar()"
+                            class="lg:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all"
+                            aria-label="切换侧边栏"
+                            aria-expanded="false"
+                            id="sidebar-toggle-btn">
+                        <i class="fas fa-bars text-lg" aria-hidden="true"></i>
+                    </button>
+                    <h2 class="text-lg font-medium text-white">{% block page_title %}管理后台{% endblock %}</h2>
+                    {% block breadcrumb %}{% endblock %}
+                </div>
+                
+                <div class="flex items-center gap-4" role="toolbar" aria-label="页面工具栏">
+                    <!-- 搜索框 -->
+                    <div class="relative">
+                        <label for="global-search" class="sr-only">全局搜索</label>
+                        <input type="text" 
+                               id="global-search"
+                               placeholder="全局搜索..." 
+                               class="input-focus-enhanced w-64 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-400 transition-all"
+                               aria-label="全局搜索">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" aria-hidden="true"></i>
+                    </div>
+                    
+                    <!-- 刷新按钮 -->
+                    <button type="button"
+                            onclick="location.reload()" 
+                            class="btn-interactive p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all group"
+                            title="刷新页面"
+                            aria-label="刷新页面">
+                        <i class="fas fa-sync-alt group-hover:rotate-180 transition-transform duration-500" aria-hidden="true"></i>
+                    </button>
+                    
+                    <!-- 当前时间 -->
+                    <div class="text-sm text-slate-400" id="current-time" aria-live="polite" aria-label="当前时间"></div>
+                </div>
+            </header>
+            
+            <!-- 内容区域 -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <!-- 消息提示 -->
+                {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for message in messages %}
+                    <div class="flex items-center gap-3 px-4 py-3 rounded-lg {% if message.tags == 'success' %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-400{% elif message.tags == 'error' %}bg-red-500/10 border border-red-500/20 text-red-400{% elif message.tags == 'warning' %}bg-amber-500/10 border border-amber-500/20 text-amber-400{% else %}bg-blue-500/10 border border-blue-500/20 text-blue-400{% endif %}">
+                        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" class="ml-auto opacity-70 hover:opacity-100">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast 容器 -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 hidden">
+        <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 loading-spinner rounded-full"></div>
+            <p class="text-slate-300">处理中...</p>
+        </div>
+    </div>
+    
+    <!-- 确认对话框 -->
+    <div id="confirm-modal" 
+         class="fixed inset-0 bg-slate-900/80 modal-backdrop flex items-center justify-center z-50 hidden"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="confirm-title"
+         aria-describedby="confirm-message">
+        <div class="modal-content bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-exclamation-triangle text-amber-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="confirm-title" class="text-lg font-semibold text-white">确认操作</h3>
+                        <p id="confirm-message" class="text-slate-400 text-sm">您确定要执行此操作吗？</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex border-t border-slate-700" role="group" aria-label="确认操作">
+                <button type="button"
+                        onclick="closeConfirmModal()" 
+                        class="flex-1 px-6 py-3 text-slate-300 hover:bg-slate-700/50 transition-colors"
+                        aria-label="取消操作">
+                    取消
+                </button>
+                <button type="button"
+                        id="confirm-btn" 
+                        class="flex-1 px-6 py-3 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                        aria-label="确认执行操作">
+                    确认
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        // Toast 通知
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            
+            const colors = {
+                success: 'bg-emerald-600',
+                error: 'bg-red-600',
+                warning: 'bg-amber-600',
+                info: 'bg-blue-600'
+            };
+            
+            toast.className = `toast-enter flex items-center gap-3 px-4 py-3 ${colors[type]} text-white rounded-lg shadow-lg min-w-[280px]`;
+            toast.innerHTML = `
+                <i class="fas ${icons[type]}"></i>
+                <span class="flex-1">${message}</span>
+                <button onclick="removeToast(this.parentElement)" class="opacity-70 hover:opacity-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => removeToast(toast), 4000);
+        }
+        
+        function removeToast(toast) {
+            toast.classList.remove('toast-enter');
+            toast.classList.add('toast-exit');
+            setTimeout(() => toast.remove(), 300);
+        }
+        
+        // 加载状态
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+        
+        // 确认对话框
+        let confirmCallback = null;
+        
+        // 确认模态框焦点管理
+        let confirmPreviousActiveElement = null;
+        
+        function showConfirm(title, message, callback) {
+            // 保存当前焦点
+            confirmPreviousActiveElement = document.activeElement;
+            
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            confirmCallback = callback;
+            
+            // 聚焦到确认按钮
+            setTimeout(() => {
+                const confirmBtn = document.getElementById('confirm-btn');
+                if (confirmBtn) confirmBtn.focus();
+            }, 100);
+        }
+        
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirm-modal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            confirmCallback = null;
+            
+            // 恢复焦点
+            if (confirmPreviousActiveElement && confirmPreviousActiveElement.focus) {
+                confirmPreviousActiveElement.focus();
+            }
+            confirmPreviousActiveElement = null;
+        }
+        
+        document.getElementById('confirm-btn').addEventListener('click', function() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmModal();
+        });
+        
+        // AJAX 请求封装
+        async function apiRequest(url, options = {}) {
+            showLoading();
+            
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                }
+                
+                return data;
+                
+            } catch (error) {
+                showToast('请求失败，请稍后重试', 'error');
+                console.error('API Error:', error);
+                return { success: false };
+                
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // 删除操作
+        function deleteItem(url, itemName) {
+            showConfirm('确认删除', `您确定要删除 "${itemName}" 吗？此操作无法撤销。`, async () => {
+                const result = await apiRequest(url, { method: 'POST' });
+                if (result.success) {
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
+        }
+        
+        // ESC 关闭模态框
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const confirmModal = document.getElementById('confirm-modal');
+                if (confirmModal && !confirmModal.classList.contains('hidden')) {
+                    closeConfirmModal();
+                }
+                // 移动端时也关闭侧边栏
+                if (window.innerWidth < 1024) {
+                    const sidebar = document.getElementById('admin-sidebar');
+                    if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                        toggleSidebar();
+                    }
+                }
+            }
+        });
+        
+        // 点击背景关闭确认模态框
+        document.getElementById('confirm-modal').addEventListener('click', function(e) {
+            if (e.target.id === 'confirm-modal') {
+                closeConfirmModal();
+            }
+        });
+        
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            
+            if (!sidebar || !overlay || !toggleBtn) return;
+            
+            const isOpen = !sidebar.classList.contains('-translate-x-full');
+            
+            if (isOpen) {
+                // 关闭侧边栏
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+            } else {
+                // 打开侧边栏
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                toggleBtn.setAttribute('aria-expanded', 'true');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        // 窗口大小改变时，如果切换到桌面端，自动显示侧边栏
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                const sidebar = document.getElementById('admin-sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                const toggleBtn = document.getElementById('sidebar-toggle-btn');
+                
+                if (window.innerWidth >= 1024) {
+                    // 桌面端：显示侧边栏，隐藏遮罩
+                    if (sidebar) sidebar.classList.remove('-translate-x-full');
+                    if (overlay) overlay.classList.add('hidden');
+                    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                    document.body.style.overflow = '';
+                } else {
+                    // 移动端：默认隐藏侧边栏
+                    if (sidebar) sidebar.classList.add('-translate-x-full');
+                    if (overlay) overlay.classList.add('hidden');
+                    if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
+                }
+            }, 100);
+        });
+        
+        // 点击侧边栏链接时，移动端自动关闭侧边栏
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('#admin-sidebar a[href]');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 1024) {
+                        setTimeout(toggleSidebar, 100);
+                    }
+                });
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,124 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}费率模板管理{% endblock %}
+{% block page_title %}费率模板管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">费率模板管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 操作栏 -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" role="toolbar" aria-label="费率模板管理操作栏">
+        <div class="text-sm text-slate-400" role="status" aria-live="polite">
+            共 <span class="text-white font-medium">{{ templates|length }}</span> 个模板
+        </div>
+        
+        <a href="{% url 'parking:admin_pricing_template_add' %}" 
+           class="btn-ripple inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+           aria-label="新增费率模板">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            新增费率模板
+        </a>
+    </div>
+    
+    <!-- 模板列表 -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="费率模板列表" role="region">
+        {% for template in templates %}
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover:border-primary-500/50 transition-colors" role="article" aria-labelledby="template-{{ template.id }}-title">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 id="template-{{ template.id }}-title" class="text-lg font-semibold text-white mb-1">{{ template.name }}</h3>
+                    {% if template.description %}
+                    <p class="text-sm text-slate-400 line-clamp-2">{{ template.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if template.is_active %}
+                    <span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full" aria-label="状态：启用">启用</span>
+                    {% else %}
+                    <span class="px-2 py-1 bg-slate-500/20 text-slate-400 text-xs rounded-full" aria-label="状态：禁用">禁用</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-400">免费时长</span>
+                    <span class="text-white font-medium" aria-live="polite">{{ template.free_minutes }} 分钟</span>
+                </div>
+                {% if template.daily_max_fee %}
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-400">每日上限</span>
+                    <span class="text-white font-medium" aria-live="polite">¥{{ template.daily_max_fee }}</span>
+                </div>
+                {% endif %}
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-slate-400">费率规则</span>
+                    <span class="text-white font-medium" aria-live="polite">{{ template.rules.count }} 条</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 pt-4 border-t border-slate-700/50" role="group" aria-label="操作按钮">
+                <a href="{% url 'parking:admin_pricing_template_edit' template.id %}" 
+                   class="flex-1 px-3 py-2 bg-primary-600/20 hover:bg-primary-600/30 text-primary-400 rounded-lg text-sm text-center transition-colors"
+                   aria-label="编辑费率模板 {{ template.name }}">
+                    <i class="fas fa-edit mr-1" aria-hidden="true"></i>编辑
+                </a>
+                <button type="button"
+                        onclick="deleteTemplate({{ template.id }}, '{{ template.name }}')"
+                        class="flex-1 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors"
+                        aria-label="删除费率模板 {{ template.name }}">
+                    <i class="fas fa-trash mr-1" aria-hidden="true"></i>删除
+                </button>
+            </div>
+        </article>
+        {% empty %}
+        <div class="col-span-full text-center py-12" role="status" aria-live="polite">
+            <i class="fas fa-inbox text-4xl text-slate-600 mb-4" aria-hidden="true"></i>
+            <p class="text-slate-400">暂无费率模板</p>
+            <a href="{% url 'parking:admin_pricing_template_add' %}" 
+               class="mt-4 inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+               aria-label="创建第一个费率模板">
+                创建第一个模板
+            </a>
+        </div>
+        {% endfor %}
+    </section>
+</div>
+
+<script>
+async function deleteTemplate(id, name) {
+    if (!confirm(`确定要删除模板 "${name}" 吗？\n\n如果该模板正在被使用，将无法删除。`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`{% url 'parking:admin_pricing_template_delete' 0 %}`.replace('0', id), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('删除成功');
+            location.reload();
+        } else {
+            alert('删除失败：' + result.message);
+        }
+    } catch (error) {
+        alert('删除失败：' + error.message);
+    }
+}
+</script>
+{% endblock %}
+

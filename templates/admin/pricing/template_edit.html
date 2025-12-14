@@ -1,0 +1,365 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if template %}编辑费率模板{% else %}新增费率模板{% endif %}{% endblock %}
+{% block page_title %}{% if template %}编辑费率模板{% else %}新增费率模板{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <a href="{% url 'parking:admin_pricing_template_list' %}" class="hover:text-white" aria-label="费率模板管理">费率模板管理</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">{% if template %}编辑{% else %}新增{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl">
+     <form id="template-form" class="space-y-6" novalidate data-validate>
+        {% csrf_token %}
+        
+        <!-- 基本信息 -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 space-y-5" role="region" aria-labelledby="template-basic-title">
+            <h3 id="template-basic-title" class="text-lg font-semibold text-white border-b border-slate-700/50 pb-4 mb-5">
+                <i class="fas fa-info-circle text-primary-400 mr-2" aria-hidden="true"></i>
+                基本信息
+            </h3>
+            
+            <div>
+                <label for="template-name" class="block text-sm font-medium text-slate-300 mb-2">
+                    模板名称 <span class="text-red-400" aria-label="必填">*</span>
+                </label>
+                <input type="text" 
+                       id="template-name" 
+                       name="name" 
+                       value="{{ template.name|default:'' }}" 
+                       required
+                       data-validation="text_length"
+                       data-max-length="100"
+                       placeholder="如：标准阶梯收费、优惠收费"
+                       class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                       aria-describedby="template-name-hint template-name-error"
+                       aria-required="true">
+                <p id="template-name-hint" class="text-xs text-slate-500 mt-1">请输入模板名称，如：标准阶梯收费、优惠收费</p>
+                <div id="template-name-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+            </div>
+            
+            <div>
+                <label for="template-description" class="block text-sm font-medium text-slate-300 mb-2">
+                    模板描述
+                </label>
+                <textarea id="template-description" 
+                          name="description" 
+                          rows="3"
+                          placeholder="描述该模板的用途和特点"
+                          class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                          aria-describedby="template-description-hint">{{ template.description|default:'' }}</textarea>
+                <p id="template-description-hint" class="text-xs text-slate-500 mt-1 sr-only">描述该模板的用途和特点（选填）</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="free-minutes" class="block text-sm font-medium text-slate-300 mb-2">
+                        免费时长（分钟） <span class="text-red-400" aria-label="必填">*</span>
+                    </label>
+                    <input type="number" 
+                           id="free-minutes" 
+                           name="free_minutes" 
+                           value="{{ template.free_minutes|default:15 }}" 
+                           required 
+                           data-validation="non_negative"
+                           min="0"
+                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                           aria-describedby="free-minutes-hint free-minutes-error"
+                           aria-required="true">
+                    <p id="free-minutes-hint" class="text-xs text-slate-500 mt-1">设置免费停车时长（分钟）</p>
+                    <div id="free-minutes-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+                </div>
+                
+                <div>
+                    <label for="daily-max-fee" class="block text-sm font-medium text-slate-300 mb-2">
+                        每日收费上限（元）
+                    </label>
+                    <input type="number" 
+                           id="daily-max-fee" 
+                           name="daily_max_fee" 
+                           value="{{ template.daily_max_fee|default:'' }}" 
+                           min="0" 
+                           step="0.01"
+                           placeholder="留空表示不设上限"
+                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                           aria-describedby="daily-max-fee-hint">
+                    <p id="daily-max-fee-hint" class="text-xs text-slate-500 mt-1">设置每日收费上限，留空表示不设上限</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 费率规则 -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 space-y-5" role="region" aria-labelledby="rules-title">
+            <div class="flex items-center justify-between border-b border-slate-700/50 pb-4 mb-5">
+                <h3 id="rules-title" class="text-lg font-semibold text-white">
+                    <i class="fas fa-list-ol text-primary-400 mr-2" aria-hidden="true"></i>
+                    费率规则
+                </h3>
+                <button type="button" 
+                        onclick="addRule()" 
+                        class="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors"
+                        aria-label="添加费率规则">
+                    <i class="fas fa-plus mr-1" aria-hidden="true"></i>添加规则
+                </button>
+            </div>
+            
+            <div id="rules-container" class="space-y-4" role="list" aria-label="费率规则列表">
+                {% for rule in rules %}
+                <div class="rule-item bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-index="{{ forloop.counter0 }}" role="listitem">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="rule-start-{{ forloop.counter0 }}" class="block text-xs text-slate-400 mb-1">开始时间（分钟）</label>
+                            <input type="number" 
+                                   id="rule-start-{{ forloop.counter0 }}"
+                                   class="rule-start-minutes w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm" 
+                                   value="{{ rule.start_minutes }}" 
+                                   min="0" 
+                                   required
+                                   aria-label="规则 {{ forloop.counter }} 开始时间（分钟）">
+                        </div>
+                        <div>
+                            <label for="rule-end-{{ forloop.counter0 }}" class="block text-xs text-slate-400 mb-1">结束时间（分钟）</label>
+                            <input type="number" 
+                                   id="rule-end-{{ forloop.counter0 }}"
+                                   class="rule-end-minutes w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm" 
+                                   value="{{ rule.end_minutes|default:'' }}" 
+                                   min="0" 
+                                   placeholder="留空表示无上限"
+                                   aria-label="规则 {{ forloop.counter }} 结束时间（分钟）">
+                        </div>
+                        <div>
+                            <label for="rule-rate-{{ forloop.counter0 }}" class="block text-xs text-slate-400 mb-1">费率（元/小时）</label>
+                            <input type="number" 
+                                   id="rule-rate-{{ forloop.counter0 }}"
+                                   class="rule-rate w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm" 
+                                   value="{{ rule.rate_per_hour }}" 
+                                   min="0" 
+                                   step="0.01" 
+                                   required
+                                   aria-label="规则 {{ forloop.counter }} 费率（元/小时）">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" 
+                                    onclick="removeRule(this)" 
+                                    class="w-full px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm transition-colors"
+                                    aria-label="删除规则 {{ forloop.counter }}">
+                                <i class="fas fa-trash mr-1" aria-hidden="true"></i>删除
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8 text-slate-500" role="status" aria-live="polite">
+                    <i class="fas fa-info-circle mb-2" aria-hidden="true"></i>
+                    <p>暂无费率规则，请添加规则</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="flex items-center gap-4" role="group" aria-label="表单操作">
+            <button type="submit" 
+                    class="btn-ripple px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                    aria-label="保存费率模板">
+                <i class="fas fa-save mr-2" aria-hidden="true"></i>保存模板
+            </button>
+            <a href="{% url 'parking:admin_pricing_template_list' %}" 
+               class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+               aria-label="取消并返回费率模板列表">
+                取消
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+let ruleIndex = {{ rules|length }};
+
+function addRule() {
+    const container = document.getElementById('rules-container');
+    const emptyMsg = container.querySelector('.text-center');
+    if (emptyMsg) emptyMsg.remove();
+    
+    const ruleHtml = `
+        <div class="rule-item bg-slate-900/50 border border-slate-700 rounded-lg p-4" data-index="${ruleIndex}">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">开始时间（分钟）</label>
+                    <input type="number" class="rule-start-minutes w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm" 
+                           value="0" min="0" required>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">结束时间（分钟）</label>
+                    <input type="number" class="rule-end-minutes w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm" 
+                           value="" min="0" placeholder="留空表示无上限">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">费率（元/小时）</label>
+                    <input type="number" class="rule-rate w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm" 
+                           value="5.00" min="0" step="0.01" required>
+                </div>
+                <div class="flex items-end">
+                    <button type="button" onclick="removeRule(this)" 
+                            class="w-full px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm transition-colors">
+                        <i class="fas fa-trash mr-1"></i>删除
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', ruleHtml);
+    ruleIndex++;
+}
+
+function removeRule(btn) {
+    if (confirm('确定要删除这条规则吗？')) {
+        btn.closest('.rule-item').remove();
+        const container = document.getElementById('rules-container');
+        if (container.children.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-slate-500">
+                    <i class="fas fa-info-circle mb-2"></i>
+                    <p>暂无费率规则，请添加规则</p>
+                </div>
+            `;
+        }
+    }
+}
+
+document.getElementById('template-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // ========== 前端验证（提交前） ==========
+    
+    // 1. 验证模板名称（必填）
+    const nameInput = document.getElementById('template-name');
+    const name = nameInput.value.trim();
+    if (!name) {
+        alert('请输入模板名称');
+        nameInput.focus();
+        return;
+    }
+    if (name.length > 100) {
+        alert('模板名称长度不能超过100个字符');
+        nameInput.focus();
+        return;
+    }
+    
+    // 2. 验证费率规则
+    const rules = [];
+    let hasRuleError = false;
+    
+    document.querySelectorAll('.rule-item').forEach((item, idx) => {
+        const startMinutesInput = item.querySelector('.rule-start-minutes');
+        const endMinutesInput = item.querySelector('.rule-end-minutes');
+        const rateInput = item.querySelector('.rule-rate');
+        
+        const startMinutes = parseInt(startMinutesInput.value);
+        const endMinutes = endMinutesInput.value ? parseInt(endMinutesInput.value) : null;
+        const rate = parseFloat(rateInput.value);
+        
+        // 验证起始分钟数
+        if (isNaN(startMinutes) || startMinutes < 0) {
+            alert(`第${idx + 1}条规则：起始分钟数必须是0或正整数`);
+            startMinutesInput.focus();
+            hasRuleError = true;
+            return;
+        }
+        
+        // 验证结束分钟数（如果有值）
+        if (endMinutes !== null && (isNaN(endMinutes) || endMinutes <= startMinutes)) {
+            alert(`第${idx + 1}条规则：结束分钟数必须大于起始分钟数`);
+            endMinutesInput.focus();
+            hasRuleError = true;
+            return;
+        }
+        
+        // 验证费率
+        if (isNaN(rate) || rate < 0) {
+            alert(`第${idx + 1}条规则：费率必须是非负数`);
+            rateInput.focus();
+            hasRuleError = true;
+            return;
+        }
+        
+        rules.push({
+            start_minutes: startMinutes,
+            end_minutes: endMinutes,
+            rate_per_hour: rate
+        });
+    });
+    
+    if (hasRuleError) {
+        return;
+    }
+    
+    if (rules.length === 0) {
+        alert('请至少添加一条费率规则');
+        return;
+    }
+    
+    // 3. 验证免费时长（可选，但如果有值必须是正整数）
+    const freeMinutesInput = document.getElementById('free-minutes');
+    if (freeMinutesInput.value) {
+        const freeMinutes = parseInt(freeMinutesInput.value);
+        if (isNaN(freeMinutes) || freeMinutes < 0) {
+            alert('免费时长必须是正整数');
+            freeMinutesInput.focus();
+            return;
+        }
+    }
+    
+    // 4. 验证每日上限（可选，但如果有值必须是非负数）
+    const dailyMaxFeeInput = document.getElementById('daily-max-fee');
+    if (dailyMaxFeeInput.value) {
+        const dailyMaxFee = parseFloat(dailyMaxFeeInput.value);
+        if (isNaN(dailyMaxFee) || dailyMaxFee < 0) {
+            alert('每日上限必须是非负数');
+            dailyMaxFeeInput.focus();
+            return;
+        }
+    }
+    
+    const data = {
+        name: document.getElementById('template-name').value,
+        description: document.getElementById('template-description').value,
+        free_minutes: parseInt(document.getElementById('free-minutes').value) || 15,
+        daily_max_fee: document.getElementById('daily-max-fee').value || null,
+        rules: rules
+    };
+    
+    try {
+        const url = '{% if template %}{% url "parking:admin_pricing_template_edit" template.id %}{% else %}{% url "parking:admin_pricing_template_add" %}{% endif %}';
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('保存成功');
+            location.href = '{% url "parking:admin_pricing_template_list" %}';
+        } else {
+            alert('保存失败：' + result.message);
+        }
+    } catch (error) {
+        alert('保存失败：' + error.message);
+    }
+});
+</script>
+{% endblock %}
+

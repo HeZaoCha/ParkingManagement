@@ -1,0 +1,374 @@
+{% extends 'admin/base.html' %}
+{% load parking_filters %}
+
+{% block title %}停车记录{% endblock %}
+{% block page_title %}停车记录{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">停车记录</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 统计卡片 -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4" aria-label="停车记录统计" role="region">
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4" role="article" aria-labelledby="total-records-label">
+            <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center" aria-hidden="true">
+                <i class="fas fa-clipboard-list text-blue-400 text-xl"></i>
+            </div>
+            <div>
+                <p id="total-records-label" class="text-slate-400 text-sm">总记录</p>
+                <p class="text-xl font-bold text-white number-animate" aria-live="polite">{{ stats.total }}</p>
+            </div>
+        </article>
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4" role="article" aria-labelledby="active-vehicles-label">
+            <div class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center" aria-hidden="true">
+                <i class="fas fa-car text-emerald-400 text-xl"></i>
+            </div>
+            <div>
+                <p id="active-vehicles-label" class="text-slate-400 text-sm">在场车辆</p>
+                <p class="text-xl font-bold text-emerald-400 number-animate" aria-live="polite">{{ stats.active }}</p>
+            </div>
+        </article>
+        <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-4" role="article" aria-labelledby="total-revenue-label">
+            <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center" aria-hidden="true">
+                <i class="fas fa-dollar-sign text-amber-400 text-xl"></i>
+            </div>
+            <div>
+                <p id="total-revenue-label" class="text-slate-400 text-sm">累计收入</p>
+                <p class="text-xl font-bold text-amber-400 number-animate" aria-live="polite">¥{{ stats.total_revenue }}</p>
+            </div>
+        </article>
+    </section>
+    
+    <!-- 筛选栏 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4" role="region" aria-labelledby="filter-title">
+        <h3 id="filter-title" class="sr-only">筛选条件</h3>
+        <form method="get" class="flex flex-wrap items-center gap-4" role="search" aria-label="筛选停车记录">
+            <!-- 搜索 -->
+            <div class="relative flex-1 min-w-[200px]">
+                <label for="record-search" class="sr-only">搜索车牌号</label>
+                <input type="text" 
+                       id="record-search"
+                       name="search" 
+                       value="{{ search }}" 
+                       placeholder="搜索车牌号..." 
+                       class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:border-primary-500"
+                       aria-label="搜索车牌号">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true"></i>
+            </div>
+            
+            <!-- 状态 -->
+            <label for="record-status-filter" class="sr-only">状态筛选</label>
+            <select id="record-status-filter"
+                    name="status" 
+                    class="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-primary-500"
+                    aria-label="筛选停车记录状态">
+                <option value="">全部状态</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>停车中</option>
+                <option value="completed" {% if status == 'completed' %}selected{% endif %}>已出场</option>
+                <option value="unpaid" {% if status == 'unpaid' %}selected{% endif %}>待支付</option>
+                <option value="paid" {% if status == 'paid' %}selected{% endif %}>已支付</option>
+            </select>
+            
+            <!-- 日期范围 -->
+            <label for="date-from" class="sr-only">开始日期</label>
+            <input type="date" 
+                   id="date-from"
+                   name="date_from" 
+                   value="{{ date_from|default:'' }}"
+                   class="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-primary-500"
+                   aria-label="开始日期">
+            <span class="text-slate-400" aria-hidden="true">至</span>
+            <label for="date-to" class="sr-only">结束日期</label>
+            <input type="date" 
+                   id="date-to"
+                   name="date_to" 
+                   value="{{ date_to|default:'' }}"
+                   class="px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-primary-500"
+                   aria-label="结束日期">
+            
+            <button type="submit" 
+                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                    aria-label="应用筛选条件">
+                <i class="fas fa-filter mr-2" aria-hidden="true"></i>筛选
+            </button>
+            
+            {% if search or status or date_from or date_to %}
+            <a href="{% url 'parking:admin_parking_record_list' %}" 
+               class="px-4 py-2 text-slate-400 hover:text-white transition-colors"
+               aria-label="清除所有筛选条件">
+                清除筛选
+            </a>
+            {% endif %}
+        </form>
+    </div>
+    
+    <!-- 列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="record-list-title">
+        <h2 id="record-list-title" class="sr-only">停车记录列表</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full" role="table" aria-label="停车记录列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th scope="col" class="px-5 py-4 font-medium">车牌号</th>
+                        <th scope="col" class="px-5 py-4 font-medium">停车场/车位</th>
+                        <th scope="col" class="px-5 py-4 font-medium">入场时间</th>
+                        <th scope="col" class="px-5 py-4 font-medium">出场时间</th>
+                        <th scope="col" class="px-5 py-4 font-medium">时长</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right">费用</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">状态</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for record in records %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-medium text-white bg-slate-700/50 px-2 py-1 rounded">
+                                {{ record.vehicle.license_plate }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="text-slate-300">{{ record.parking_space.parking_lot.name }}</div>
+                            <div class="text-xs text-slate-500">{{ record.parking_space.space_number }}</div>
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ record.entry_time|date:"m-d H:i" }}
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ record.exit_time|date:"m-d H:i"|default:"-" }}
+                        </td>
+                        <td class="px-5 py-4 text-slate-300 text-sm">
+                            {% if record.duration_minutes %}
+                                {{ record.duration_minutes|duration_format }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-right">
+                            {% if record.fee %}
+                            <span class="text-amber-400 font-mono font-medium">¥{{ record.fee }}</span>
+                            {% else %}
+                            <span class="text-slate-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            {% if not record.exit_time %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full" aria-label="状态：停车中">
+                                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" aria-hidden="true"></span>
+                                停车中
+                            </span>
+                            {% elif not record.is_paid %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full" aria-label="状态：待支付">
+                                <i class="fas fa-clock text-xs" aria-hidden="true"></i>
+                                待支付
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-500/20 text-slate-400 text-xs rounded-full" aria-label="状态：已完成">
+                                <i class="fas fa-check text-xs" aria-hidden="true"></i>
+                                已完成
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-1" role="group" aria-label="操作按钮">
+                                <a href="{% url 'parking:admin_parking_record_detail' record.pk %}" 
+                                   class="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                   title="查看详情"
+                                   aria-label="查看停车记录详情">
+                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                </a>
+                                {% if not record.exit_time %}
+                                <button type="button"
+                                        onclick="checkoutRecord({{ record.pk }})" 
+                                        class="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                        title="办理出场"
+                                        aria-label="办理车辆出场">
+                                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                                </button>
+                                {% elif not record.is_paid %}
+                                <button type="button"
+                                        onclick="payRecord({{ record.pk }})" 
+                                        class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 rounded-lg transition-colors"
+                                        title="确认支付"
+                                        aria-label="确认支付停车费用">
+                                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-5 py-16 text-center" role="status" aria-live="polite">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center" aria-hidden="true">
+                                    <i class="fas fa-clipboard-list text-2xl text-slate-500"></i>
+                                </div>
+                                <p class="text-slate-400">暂无停车记录</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if records.has_other_pages %}
+        <nav class="px-5 py-4 border-t border-slate-700/50 flex items-center justify-between" role="navigation" aria-label="分页导航">
+            <p class="text-sm text-slate-400" aria-live="polite">
+                显示 {{ records.start_index }}-{{ records.end_index }} 条，共 {{ records.paginator.count }} 条
+            </p>
+            <div class="flex items-center gap-1" role="group" aria-label="分页控件">
+                {% if records.has_previous %}
+                <a href="?page={{ records.previous_page_number }}&search={{ search }}&status={{ status }}&date_from={{ date_from }}&date_to={{ date_to }}" 
+                   class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded"
+                   aria-label="上一页">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in records.paginator.page_range %}
+                    {% if num == records.number %}
+                    <span class="px-3 py-1.5 bg-primary-600 text-white rounded" aria-current="page" aria-label="当前页：第 {{ num }} 页">{{ num }}</span>
+                    {% elif num > records.number|add:'-3' and num < records.number|add:'3' %}
+                    <a href="?page={{ num }}&search={{ search }}&status={{ status }}&date_from={{ date_from }}&date_to={{ date_to }}" 
+                       class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded"
+                       aria-label="第 {{ num }} 页">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if records.has_next %}
+                <a href="?page={{ records.next_page_number }}&search={{ search }}&status={{ status }}&date_from={{ date_from }}&date_to={{ date_to }}" 
+                   class="px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded"
+                   aria-label="下一页">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 出场结算模态框 -->
+<div id="checkout-modal" 
+     class="fixed inset-0 bg-slate-900/80 modal-backdrop flex items-center justify-center z-50 hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="checkout-modal-title"
+     aria-describedby="checkout-modal-description">
+    <div class="modal-content bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-sm mx-4">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+                <i class="fas fa-check-circle text-emerald-400 text-3xl"></i>
+            </div>
+            <h3 id="checkout-modal-title" class="text-lg font-semibold text-white mb-2">出场成功</h3>
+            <p id="checkout-modal-description" class="sr-only">出场结算信息</p>
+            <p class="text-slate-400 mb-4">停车费用</p>
+            <p class="text-3xl font-bold text-amber-400 number-animate" id="checkout-fee" aria-live="polite">¥0.00</p>
+            <p class="text-sm text-slate-500 mt-2">
+                停车时长: <span id="checkout-duration" aria-live="polite">0</span> 分钟
+            </p>
+        </div>
+        <div class="flex border-t border-slate-700" role="group" aria-label="操作按钮">
+            <button type="button"
+                    onclick="closeCheckoutModal()" 
+                    class="flex-1 px-6 py-3 text-slate-300 hover:bg-slate-700/50 transition-colors"
+                    aria-label="关闭结算对话框">
+                关闭
+            </button>
+            <button type="button"
+                    id="pay-now-btn" 
+                    class="flex-1 px-6 py-3 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                    aria-label="立即支付停车费用">
+                立即支付
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentRecordId = null;
+
+let checkoutPreviousActiveElement = null;
+
+async function checkoutRecord(pk) {
+    // 保存当前焦点
+    checkoutPreviousActiveElement = document.activeElement;
+    
+    const result = await apiRequest(`/manage/records/${pk}/checkout/`, { method: 'POST' });
+    
+    if (result.success) {
+        currentRecordId = pk;
+        document.getElementById('checkout-fee').textContent = '¥' + result.fee;
+        document.getElementById('checkout-duration').textContent = result.duration;
+        const modal = document.getElementById('checkout-modal');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // 聚焦到支付按钮
+        setTimeout(() => {
+            const payBtn = document.getElementById('pay-now-btn');
+            if (payBtn) payBtn.focus();
+        }, 100);
+    }
+}
+
+function closeCheckoutModal() {
+    const modal = document.getElementById('checkout-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    
+    // 恢复焦点
+    if (checkoutPreviousActiveElement && checkoutPreviousActiveElement.focus) {
+        checkoutPreviousActiveElement.focus();
+    }
+    checkoutPreviousActiveElement = null;
+    
+    location.reload();
+}
+
+document.getElementById('pay-now-btn').addEventListener('click', async function() {
+    if (currentRecordId) {
+        await payRecord(currentRecordId);
+        closeCheckoutModal();
+    }
+});
+
+async function payRecord(pk) {
+    const result = await apiRequest(`/manage/records/${pk}/pay/`, { method: 'POST' });
+    if (result.success) {
+        setTimeout(() => location.reload(), 500);
+    }
+}
+
+// ESC键关闭结算模态框
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('checkout-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeCheckoutModal();
+        }
+    }
+});
+
+// 点击背景关闭结算模态框
+document.getElementById('checkout-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'checkout-modal') {
+        closeCheckoutModal();
+    }
+});
+</script>
+{% endblock %}
+

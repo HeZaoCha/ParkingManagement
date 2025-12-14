@@ -1,0 +1,162 @@
+{# 导航栏组件 - 支持主题系统 #}
+<nav class="bg-gradient-theme shadow-lg sticky top-0 z-40" role="navigation" aria-label="主导航">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16">
+      {# Logo和标题 #}
+      <div class="flex items-center">
+        <a href="{% url 'parking:dashboard' %}" class="flex items-center group" aria-label="返回首页">
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mr-3 group-hover:bg-white/30 transition-all group-hover:scale-110 group-active:scale-95">
+            <i class="fas fa-parking text-white text-xl group-hover:rotate-12 transition-transform duration-300" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white text-shadow">停车场管理系统</h1>
+            <p class="text-xs text-white/70 hidden sm:block">Parking Management System</p>
+          </div>
+        </a>
+      </div>
+      
+      {# 中间快捷操作 #}
+      <div class="hidden md:flex items-center space-x-2" role="toolbar" aria-label="快捷操作">
+        <button onclick="openQuickEntry()" 
+                type="button"
+                class="btn-interactive ripple-effect flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium group"
+                aria-label="车辆入场">
+          <i class="fas fa-sign-in-alt group-hover:translate-x-0.5 transition-transform duration-200" aria-hidden="true"></i>
+          <span>车辆入场</span>
+        </button>
+        <button onclick="openQuickExit()" 
+                type="button"
+                class="btn-interactive ripple-effect flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium group"
+                aria-label="车辆出场">
+          <i class="fas fa-sign-out-alt group-hover:-translate-x-0.5 transition-transform duration-200" aria-hidden="true"></i>
+          <span>车辆出场</span>
+        </button>
+        <button onclick="openQuickSearch()" 
+                type="button"
+                class="btn-interactive ripple-effect flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium group"
+                aria-label="查询车辆">
+          <i class="fas fa-search group-hover:rotate-90 transition-transform duration-300" aria-hidden="true"></i>
+          <span>查询车辆</span>
+        </button>
+      </div>
+      
+      {# 用户信息和操作 #}
+      <div class="flex items-center space-x-3">
+        {# 通知按钮 #}
+        <button type="button"
+                class="btn-interactive relative p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all group" 
+                title="通知"
+                aria-label="查看通知"
+                aria-describedby="notification-badge">
+          <i class="fas fa-bell group-hover:animate-bounce transition-transform duration-200" aria-hidden="true"></i>
+          <span id="notification-badge" class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新通知"></span>
+        </button>
+        
+        {# 管理后台入口 #}
+        {% if user.is_staff %}
+        <a href="{% url 'parking:admin_index' %}" 
+           class="btn-interactive ripple-effect flex items-center gap-2 px-3 py-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-all group"
+           title="管理后台">
+          <i class="fas fa-cog group-hover:rotate-90 transition-transform duration-300"></i>
+          <span class="hidden lg:inline">管理后台</span>
+        </a>
+        {% endif %}
+        
+        {# 用户下拉菜单 #}
+        <div class="relative" id="user-menu">
+          <button onclick="toggleUserMenu()" 
+                  type="button"
+                  class="btn-interactive flex items-center gap-2 px-3 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all group"
+                  aria-label="用户菜单"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  id="user-menu-button">
+            <div class="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center group-hover:bg-white/40 transition-colors">
+              <i class="fas fa-user text-white text-sm group-hover:scale-110 transition-transform duration-200" aria-hidden="true"></i>
+            </div>
+            <span class="text-white font-medium hidden sm:inline">{{ user.username }}</span>
+            <i class="fas fa-chevron-down text-white/70 text-xs group-hover:rotate-180 transition-transform duration-300" aria-hidden="true"></i>
+          </button>
+          
+          {# 下拉菜单 #}
+          <div id="user-dropdown" 
+               role="menu"
+               aria-labelledby="user-menu-button"
+               class="absolute right-0 top-full mt-2 w-48 card-theme rounded-xl overflow-hidden opacity-0 invisible transform -translate-y-2 transition-all duration-200">
+            <div class="p-3 border-b border-theme">
+              <p class="text-theme-primary font-medium">{{ user.username }}</p>
+              <p class="text-theme-muted text-sm">{{ user.email|default:"管理员" }}</p>
+            </div>
+            <div class="py-1">
+              <a href="#" role="menuitem" class="btn-interactive flex items-center gap-3 px-4 py-2 text-theme-secondary hover:bg-theme-hover transition-all group">
+                <i class="fas fa-user-circle w-4 group-hover:scale-110 transition-transform duration-200" aria-hidden="true"></i>
+                <span>个人资料</span>
+              </a>
+              <a href="#" role="menuitem" class="btn-interactive flex items-center gap-3 px-4 py-2 text-theme-secondary hover:bg-theme-hover transition-all group">
+                <i class="fas fa-cog w-4 group-hover:rotate-90 transition-transform duration-300" aria-hidden="true"></i>
+                <span>账户设置</span>
+              </a>
+            </div>
+            <div class="border-t border-theme py-1">
+              <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="btn-interactive ripple-effect flex items-center gap-3 px-4 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 w-full transition-all group">
+                  <i class="fas fa-sign-out-alt w-4 group-hover:translate-x-1 transition-transform duration-200"></i>
+                  <span>退出登录</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {# 移动端快捷操作栏 #}
+  <div class="md:hidden border-t border-white/20">
+    <div class="flex justify-around py-2 px-4">
+      <button onclick="openQuickEntry()" class="btn-interactive flex flex-col items-center text-white/80 hover:text-white transition-all group">
+        <i class="fas fa-sign-in-alt text-lg group-hover:translate-y-0.5 transition-transform duration-200"></i>
+        <span class="text-xs mt-1">入场</span>
+      </button>
+      <button onclick="openQuickExit()" class="btn-interactive flex flex-col items-center text-white/80 hover:text-white transition-all group">
+        <i class="fas fa-sign-out-alt text-lg group-hover:-translate-y-0.5 transition-transform duration-200"></i>
+        <span class="text-xs mt-1">出场</span>
+      </button>
+      <button onclick="openQuickSearch()" class="btn-interactive flex flex-col items-center text-white/80 hover:text-white transition-all group">
+        <i class="fas fa-search text-lg group-hover:rotate-90 transition-transform duration-300"></i>
+        <span class="text-xs mt-1">查询</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+{# 用户菜单脚本 #}
+<script>
+  let userMenuOpen = false;
+  
+  function toggleUserMenu() {
+    const dropdown = document.getElementById('user-dropdown');
+    const button = document.getElementById('user-menu-button');
+    userMenuOpen = !userMenuOpen;
+    
+    if (userMenuOpen) {
+      dropdown.classList.remove('opacity-0', 'invisible', '-translate-y-2');
+      dropdown.classList.add('opacity-100', 'visible', 'translate-y-0');
+      button.setAttribute('aria-expanded', 'true');
+    } else {
+      dropdown.classList.add('opacity-0', 'invisible', '-translate-y-2');
+      dropdown.classList.remove('opacity-100', 'visible', 'translate-y-0');
+      button.setAttribute('aria-expanded', 'false');
+    }
+  }
+  
+  // 点击外部关闭菜单
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('user-menu');
+    if (!menu.contains(e.target) && userMenuOpen) {
+      toggleUserMenu();
+    }
+  });
+</script>

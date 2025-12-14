@@ -1,0 +1,244 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}通缉车辆管理{% endblock %}
+{% block page_title %}通缉车辆管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">通缉车辆管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 操作栏 -->
+    <div class="flex items-center justify-between" role="toolbar" aria-label="通缉车辆管理操作栏">
+        <div class="flex items-center gap-4">
+            <h3 class="text-lg font-semibold text-white">通缉车辆列表</h3>
+            <nav class="flex gap-2" role="group" aria-label="状态筛选">
+                <a href="?status=active" 
+                   class="px-4 py-2 rounded-lg transition-colors {% if status == 'active' %}bg-primary-600 text-white{% else %}bg-slate-700 text-slate-300 hover:bg-slate-600{% endif %}"
+                   aria-label="筛选：通缉中"
+                   {% if status == 'active' %}aria-current="page"{% endif %}>
+                    通缉中
+                </a>
+                <a href="?status=caught" 
+                   class="px-4 py-2 rounded-lg transition-colors {% if status == 'caught' %}bg-primary-600 text-white{% else %}bg-slate-700 text-slate-300 hover:bg-slate-600{% endif %}"
+                   aria-label="筛选：已抓获"
+                   {% if status == 'caught' %}aria-current="page"{% endif %}>
+                    已抓获
+                </a>
+                <a href="?status=cancelled" 
+                   class="px-4 py-2 rounded-lg transition-colors {% if status == 'cancelled' %}bg-primary-600 text-white{% else %}bg-slate-700 text-slate-300 hover:bg-slate-600{% endif %}"
+                   aria-label="筛选：已取消"
+                   {% if status == 'cancelled' %}aria-current="page"{% endif %}>
+                    已取消
+                </a>
+                <a href="?" 
+                   class="px-4 py-2 rounded-lg transition-colors {% if not status %}bg-primary-600 text-white{% else %}bg-slate-700 text-slate-300 hover:bg-slate-600{% endif %}"
+                   aria-label="显示全部"
+                   {% if not status %}aria-current="page"{% endif %}>
+                    全部
+                </a>
+            </nav>
+        </div>
+        <a href="{% url 'parking:admin_wanted_vehicle_add' %}" 
+           class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2"
+           aria-label="新增通缉车辆">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            新增通缉车辆
+        </a>
+    </div>
+    
+    <!-- 搜索栏 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4" role="region" aria-labelledby="search-title">
+        <h3 id="search-title" class="sr-only">搜索通缉车辆</h3>
+        <form method="get" class="flex gap-3" role="search" aria-label="搜索通缉车辆">
+            {% if status %}
+            <input type="hidden" name="status" value="{{ status }}">
+            {% endif %}
+            <label for="wanted-search" class="sr-only">搜索</label>
+            <input type="text" 
+                   id="wanted-search"
+                   name="search" 
+                   value="{{ search }}" 
+                   placeholder="搜索车牌号、描述、案件编号..."
+                   class="flex-1 px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                   aria-label="搜索通缉车辆">
+            <button type="submit" 
+                    class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                    aria-label="搜索">
+                <i class="fas fa-search" aria-hidden="true"></i>
+            </button>
+        </form>
+    </div>
+    
+    <!-- 通缉车辆列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="wanted-list-title">
+        <h2 id="wanted-list-title" class="sr-only">通缉车辆列表</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full" role="table" aria-label="通缉车辆列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th scope="col" class="px-5 py-3 font-medium">车牌号</th>
+                        <th scope="col" class="px-5 py-3 font-medium">车辆类型</th>
+                        <th scope="col" class="px-5 py-3 font-medium">优先级</th>
+                        <th scope="col" class="px-5 py-3 font-medium">状态</th>
+                        <th scope="col" class="px-5 py-3 font-medium">案件编号</th>
+                        <th scope="col" class="px-5 py-3 font-medium">创建时间</th>
+                        <th scope="col" class="px-5 py-3 font-medium">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for vehicle in vehicles %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-medium text-white">{{ vehicle.license_plate }}</span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">{{ vehicle.vehicle_type|default:"-" }}</td>
+                        <td class="px-5 py-4">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                                {% if vehicle.priority >= 8 %}bg-red-500/20 text-red-400
+                                {% elif vehicle.priority >= 5 %}bg-orange-500/20 text-orange-400
+                                {% else %}bg-yellow-500/20 text-yellow-400{% endif %}">
+                                {{ vehicle.priority }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4">
+                            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs
+                                {% if vehicle.status == 'active' %}bg-red-500/20 text-red-400
+                                {% elif vehicle.status == 'caught' %}bg-emerald-500/20 text-emerald-400
+                                {% else %}bg-slate-500/20 text-slate-400{% endif %}">
+                                {{ vehicle.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">{{ vehicle.case_number|default:"-" }}</td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ vehicle.created_at|date:"Y-m-d H:i" }}
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex gap-2" role="group" aria-label="操作按钮">
+                                <a href="{% url 'parking:admin_wanted_vehicle_detail' vehicle.pk %}" 
+                                   class="px-3 py-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded text-sm transition-colors"
+                                   aria-label="查看通缉车辆 {{ vehicle.license_plate }} 详情">
+                                    详情
+                                </a>
+                                <a href="{% url 'parking:admin_wanted_vehicle_edit' vehicle.pk %}" 
+                                   class="px-3 py-1 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded text-sm transition-colors"
+                                   aria-label="编辑通缉车辆 {{ vehicle.license_plate }}">
+                                    编辑
+                                </a>
+                                {% if vehicle.status == 'active' %}
+                                <button type="button"
+                                        onclick="cancelWanted({{ vehicle.pk }})" 
+                                        class="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded text-sm transition-colors"
+                                        aria-label="取消通缉车辆 {{ vehicle.license_plate }}">
+                                    取消
+                                </button>
+                                {% endif %}
+                                <button type="button"
+                                        onclick="deleteWanted({{ vehicle.pk }})" 
+                                        class="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-sm transition-colors"
+                                        aria-label="删除通缉车辆 {{ vehicle.license_plate }}">
+                                    删除
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-12 text-center text-slate-400" role="status" aria-live="polite">
+                            <i class="fas fa-exclamation-triangle text-4xl mb-3 opacity-50" aria-hidden="true"></i>
+                            <p>暂无通缉车辆</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if vehicles.has_other_pages %}
+        <nav class="p-5 border-t border-slate-700/50 flex items-center justify-between" role="navigation" aria-label="分页导航">
+            <div class="text-sm text-slate-400" aria-live="polite">
+                显示第 {{ vehicles.start_index }} - {{ vehicles.end_index }} 条，共 {{ vehicles.paginator.count }} 条
+            </div>
+            <div class="flex gap-2" role="group" aria-label="分页控件">
+                {% if vehicles.has_previous %}
+                <a href="?page={{ vehicles.previous_page_number }}{% if status %}&status={{ status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" 
+                   class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                   aria-label="上一页">
+                    上一页
+                </a>
+                {% endif %}
+                {% if vehicles.has_next %}
+                <a href="?page={{ vehicles.next_page_number }}{% if status %}&status={{ status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" 
+                   class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                   aria-label="下一页">
+                    下一页
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+    
+    <!-- 警报日志快捷入口 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-white mb-2">警报日志</h3>
+                <p class="text-sm text-slate-400">查看所有通缉车辆入场警报记录</p>
+            </div>
+            <a href="{% url 'parking:admin_alert_log_list' %}" 
+               class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2">
+                <i class="fas fa-bell"></i>
+                查看警报日志
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function cancelWanted(id) {
+    if (!confirm('确定要取消此通缉吗？')) return;
+    
+    fetch(`/parking/manage/alert/wanted/${id}/cancel/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+        },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('操作失败：' + data.message);
+        }
+    });
+}
+
+function deleteWanted(id) {
+    if (!confirm('确定要删除此通缉车辆吗？此操作不可恢复！')) return;
+    
+    fetch(`/parking/manage/alert/wanted/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+        },
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('删除失败：' + data.message);
+        }
+    });
+}
+</script>
+{% endblock %}
+

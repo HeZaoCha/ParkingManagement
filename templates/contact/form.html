@@ -1,0 +1,1003 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}联系我们 - 停车场管理系统{% endblock %}
+
+{% block body_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<style>
+  /* 联系页面专用样式 - 每个卡片使用不同主题色 */
+  .contact-page {
+    /* 背景色根据当前选择的主题色变化，而非仅由亮暗模式控制 */
+    /* 使用主题色定义的背景色，确保背景色随主题色变化 */
+    background: var(--bg-secondary);
+    min-height: 100vh;
+    /* 为联系页面添加微妙的主题色背景渐变 */
+    position: relative;
+  }
+  
+  /* 根据主题色添加背景渐变效果（可选，增强视觉层次） */
+  .contact-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 50%, 
+      var(--color-primary-100, transparent) 0%, 
+      transparent 50%),
+                radial-gradient(circle at 80% 50%, 
+      var(--color-primary-100, transparent) 0%, 
+      transparent 50%);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  html.dark .contact-page::before {
+    background: radial-gradient(circle at 20% 50%, 
+      var(--color-primary-900, transparent) 0%, 
+      transparent 50%),
+                radial-gradient(circle at 80% 50%, 
+      var(--color-primary-900, transparent) 0%, 
+      transparent 50%);
+    opacity: 0.2;
+  }
+  
+  .contact-page > * {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* 邮件联系卡片 - 蓝色主题 */
+  .contact-card-email {
+    background: linear-gradient(135deg, 
+      var(--contact-email-50) 0%, 
+      var(--contact-email-100) 50%,
+      var(--contact-email-50) 100%);
+    border: 2px solid var(--contact-email-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-email {
+    background: linear-gradient(135deg, 
+      var(--contact-email-900) 0%, 
+      var(--contact-email-800) 50%,
+      var(--contact-email-900) 100%);
+    border-color: var(--contact-email-700);
+  }
+  
+  .contact-card-email::before {
+    background: linear-gradient(90deg, 
+      var(--contact-email-500) 0%, 
+      var(--contact-email-400) 50%, 
+      var(--contact-email-500) 100%);
+  }
+  
+  .contact-card-email .icon-bg {
+    background: var(--contact-email-100);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+  }
+  
+  html.dark .contact-card-email .icon-bg {
+    background: var(--contact-email-800);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  }
+  
+  .contact-card-email .icon {
+    color: var(--contact-email-600);
+  }
+  
+  html.dark .contact-card-email .icon {
+    color: var(--contact-email-400);
+  }
+  
+  .contact-card-email .btn {
+    background: var(--contact-email-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  }
+  
+  .contact-card-email .btn:hover {
+    background: var(--contact-email-600);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+  }
+  
+  /* GitHub Issues 卡片 - 紫色主题 */
+  .contact-card-github {
+    background: linear-gradient(135deg, 
+      var(--contact-github-50) 0%, 
+      var(--contact-github-100) 50%,
+      var(--contact-github-50) 100%);
+    border: 2px solid var(--contact-github-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-github {
+    background: linear-gradient(135deg, 
+      var(--contact-github-900) 0%, 
+      var(--contact-github-800) 50%,
+      var(--contact-github-900) 100%);
+    border-color: var(--contact-github-700);
+  }
+  
+  .contact-card-github::before {
+    background: linear-gradient(90deg, 
+      var(--contact-github-500) 0%, 
+      var(--contact-github-400) 50%, 
+      var(--contact-github-500) 100%);
+  }
+  
+  .contact-card-github .icon-bg {
+    background: var(--contact-github-100);
+    box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.2);
+  }
+  
+  html.dark .contact-card-github .icon-bg {
+    background: var(--contact-github-800);
+    box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.3);
+  }
+  
+  .contact-card-github .icon {
+    color: var(--contact-github-600);
+  }
+  
+  html.dark .contact-card-github .icon {
+    color: var(--contact-github-400);
+  }
+  
+  .contact-card-github .btn {
+    background: var(--contact-github-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.3);
+  }
+  
+  .contact-card-github .btn:hover {
+    background: var(--contact-github-600);
+    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.4);
+  }
+  
+  /* CSDN私信卡片 - 绿色主题 */
+  .contact-card-csdn {
+    background: linear-gradient(135deg, 
+      var(--contact-csdn-50) 0%, 
+      var(--contact-csdn-100) 50%,
+      var(--contact-csdn-50) 100%);
+    border: 2px solid var(--contact-csdn-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-csdn {
+    background: linear-gradient(135deg, 
+      var(--contact-csdn-900) 0%, 
+      var(--contact-csdn-800) 50%,
+      var(--contact-csdn-900) 100%);
+    border-color: var(--contact-csdn-700);
+  }
+  
+  .contact-card-csdn::before {
+    background: linear-gradient(90deg, 
+      var(--contact-csdn-500) 0%, 
+      var(--contact-csdn-400) 50%, 
+      var(--contact-csdn-500) 100%);
+  }
+  
+  .contact-card-csdn .icon-bg {
+    background: var(--contact-csdn-100);
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
+  }
+  
+  html.dark .contact-card-csdn .icon-bg {
+    background: var(--contact-csdn-800);
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+  }
+  
+  .contact-card-csdn .icon {
+    color: var(--contact-csdn-600);
+  }
+  
+  html.dark .contact-card-csdn .icon {
+    color: var(--contact-csdn-400);
+  }
+  
+  .contact-card-csdn .btn {
+    background: var(--contact-csdn-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+  }
+  
+  .contact-card-csdn .btn:hover {
+    background: var(--contact-csdn-600);
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.4);
+  }
+  
+  /* 在岗工作人员卡片 - 橙色主题 */
+  .contact-card-staff {
+    background: linear-gradient(135deg, 
+      var(--contact-staff-50) 0%, 
+      var(--contact-staff-100) 50%,
+      var(--contact-staff-50) 100%);
+    border: 2px solid var(--contact-staff-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-staff {
+    background: linear-gradient(135deg, 
+      var(--contact-staff-900) 0%, 
+      var(--contact-staff-800) 50%,
+      var(--contact-staff-900) 100%);
+    border-color: var(--contact-staff-700);
+  }
+  
+  .contact-card-staff::before {
+    background: linear-gradient(90deg, 
+      var(--contact-staff-500) 0%, 
+      var(--contact-staff-400) 50%, 
+      var(--contact-staff-500) 100%);
+  }
+  
+  .contact-card-staff .icon-bg {
+    background: var(--contact-staff-100);
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+  }
+  
+  html.dark .contact-card-staff .icon-bg {
+    background: var(--contact-staff-800);
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  }
+  
+  .contact-card-staff .icon {
+    color: var(--contact-staff-600);
+  }
+  
+  html.dark .contact-card-staff .icon {
+    color: var(--contact-staff-400);
+  }
+  
+  .contact-card-staff .btn {
+    background: var(--contact-staff-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  }
+  
+  .contact-card-staff .btn:hover {
+    background: var(--contact-staff-600);
+    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
+  }
+  
+  /* 通用卡片样式增强 */
+  .contact-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+  }
+  
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+  
+  .contact-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .contact-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 确保文本对比度符合WCAG要求 */
+  .contact-card h3 {
+    color: var(--text-primary);
+  }
+  
+  .contact-card p {
+    color: var(--text-secondary);
+  }
+  
+  /* 确保联系表单电话号码输入框的区号显示 */
+  /* 确保联系表单电话号码输入框的区号显示在国旗区域 */
+  .contact-form .iti__selected-flag {
+    width: auto !important;
+    padding-right: 8px !important;
+  }
+  
+  .contact-form .iti__selected-dial-code {
+    display: inline-block !important;
+    margin-left: 6px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary, #111827) !important;
+    font-size: 14px !important;
+  }
+  
+  .dark .contact-form .iti__selected-dial-code {
+    color: var(--text-primary-dark, #f9fafb) !important;
+  }
+  
+  /* 确保输入框有足够的左边距为国旗和区号留出空间 */
+  .contact-form .iti__flag-container + input,
+  .contact-form .iti input {
+    padding-left: 90px !important;
+  }
+</style>
+
+<div class="contact-page min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto">
+    {# 回退按钮 #}
+    <div class="mb-6">
+      <button type="button"
+              onclick="history.back()" 
+              class="flex items-center gap-2 px-4 py-2 rounded-lg bg-theme-card border border-theme hover:bg-theme-hover transition-colors text-theme-secondary hover:text-theme-primary"
+              aria-label="返回上一页">
+        <i class="fas fa-arrow-left" aria-hidden="true"></i>
+        <span>返回上一页</span>
+      </button>
+    </div>
+    
+    {# 页面标题 #}
+    <header class="text-center mb-8" role="banner">
+      <h1 class="text-4xl font-bold text-theme-primary mb-2">
+        <i class="fas fa-headset text-primary-500 mr-2" aria-hidden="true"></i>
+        联系我们
+      </h1>
+      <p class="text-theme-secondary text-lg">您的反馈对我们非常重要，我们会认真对待每一条消息</p>
+    </header>
+
+    {# 联系卡片 - 每个卡片使用不同的主题色 #}
+    <section class="grid md:grid-cols-2 gap-6 mb-8" aria-label="联系方式" role="region">
+      {# 邮件联系 - 蓝色主题 #}
+      <article class="contact-card contact-card-email rounded-2xl p-6 shadow-lg" role="article" aria-labelledby="email-contact-title">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="icon-bg w-12 h-12 rounded-full flex items-center justify-center transition-all" aria-hidden="true">
+            <i class="icon fas fa-envelope text-xl"></i>
+          </div>
+          <div>
+            <h3 id="email-contact-title" class="font-semibold">邮件联系</h3>
+            <p class="text-sm">发送邮件给管理员</p>
+          </div>
+        </div>
+        <p class="text-sm mb-4">
+          您可以通过邮件向我们反馈问题、建议或意见。我们会在24小时内回复。
+        </p>
+        <button type="button"
+                onclick="showEmailForm()" 
+                class="btn w-full py-2 px-4 rounded-lg transition-all font-medium"
+                aria-label="打开邮件反馈表单">
+          <i class="fas fa-paper-plane mr-2" aria-hidden="true"></i>
+          填写反馈表单
+        </button>
+      </article>
+
+      {# GitHub Issues - 紫色主题 #}
+      <article class="contact-card contact-card-github rounded-2xl p-6 shadow-lg" role="article" aria-labelledby="github-contact-title">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="icon-bg w-12 h-12 rounded-full flex items-center justify-center transition-all" aria-hidden="true">
+            <i class="icon fab fa-github text-xl"></i>
+          </div>
+          <div>
+            <h3 id="github-contact-title" class="font-semibold">GitHub Issues</h3>
+            <p class="text-sm">在GitHub上提交问题</p>
+          </div>
+        </div>
+        <p class="text-sm mb-4">
+          如果您是开发者，可以在GitHub上提交Issue，我们会及时处理。
+        </p>
+        <a href="https://github.com/HeZaoCha/ParkingManagement/issues" 
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn block w-full py-2 px-4 rounded-lg transition-all text-center font-medium"
+           aria-label="在新窗口打开GitHub Issues">
+          <i class="fab fa-github mr-2" aria-hidden="true"></i>
+          打开GitHub Issues
+        </a>
+      </article>
+
+      {# CSDN私信 - 绿色主题 #}
+      <article class="contact-card contact-card-csdn rounded-2xl p-6 shadow-lg" role="article" aria-labelledby="csdn-contact-title">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="icon-bg w-12 h-12 rounded-full flex items-center justify-center transition-all" aria-hidden="true">
+            <i class="icon fas fa-comment text-xl"></i>
+          </div>
+          <div>
+            <h3 id="csdn-contact-title" class="font-semibold">CSDN私信</h3>
+            <p class="text-sm">通过CSDN联系作者</p>
+          </div>
+        </div>
+        <p class="text-sm mb-4">
+          您可以在CSDN上私信作者，我们会尽快回复您的问题。
+        </p>
+        <a href="https://blog.csdn.net/m0_68192925?type=blog" 
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn block w-full py-2 px-4 rounded-lg transition-all text-center font-medium"
+           aria-label="在新窗口打开CSDN博客">
+          <i class="fas fa-external-link-alt mr-2" aria-hidden="true"></i>
+          打开CSDN博客
+        </a>
+      </article>
+
+      {# 在岗工作人员 - 橙色主题 #}
+      <article class="contact-card contact-card-staff rounded-2xl p-6 shadow-lg" role="article" aria-labelledby="staff-contact-title">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="icon-bg w-12 h-12 rounded-full flex items-center justify-center transition-all" aria-hidden="true">
+            <i class="icon fas fa-user-tie text-xl"></i>
+          </div>
+          <div>
+            <h3 id="staff-contact-title" class="font-semibold">在岗工作人员</h3>
+            <p class="text-sm">联系当前在岗的工作人员</p>
+          </div>
+        </div>
+        <p class="text-sm mb-4">
+          查询当前在岗的工作人员联系方式，获取实时帮助。
+        </p>
+        <button type="button"
+                onclick="showOnDutyStaff()" 
+                class="btn w-full py-2 px-4 rounded-lg transition-all font-medium"
+                aria-label="查看当前在岗工作人员">
+          <i class="fas fa-users mr-2" aria-hidden="true"></i>
+          查看在岗人员
+        </button>
+      </article>
+    </section>
+
+    {# 反馈表单模态框 #}
+    <div id="email-form-modal" 
+         class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="email-form-modal-title"
+         aria-describedby="email-form-modal-description">
+      <div class="bg-theme-card rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 id="email-form-modal-title" class="text-2xl font-bold text-theme-primary">
+            <i class="fas fa-envelope text-primary-500 mr-2" aria-hidden="true"></i>
+            反馈表单
+          </h2>
+          <button type="button"
+                  onclick="hideEmailForm()" 
+                  class="text-theme-muted hover:text-theme-primary"
+                  aria-label="关闭反馈表单对话框">
+            <i class="fas fa-times text-xl" aria-hidden="true"></i>
+          </button>
+        </div>
+        <p id="email-form-modal-description" class="sr-only">填写反馈表单，向我们发送您的意见、建议或问题</p>
+
+        <form id="contact-form" onsubmit="submitContactForm(event)" novalidate>
+          <div class="space-y-4">
+            {# 消息类型 #}
+            <div>
+              <label for="contact-message-type" class="block text-sm font-medium text-theme-secondary mb-2">消息类型</label>
+              <select id="contact-message-type"
+                      name="message_type" 
+                      class="input-theme w-full rounded-lg px-4 py-2" 
+                      required
+                      aria-describedby="message-type-hint">
+                <option value="feedback">意见反馈</option>
+                <option value="bug">问题报告</option>
+                <option value="suggestion">功能建议</option>
+                <option value="other">其他</option>
+              </select>
+              <p id="message-type-hint" class="text-xs text-theme-muted mt-1 sr-only">选择消息类型</p>
+            </div>
+
+            {# 姓名 #}
+            <div>
+              <label for="contact-name" class="block text-sm font-medium text-theme-secondary mb-2">
+                姓名 <span class="text-red-500" aria-label="必填">*</span>
+              </label>
+              <input type="text" 
+                     id="contact-name"
+                     name="name" 
+                     class="input-theme w-full rounded-lg px-4 py-2" 
+                     required 
+                     placeholder="请输入您的姓名"
+                     aria-describedby="contact-name-hint"
+                     aria-required="true"
+                     autocomplete="name">
+              <p id="contact-name-hint" class="text-xs text-theme-muted mt-1 sr-only">请输入您的姓名</p>
+              <div id="contact-name-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+            </div>
+
+            {# 邮箱 #}
+            <div>
+              <label for="contact-email" class="block text-sm font-medium text-theme-secondary mb-2">
+                邮箱 <span class="text-red-500" aria-label="必填">*</span>
+              </label>
+              <input type="email" 
+                     id="contact-email"
+                     name="email" 
+                     class="input-theme w-full rounded-lg px-4 py-2" 
+                     required 
+                     placeholder="your@email.com"
+                     aria-describedby="contact-email-hint"
+                     aria-required="true"
+                     autocomplete="email">
+              <p id="contact-email-hint" class="text-xs text-theme-muted mt-1 sr-only">请输入您的邮箱地址</p>
+              <div id="contact-email-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+            </div>
+
+            {# 手机号 #}
+            <div>
+              <label class="block text-sm font-medium text-theme-secondary mb-2" for="contact-phone-input">
+                手机号（选填）
+              </label>
+              <div id="contact-phone-hint" class="text-xs text-theme-muted mb-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                请选择国家/地区，区号将显示在国旗区域
+              </div>
+              <div class="relative">
+                <input type="tel" 
+                       name="phone" 
+                       id="contact-phone-input"
+                       autocomplete="tel"
+                       class="input-theme w-full rounded-lg px-4 py-2 pr-10"
+                       style="padding-left: 80px !important;"
+                       aria-describedby="contact-phone-hint contact-phone-error">
+                <div id="contact-phone-validation-icon" class="absolute right-3 top-1/2 -translate-y-1/2 hidden pointer-events-none z-10">
+                  <i class="fas fa-check-circle text-green-500" id="contact-phone-valid-icon"></i>
+                  <i class="fas fa-times-circle text-red-500" id="contact-phone-invalid-icon"></i>
+                </div>
+              </div>
+              <div id="contact-phone-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+            </div>
+
+            {# 主题 #}
+            <div>
+              <label for="contact-subject" class="block text-sm font-medium text-theme-secondary mb-2">
+                主题 <span class="text-red-500" aria-label="必填">*</span>
+              </label>
+              <input type="text" 
+                     id="contact-subject"
+                     name="subject" 
+                     class="input-theme w-full rounded-lg px-4 py-2" 
+                     required 
+                     placeholder="请简要描述您的问题或建议"
+                     aria-describedby="contact-subject-hint"
+                     aria-required="true">
+              <p id="contact-subject-hint" class="text-xs text-theme-muted mt-1 sr-only">请输入主题，简要描述您的问题或建议</p>
+              <div id="contact-subject-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+            </div>
+
+            {# 内容 #}
+            <div>
+              <label for="contact-content" class="block text-sm font-medium text-theme-secondary mb-2">
+                详细内容 <span class="text-red-500" aria-label="必填">*</span>
+              </label>
+              <textarea id="contact-content"
+                        name="content" 
+                        rows="6" 
+                        class="input-theme w-full rounded-lg px-4 py-2" 
+                        required 
+                        placeholder="请详细描述您的问题、建议或意见..."
+                        aria-describedby="contact-content-hint"
+                        aria-required="true"></textarea>
+              <p id="contact-content-hint" class="text-xs text-theme-muted mt-1 sr-only">请详细描述您的问题、建议或意见</p>
+              <div id="contact-content-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+            </div>
+
+            {# 提交按钮 #}
+            <div class="flex gap-3 pt-4" role="group" aria-label="表单操作">
+              <button type="submit" 
+                      class="flex-1 py-3 px-6 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                      aria-label="提交反馈表单">
+                <i class="fas fa-paper-plane mr-2" aria-hidden="true"></i>
+                提交反馈
+              </button>
+              <button type="button" 
+                      onclick="hideEmailForm()" 
+                      class="px-6 py-3 bg-theme-secondary text-theme-primary rounded-lg hover:bg-theme-hover transition-colors"
+                      aria-label="取消并关闭反馈表单">
+                取消
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 初始化国际手机号输入组件
+let contactPhoneInputInstance = null;
+
+// 初始化函数（在DOMContentLoaded中调用）
+function initContactPhoneInput() {
+  const contactPhoneInput = document.getElementById('contact-phone-input');
+  
+  if (contactPhoneInput) {
+    // 初始化 intl-tel-input 插件
+    contactPhoneInputInstance = window.intlTelInput(contactPhoneInput, {
+      initialCountry: 'cn', // 默认选择中国
+      preferredCountries: ['cn', 'us', 'hk', 'tw', 'jp', 'kr', 'sg'], // 常用国家优先显示
+      nationalMode: true, // 使用国家格式（输入框内不显示区号）
+      formatAsYouType: true, // 输入时自动格式化
+      autoPlaceholder: 'polite', // 自动设置占位符
+      placeholderNumberType: 'MOBILE', // 使用手机号作为占位符
+      countrySearch: true, // 启用国家搜索
+      showSelectedDialCode: true, // 在国旗区域显示区号
+      separateDialCode: true, // 将区号单独显示在国旗区域
+      strictMode: true, // 严格模式：只允许数字，并根据国家自动限制最大长度
+      loadUtils: () => import('https://cdn.jsdelivr.net/npm/intl-tel-input@25.13.1/build/js/utils.js'),
+      // 自定义样式以匹配主题
+      containerClass: 'w-full',
+      // 支持IP自动检测（可选）
+      geoIpLookup: function(callback) {
+        // 可选：使用IP检测用户国家，这里默认使用中国
+        callback('cn');
+      }
+    });
+    
+    // 监听国家变化事件
+    contactPhoneInput.addEventListener('countrychange', function() {
+      // 当使用 separateDialCode 时，区号会自动显示在国旗区域，输入框内只需要输入数字
+      updateContactPhoneValidation(contactPhoneInput);
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // 初始化联系表单手机号输入组件
+  initContactPhoneInput();
+
+// 验证手机号格式（使用 intl-tel-input 的验证方法）
+function validatePhoneNumber() {
+  const contactPhoneInput = document.getElementById('contact-phone-input');
+  if (!contactPhoneInput || !contactPhoneInputInstance) {
+    return { valid: false, message: '手机号输入框未初始化' };
+  }
+  
+  const value = contactPhoneInput.value.trim();
+  
+  if (!value) {
+    return { valid: false, message: '请输入手机号' };
+  }
+  
+  // 使用 intl-tel-input 的验证方法
+  if (contactPhoneInputInstance.isValidNumber()) {
+    // 获取E.164格式的完整号码
+    const fullNumber = contactPhoneInputInstance.getNumber();
+    return { valid: true, cleaned: fullNumber, isInternational: true };
+  } else {
+    // 获取验证错误信息
+    const errorCode = contactPhoneInputInstance.getValidationError();
+    const errorMessages = {
+      0: '手机号格式不正确',
+      1: '国家代码无效',
+      2: '号码过短',
+      3: '号码过长',
+      4: '号码格式不正确'
+    };
+    return { valid: false, message: errorMessages[errorCode] || '请输入有效的手机号' };
+  }
+}
+
+function updateContactPhoneValidation(phoneInput) {
+  if (!contactPhoneInputInstance) return;
+  
+  const errorDiv = document.getElementById('contact-phone-error');
+  const validationIcon = document.getElementById('contact-phone-validation-icon');
+  const validIcon = document.getElementById('contact-phone-valid-icon');
+  const invalidIcon = document.getElementById('contact-phone-invalid-icon');
+  
+  const value = phoneInput.value.trim();
+  
+  if (!value) {
+    errorDiv.classList.add('hidden');
+    validationIcon.classList.add('hidden');
+    phoneInput.setAttribute('aria-invalid', 'false');
+    phoneInput.classList.remove('border-red-500', 'border-green-500');
+    return;
+  }
+  
+  const validation = validatePhoneNumber();
+  
+  if (validation.valid) {
+    errorDiv.classList.add('hidden');
+    validationIcon.classList.remove('hidden');
+    validIcon.classList.remove('hidden');
+    invalidIcon.classList.add('hidden');
+    phoneInput.setAttribute('aria-invalid', 'false');
+    phoneInput.classList.remove('border-red-500');
+    phoneInput.classList.add('border-green-500');
+  } else {
+    errorDiv.textContent = validation.message;
+    errorDiv.classList.remove('hidden');
+    validationIcon.classList.remove('hidden');
+    validIcon.classList.add('hidden');
+    invalidIcon.classList.remove('hidden');
+    phoneInput.setAttribute('aria-invalid', 'true');
+    phoneInput.classList.remove('border-green-500');
+    phoneInput.classList.add('border-red-500');
+  }
+}
+
+// 初始化联系表单手机号验证
+document.addEventListener('DOMContentLoaded', function() {
+  const contactPhoneInput = document.getElementById('contact-phone-input');
+  
+  if (contactPhoneInput && contactPhoneInputInstance) {
+    // 输入时实时验证
+    contactPhoneInput.addEventListener('input', function() {
+      // 延迟验证，避免频繁验证影响输入体验
+      clearTimeout(contactPhoneInput.validationTimeout);
+      contactPhoneInput.validationTimeout = setTimeout(() => {
+        updateContactPhoneValidation(contactPhoneInput);
+      }, 300);
+    });
+    
+    // 失焦时验证
+    contactPhoneInput.addEventListener('blur', function() {
+      updateContactPhoneValidation(contactPhoneInput);
+    });
+  }
+});
+
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = '/';
+  }
+}
+
+let emailFormModalPreviousActiveElement = null;
+
+function showEmailForm() {
+  // 保存当前焦点
+  emailFormModalPreviousActiveElement = document.activeElement;
+  
+  const modal = document.getElementById('email-form-modal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+  document.body.style.overflow = 'hidden';
+  
+  // 聚焦到第一个输入框
+  setTimeout(() => {
+    const firstInput = modal.querySelector('select, input, textarea');
+    if (firstInput) firstInput.focus();
+  }, 100);
+}
+
+function hideEmailForm() {
+  const modal = document.getElementById('email-form-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+  document.body.style.overflow = '';
+  
+  // 恢复焦点
+  if (emailFormModalPreviousActiveElement && emailFormModalPreviousActiveElement.focus) {
+    emailFormModalPreviousActiveElement.focus();
+  }
+  emailFormModalPreviousActiveElement = null;
+}
+
+// ESC键关闭反馈表单模态框
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('email-form-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+      hideEmailForm();
+    }
+  }
+});
+
+// 点击背景关闭反馈表单模态框
+document.getElementById('email-form-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'email-form-modal') {
+    hideEmailForm();
+  }
+});
+
+function submitContactForm(event) {
+  event.preventDefault();
+  const form = event.target;
+  
+  // ========== 前端验证（提交前） ==========
+  let hasError = false;
+  
+  // 1. 验证姓名（必填）
+  const nameInput = document.getElementById('contact-name');
+  const name = nameInput.value.trim();
+  if (!name) {
+    showContactFieldError('name', '请输入您的姓名');
+    nameInput.focus();
+    return;
+  }
+  if (name.length > 100) {
+    showContactFieldError('name', '姓名长度不能超过100个字符');
+    nameInput.focus();
+    return;
+  }
+  clearContactFieldError('name');
+  
+  // 2. 验证邮箱（必填）
+  const emailInput = document.getElementById('contact-email');
+  const email = emailInput.value.trim();
+  if (!email) {
+    showContactFieldError('email', '请输入邮箱地址');
+    emailInput.focus();
+    return;
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showContactFieldError('email', '邮箱格式不正确');
+    emailInput.focus();
+    return;
+  }
+  clearContactFieldError('email');
+  
+  // 3. 验证手机号（如果填写了）
+  const phoneInput = document.getElementById('contact-phone-input');
+  if (phoneInput && phoneInput.value && contactPhoneInputInstance) {
+    const validation = validatePhoneNumber();
+    if (!validation.valid) {
+      showContactFieldError('phone', validation.message);
+      phoneInput.focus();
+      updateContactPhoneValidation(phoneInput);
+      return;
+    }
+    // 使用 intl-tel-input 获取E.164格式的完整号码
+    const fullNumber = contactPhoneInputInstance.getNumber();
+    if (fullNumber) {
+      phoneInput.value = fullNumber;
+    }
+    clearContactFieldError('phone');
+  }
+  
+  // 4. 验证主题（必填）
+  const subjectInput = document.getElementById('contact-subject');
+  const subject = subjectInput.value.trim();
+  if (!subject) {
+    showContactFieldError('subject', '请输入主题');
+    subjectInput.focus();
+    return;
+  }
+  if (subject.length > 200) {
+    showContactFieldError('subject', '主题长度不能超过200个字符');
+    subjectInput.focus();
+    return;
+  }
+  clearContactFieldError('subject');
+  
+  // 5. 验证内容（必填）
+  const contentInput = document.getElementById('contact-content');
+  const content = contentInput.value.trim();
+  if (!content) {
+    showContactFieldError('content', '请输入详细内容');
+    contentInput.focus();
+    return;
+  }
+  if (content.length < 10) {
+    showContactFieldError('content', '详细内容至少需要10个字符');
+    contentInput.focus();
+    return;
+  }
+  clearContactFieldError('content');
+  
+  // 所有验证通过，准备提交
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData);
+  
+  // 清理手机号格式（使用E.164格式）
+  if (data.phone && contactPhoneInputInstance) {
+    // 使用 intl-tel-input 获取标准E.164格式
+    const fullNumber = contactPhoneInputInstance.getNumber();
+    if (fullNumber) {
+      data.phone = fullNumber; // E.164格式，如 +8613800138000
+    }
+  }
+  
+// 显示联系表单字段错误
+function showContactFieldError(fieldName, message) {
+  const errorElement = document.getElementById(`contact-${fieldName}-error`);
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.classList.remove('hidden');
+    errorElement.setAttribute('aria-live', 'polite');
+  }
+  
+  // 更新输入框状态
+  const inputElement = document.getElementById(`contact-${fieldName}`);
+  if (inputElement) {
+    inputElement.classList.add('input-error');
+    inputElement.setAttribute('aria-invalid', 'true');
+  }
+}
+
+// 清除联系表单字段错误
+function clearContactFieldError(fieldName) {
+  const errorElement = document.getElementById(`contact-${fieldName}-error`);
+  if (errorElement) {
+    errorElement.classList.add('hidden');
+    errorElement.textContent = '';
+  }
+  
+  // 更新输入框状态
+  const inputElement = document.getElementById(`contact-${fieldName}`);
+  if (inputElement) {
+    inputElement.classList.remove('input-error');
+    inputElement.setAttribute('aria-invalid', 'false');
+  }
+}
+
+  fetch('/parking/contact/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken')
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      alert('感谢您的反馈！我们会尽快处理。');
+      form.reset();
+      hideEmailForm();
+    } else {
+      alert('提交失败：' + result.message);
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('提交失败，请稍后重试');
+  });
+}
+
+async function showOnDutyStaff() {
+  try {
+    const response = await fetch('/parking/api/on-duty-staff/');
+    const result = await response.json();
+    
+    if (result.success && result.data.staff.length > 0) {
+      const staff = result.data.staff;
+      let staffInfo = `当前在岗工作人员（${result.data.parking_lot}）：\n\n`;
+      staff.forEach((s, index) => {
+        staffInfo += `${index + 1}. ${s.name} (${s.username})\n`;
+        if (s.phone) staffInfo += `   电话：${s.phone}\n`;
+        if (s.email) staffInfo += `   邮箱：${s.email}\n`;
+        staffInfo += `   工作时间：${s.start_time} - ${s.end_time}\n\n`;
+      });
+      alert(staffInfo);
+    } else {
+      alert('当前暂无在岗工作人员');
+    }
+  } catch (error) {
+    console.error('查询在岗工作人员失败:', error);
+    alert('查询失败，请稍后重试');
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+</script>
+{% endblock %}
+

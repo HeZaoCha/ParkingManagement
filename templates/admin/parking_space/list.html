@@ -1,0 +1,826 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}车位管理{% endblock %}
+{% block page_title %}车位管理{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">车位管理</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 操作栏 -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between" role="toolbar" aria-label="车位管理操作栏">
+        <div class="flex flex-wrap items-center gap-4">
+            <!-- 搜索 -->
+            <form method="get" class="relative" role="search" aria-label="搜索车位">
+                <label for="space-search" class="sr-only">搜索车位</label>
+                <input type="text" 
+                       id="space-search"
+                       name="search" 
+                       value="{{ search }}" 
+                       placeholder="搜索车位号..." 
+                       class="input-focus-enhanced w-full sm:w-48 pl-10 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-400 transition-all"
+                       aria-label="搜索车位号">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" aria-hidden="true"></i>
+                {% if lot_id %}<input type="hidden" name="lot" value="{{ lot_id }}">{% endif %}
+                {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+            </form>
+            
+            <!-- 停车场筛选 -->
+            <label for="lot-filter" class="sr-only">停车场筛选</label>
+            <select id="lot-filter"
+                    onchange="location.href='?search={{ search }}&lot=' + this.value + '&status={{ status }}'" 
+                    class="input-focus-enhanced px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 transition-all cursor-pointer"
+                    aria-label="筛选停车场">
+                <option value="">全部停车场</option>
+                {% for lot in lots %}
+                <option value="{{ lot.pk }}" {% if lot_id == lot.pk|stringformat:"s" %}selected{% endif %}>{{ lot.name }}</option>
+                {% endfor %}
+            </select>
+            
+            <!-- 状态筛选 -->
+            <label for="status-filter-space" class="sr-only">状态筛选</label>
+            <select id="status-filter-space"
+                    onchange="location.href='?search={{ search }}&lot={{ lot_id }}&status=' + this.value" 
+                    class="input-focus-enhanced px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-200 transition-all cursor-pointer"
+                    aria-label="筛选车位状态">
+                <option value="">全部状态</option>
+                <option value="available" {% if status == 'available' %}selected{% endif %}>空闲</option>
+                <option value="occupied" {% if status == 'occupied' %}selected{% endif %}>占用</option>
+                <option value="reserved" {% if status == 'reserved' %}selected{% endif %}>预约</option>
+            </select>
+        </div>
+        
+        <div class="flex items-center gap-2" role="group" aria-label="操作按钮">
+            <button type="button"
+                    onclick="showBatchCreateModal()" 
+                    class="btn-interactive ripple-effect inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium group"
+                    aria-label="批量创建车位">
+                <i class="fas fa-layer-group group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                <span>批量创建</span>
+            </button>
+            <a href="{% url 'parking:admin_parking_space_add' %}" 
+               class="btn-interactive ripple-effect inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium group"
+               aria-label="新增车位">
+                <i class="fas fa-plus group-hover:rotate-90 transition-transform duration-300" aria-hidden="true"></i>
+                <span>新增车位</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- 统计 -->
+    <div class="text-sm text-slate-400" role="status" aria-live="polite">
+        共 <span class="text-white font-medium">{{ total_count }}</span> 个车位
+    </div>
+    
+    <!-- 列表 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden" role="region" aria-labelledby="space-list-title">
+        <h2 id="space-list-title" class="sr-only">车位列表</h2>
+        <div class="overflow-x-auto table-responsive">
+            <table class="w-full min-w-[700px]" role="table" aria-label="车位列表">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50 sticky top-0 z-10">
+                        <th scope="col" class="px-5 py-4 font-medium">车位号</th>
+                        <th scope="col" class="px-5 py-4 font-medium hidden sm:table-cell">停车场</th>
+                        <th scope="col" class="px-5 py-4 font-medium hidden md:table-cell">楼层</th>
+                        <th scope="col" class="px-5 py-4 font-medium hidden md:table-cell">区域</th>
+                        <th scope="col" class="px-5 py-4 font-medium hidden lg:table-cell">类型</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-center">状态</th>
+                        <th scope="col" class="px-5 py-4 font-medium text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for space in spaces %}
+                    <tr class="table-row-interactive group">
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-medium text-white group-hover:text-primary-400 transition-colors">{{ space.space_number }}</span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300 hidden sm:table-cell group-hover:text-slate-200 transition-colors">{{ space.parking_lot.name }}</td>
+                        <td class="px-5 py-4 text-slate-400 hidden md:table-cell">
+                            {% if space.floor %}
+                            <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded group-hover:bg-blue-500/30 transition-colors">{{ space.floor }}</span>
+                            {% else %}
+                            <span class="text-slate-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 text-slate-400 hidden md:table-cell">
+                            {% if space.area %}
+                            <span class="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded group-hover:bg-purple-500/30 transition-colors">{{ space.area }}</span>
+                            {% else %}
+                            <span class="text-slate-500">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4 hidden lg:table-cell">
+                            <span class="px-2 py-1 bg-slate-700/50 text-slate-300 text-xs rounded group-hover:bg-slate-600/50 transition-colors">
+                                {{ space.get_space_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-4 text-center">
+                            {% if space.is_occupied %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full" aria-label="状态：占用中">
+                                <span class="w-1.5 h-1.5 bg-red-400 rounded-full" aria-hidden="true"></span>
+                                占用中
+                            </span>
+                            {% elif space.is_reserved %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full" aria-label="状态：已预约">
+                                已预约
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full" aria-label="状态：空闲">
+                                空闲
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex items-center justify-end gap-2" role="group" aria-label="操作按钮">
+                                <a href="{% url 'parking:admin_parking_space_edit' space.pk %}" 
+                                   class="btn-interactive p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700/50 rounded-lg transition-all group/btn"
+                                   title="编辑"
+                                   aria-label="编辑车位 {{ space.space_number }}">
+                                    <i class="fas fa-edit group-hover/btn:scale-110 transition-transform" aria-hidden="true"></i>
+                                </a>
+                                <button type="button"
+                                        onclick="deleteItem('{% url 'parking:admin_parking_space_delete' space.pk %}', '{{ space.space_number }}')" 
+                                        class="btn-interactive p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 rounded-lg transition-all group/btn {% if space.is_occupied %}opacity-50 cursor-not-allowed{% endif %}"
+                                        title="删除"
+                                        aria-label="删除车位 {{ space.space_number }}"
+                                        {% if space.is_occupied %}disabled aria-disabled="true"{% endif %}>
+                                    <i class="fas fa-trash group-hover/btn:scale-110 transition-transform" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-16 text-center" role="status" aria-live="polite">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center" aria-hidden="true">
+                                    <i class="fas fa-square-parking text-2xl text-slate-500"></i>
+                                </div>
+                                <p class="text-slate-400">暂无车位数据</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 分页 -->
+        {% if spaces.has_other_pages %}
+        <nav class="px-5 py-4 border-t border-slate-700/50 flex items-center justify-between" role="navigation" aria-label="分页导航">
+            <p class="text-sm text-slate-400" aria-live="polite">
+                显示 {{ spaces.start_index }}-{{ spaces.end_index }} 条，共 {{ spaces.paginator.count }} 条
+            </p>
+            <div class="flex items-center gap-1" role="group" aria-label="分页控件">
+                {% if spaces.has_previous %}
+                <a href="?page={{ spaces.previous_page_number }}&search={{ search }}&lot={{ lot_id }}&status={{ status }}" 
+                   class="btn-interactive px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-all group"
+                   aria-label="上一页">
+                    <i class="fas fa-chevron-left group-hover:-translate-x-0.5 transition-transform" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+                
+                {% for num in spaces.paginator.page_range %}
+                    {% if num == spaces.number %}
+                    <span class="px-3 py-1.5 bg-primary-600 text-white rounded font-medium" aria-current="page" aria-label="当前页：第 {{ num }} 页">{{ num }}</span>
+                    {% elif num > spaces.number|add:'-3' and num < spaces.number|add:'3' %}
+                    <a href="?page={{ num }}&search={{ search }}&lot={{ lot_id }}&status={{ status }}" 
+                       class="btn-interactive px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-all"
+                       aria-label="第 {{ num }} 页">
+                        {{ num }}
+                    </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if spaces.has_next %}
+                <a href="?page={{ spaces.next_page_number }}&search={{ search }}&lot={{ lot_id }}&status={{ status }}" 
+                   class="btn-interactive px-3 py-1.5 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-all group"
+                   aria-label="下一页">
+                    <i class="fas fa-chevron-right group-hover:translate-x-0.5 transition-transform" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 批量创建模态框 -->
+<div id="batch-modal" 
+     class="fixed inset-0 bg-slate-900/80 modal-backdrop flex items-center justify-center z-50 hidden"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="batch-modal-title"
+     aria-describedby="batch-modal-description">
+    <div class="modal-content bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center justify-between">
+                <h3 id="batch-modal-title" class="text-lg font-semibold text-white flex items-center gap-2">
+                    <i class="fas fa-layer-group text-primary-400" aria-hidden="true"></i>
+                    批量创建车位
+                </h3>
+                <button type="button"
+                        onclick="closeBatchModal()" 
+                        class="text-slate-400 hover:text-white"
+                        aria-label="关闭批量创建对话框">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <p id="batch-modal-description" class="sr-only">批量创建车位的对话框</p>
+        </div>
+        
+        <!-- 创建方式选择 -->
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex gap-4 mb-4" role="tablist" aria-label="创建方式">
+                <button type="button"
+                        onclick="switchCreateMode('simple')" 
+                        id="mode-simple-btn"
+                        class="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors"
+                        role="tab"
+                        aria-selected="true"
+                        aria-controls="create-mode-simple"
+                        aria-label="简单创建模式">
+                    <i class="fas fa-list-ol mr-2" aria-hidden="true"></i>简单创建
+                </button>
+                <button type="button"
+                        onclick="switchCreateMode('range')" 
+                        id="mode-range-btn"
+                        class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="create-mode-range"
+                        aria-label="范围创建模式">
+                    <i class="fas fa-arrows-alt-h mr-2" aria-hidden="true"></i>范围创建
+                </button>
+                <button type="button"
+                        onclick="switchCreateMode('file')" 
+                        id="mode-file-btn"
+                        class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                        role="tab"
+                        aria-selected="false"
+                        aria-controls="create-mode-file"
+                        aria-label="文件上传模式">
+                    <i class="fas fa-file-upload mr-2" aria-hidden="true"></i>文件上传
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <!-- 简单创建模式 -->
+            <div id="create-mode-simple" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">选择停车场</label>
+                    <select id="batch-lot" class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                        {% for lot in lots %}
+                        <option value="{{ lot.pk }}">{{ lot.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">车位前缀</label>
+                        <input type="text" id="batch-prefix" value="A" 
+                               class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">起始编号</label>
+                        <input type="number" id="batch-start" value="1" min="1"
+                               class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">创建数量 (最多100)</label>
+                    <input type="number" id="batch-count" value="10" min="1" max="100"
+                           class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                </div>
+                <p class="text-sm text-slate-400">
+                    预览: <span id="batch-preview" class="text-white font-mono">A001 ~ A010</span>
+                </p>
+            </div>
+            
+            <!-- 范围创建模式 -->
+            <div id="create-mode-range" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">选择停车场</label>
+                    <select id="range-lot" class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                        {% for lot in lots %}
+                        <option value="{{ lot.pk }}">{{ lot.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">起始车位号</label>
+                        <input type="text" id="range-start" placeholder="如: A001" 
+                               class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">结束车位号</label>
+                        <input type="text" id="range-end" placeholder="如: A100" 
+                               class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">车位类型</label>
+                    <select id="range-space-type" class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                        <option value="standard">标准车位</option>
+                        <option value="vip">VIP车位</option>
+                        <option value="large">大型车位</option>
+                        <option value="disabled">残疾人车位</option>
+                    </select>
+                </div>
+                <p class="text-sm text-slate-400">
+                    预览: <span id="range-preview" class="text-white font-mono">-</span>
+                </p>
+            </div>
+            
+            <!-- 文件上传模式 -->
+            <div id="create-mode-file" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">选择停车场</label>
+                    <select id="file-lot" class="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500">
+                        {% for lot in lots %}
+                        <option value="{{ lot.pk }}">{{ lot.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">上传文件</label>
+                    <div class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+                        <input type="file" id="file-input" accept=".txt,.md,.xlsx,.xls" class="hidden" onchange="handleFileSelect(event)">
+                        <label for="file-input" class="cursor-pointer">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-slate-400 mb-3"></i>
+                            <p class="text-slate-300 mb-1">点击选择文件或拖拽文件到此处</p>
+                            <p class="text-xs text-slate-500">支持 .txt, .md, .xlsx, .xls 格式</p>
+                        </label>
+                        <div id="file-info" class="mt-3 hidden">
+                            <p class="text-sm text-slate-300" id="file-name"></p>
+                            <p class="text-xs text-slate-500" id="file-size"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'parking:admin_space_template' 0 %}" id="template-link" 
+                       class="text-sm text-primary-400 hover:text-primary-300 transition-colors">
+                        <i class="fas fa-download mr-1"></i>下载Excel模板
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex border-t border-slate-700">
+            <button onclick="closeBatchModal()" 
+                    class="flex-1 px-6 py-3 text-slate-300 hover:bg-slate-700/50 transition-colors">
+                取消
+            </button>
+            <button onclick="submitBatchCreate()" id="submit-batch-btn"
+                    class="flex-1 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 transition-colors">
+                创建
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentCreateMode = 'simple';
+let selectedFile = null;
+
+let batchModalPreviousActiveElement = null;
+
+function showBatchCreateModal() {
+    // 保存当前焦点
+    batchModalPreviousActiveElement = document.activeElement;
+    
+    const modal = document.getElementById('batch-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    switchCreateMode('simple');
+    updatePreview();
+    
+    // 聚焦到第一个输入框
+    setTimeout(() => {
+        const firstInput = modal.querySelector('select, input');
+        if (firstInput) firstInput.focus();
+    }, 100);
+}
+
+function closeBatchModal() {
+    const modal = document.getElementById('batch-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    currentCreateMode = 'simple';
+    selectedFile = null;
+    
+    // 恢复焦点
+    if (batchModalPreviousActiveElement && batchModalPreviousActiveElement.focus) {
+        batchModalPreviousActiveElement.focus();
+    }
+    batchModalPreviousActiveElement = null;
+}
+
+// ESC键关闭批量创建模态框
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('batch-modal');
+        if (modal && !modal.classList.contains('hidden')) {
+            closeBatchModal();
+        }
+    }
+});
+
+// 点击背景关闭批量创建模态框
+document.getElementById('batch-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'batch-modal') {
+        closeBatchModal();
+    }
+});
+
+function switchCreateMode(mode) {
+    currentCreateMode = mode;
+    
+    // 更新按钮状态
+    document.getElementById('mode-simple-btn').className = 
+        mode === 'simple' ? 'flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+        'flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+    document.getElementById('mode-range-btn').className = 
+        mode === 'range' ? 'flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+        'flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+    document.getElementById('mode-file-btn').className = 
+        mode === 'file' ? 'flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg transition-colors' :
+        'flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors';
+    
+    // 显示/隐藏对应模式
+    document.getElementById('create-mode-simple').classList.toggle('hidden', mode !== 'simple');
+    document.getElementById('create-mode-range').classList.toggle('hidden', mode !== 'range');
+    document.getElementById('create-mode-file').classList.toggle('hidden', mode !== 'file');
+    
+    // 更新模板下载链接
+    if (mode === 'file') {
+        const lotId = document.getElementById('file-lot').value;
+        document.getElementById('template-link').href = `/parking/manage/lots/${lotId}/spaces/template/`;
+    }
+}
+
+function updatePreview() {
+    const prefix = document.getElementById('batch-prefix').value || 'A';
+    const start = parseInt(document.getElementById('batch-start').value) || 1;
+    const count = parseInt(document.getElementById('batch-count').value) || 10;
+    const end = start + count - 1;
+    
+    const startNum = String(start).padStart(3, '0');
+    const endNum = String(end).padStart(3, '0');
+    
+    document.getElementById('batch-preview').textContent = `${prefix}${startNum} ~ ${prefix}${endNum}`;
+}
+
+function updateRangePreview() {
+    const start = document.getElementById('range-start').value.trim();
+    const end = document.getElementById('range-end').value.trim();
+    
+    if (start && end) {
+        // 简单验证格式
+        if (/^[A-Z]+\d+$/.test(start.toUpperCase()) && /^[A-Z]+\d+$/.test(end.toUpperCase())) {
+            document.getElementById('range-preview').textContent = `${start.toUpperCase()} ~ ${end.toUpperCase()}`;
+        } else {
+            document.getElementById('range-preview').textContent = '格式错误（应为：A001）';
+        }
+    } else {
+        document.getElementById('range-preview').textContent = '-';
+    }
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        selectedFile = file;
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        
+        fileName.textContent = file.name;
+        fileSize.textContent = `大小: ${(file.size / 1024).toFixed(2)} KB`;
+        fileInfo.classList.remove('hidden');
+    }
+}
+
+// 事件监听
+document.getElementById('batch-prefix')?.addEventListener('input', updatePreview);
+document.getElementById('batch-start')?.addEventListener('input', updatePreview);
+document.getElementById('batch-count')?.addEventListener('input', updatePreview);
+document.getElementById('range-start')?.addEventListener('input', updateRangePreview);
+document.getElementById('range-end')?.addEventListener('input', updateRangePreview);
+document.getElementById('file-lot')?.addEventListener('change', function() {
+    if (currentCreateMode === 'file') {
+        document.getElementById('template-link').href = `/parking/manage/lots/${this.value}/spaces/template/`;
+    }
+});
+
+// 拖拽上传
+const fileDropZone = document.querySelector('#create-mode-file .border-dashed');
+if (fileDropZone) {
+    fileDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileDropZone.classList.add('border-primary-500');
+    });
+    
+    fileDropZone.addEventListener('dragleave', () => {
+        fileDropZone.classList.remove('border-primary-500');
+    });
+    
+    fileDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileDropZone.classList.remove('border-primary-500');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            document.getElementById('file-input').files = e.dataTransfer.files;
+            handleFileSelect({ target: { files: e.dataTransfer.files } });
+        }
+    });
+}
+
+async function submitBatchCreate() {
+    const submitBtn = document.getElementById('submit-batch-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>创建中...';
+    
+    try {
+        if (currentCreateMode === 'simple') {
+            // 简单创建
+            const data = {
+                lot_id: document.getElementById('batch-lot').value,
+                prefix: document.getElementById('batch-prefix').value,
+                start: parseInt(document.getElementById('batch-start').value),
+                count: parseInt(document.getElementById('batch-count').value),
+                space_type: 'standard'
+            };
+            
+            const result = await apiRequest('{% url "parking:admin_parking_space_batch_create" %}', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            if (result.success) {
+                // 显示详细结果
+                showBatchResult({
+                    count: result.count || 0,
+                    skipped: 0,
+                    created_list: [],
+                    skipped_list: [],
+                    failed_count: 0,
+                    failed_lines: [],
+                    message: result.message || '创建成功'
+                });
+            } else {
+                alert(result.message || '创建失败');
+            }
+        } else if (currentCreateMode === 'range') {
+            // 范围创建
+            const lotId = document.getElementById('range-lot').value;
+            const start = document.getElementById('range-start').value.trim();
+            const end = document.getElementById('range-end').value.trim();
+            const spaceType = document.getElementById('range-space-type').value;
+            
+            if (!start || !end) {
+                alert('请输入起始和结束车位号');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('start', start);
+            formData.append('end', end);
+            formData.append('space_type', spaceType);
+            
+            const response = await fetch(`/parking/manage/lots/${lotId}/spaces/create-range/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // 显示详细结果
+                showBatchResult(result);
+            } else {
+                alert(result.message || '创建失败');
+            }
+        } else if (currentCreateMode === 'file') {
+            // 文件上传
+            if (!selectedFile) {
+                alert('请选择要上传的文件');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                return;
+            }
+            
+            const lotId = document.getElementById('file-lot').value;
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            const response = await fetch(`/parking/manage/lots/${lotId}/spaces/create-file/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // 显示详细结果
+                showBatchResult(result);
+            } else {
+                alert(result.message || '创建失败');
+            }
+        }
+    } catch (error) {
+        console.error('批量创建失败:', error);
+        alert('创建失败，请稍后重试');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+    
+    // 显示批量创建结果
+    function showBatchResult(result) {
+        closeBatchModal(); // 先关闭创建模态框
+        
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-slate-900/80 modal-backdrop flex items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="modal-content bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-slate-700">
+                    <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-check-circle text-emerald-400"></i>
+                        批量创建结果
+                    </h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-emerald-500/20 border border-emerald-500/30 rounded-lg p-4">
+                            <p class="text-sm text-slate-400">创建成功</p>
+                            <p class="text-2xl font-bold text-emerald-400">${result.count || 0}</p>
+                        </div>
+                        <div class="bg-amber-500/20 border border-amber-500/30 rounded-lg p-4">
+                            <p class="text-sm text-slate-400">跳过（已存在）</p>
+                            <p class="text-2xl font-bold text-amber-400">${result.skipped || 0}</p>
+                        </div>
+                        <div class="bg-red-500/20 border border-red-500/30 rounded-lg p-4">
+                            <p class="text-sm text-slate-400">解析失败</p>
+                            <p class="text-2xl font-bold text-red-400">${result.failed_count || 0}</p>
+                        </div>
+                    </div>
+                    
+                    ${result.created_list && result.created_list.length > 0 ? `
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-300 mb-2">创建成功的车位号：</h4>
+                        <div class="max-h-32 overflow-y-auto bg-slate-900/50 rounded-lg p-3">
+                            <div class="flex flex-wrap gap-2">
+                                ${result.created_list.map(num => `<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs font-mono">${num}</span>`).join('')}
+                                ${result.has_more_created ? '<span class="text-xs text-slate-500">... 还有更多</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${result.skipped_list && result.skipped_list.length > 0 ? `
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-300 mb-2">跳过的车位号（已存在）：</h4>
+                        <div class="max-h-32 overflow-y-auto bg-slate-900/50 rounded-lg p-3">
+                            <div class="flex flex-wrap gap-2">
+                                ${result.skipped_list.map(num => `<span class="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-mono">${num}</span>`).join('')}
+                                ${result.has_more_skipped ? '<span class="text-xs text-slate-500">... 还有更多</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${result.failed_lines && result.failed_lines.length > 0 ? `
+                    <div>
+                        <h4 class="text-sm font-medium text-slate-300 mb-2">解析失败的行：</h4>
+                        <div class="max-h-32 overflow-y-auto bg-slate-900/50 rounded-lg p-3">
+                            <div class="space-y-1 text-xs text-slate-400">
+                                ${result.failed_lines.map(f => `<div>第${f.line}行: ${f.content} - ${f.reason}</div>`).join('')}
+                                ${result.has_more_failed ? '<div>... 还有更多</div>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="flex gap-3 border-t border-slate-700" role="group" aria-label="操作按钮">
+                    <button type="button"
+                            onclick="exportBatchResult(${JSON.stringify(result).replace(/"/g, '&quot;')})" 
+                            class="flex-1 px-6 py-3 bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                            aria-label="导出创建结果">
+                        <i class="fas fa-download mr-2" aria-hidden="true"></i>
+                        导出结果
+                    </button>
+                    <button type="button"
+                            onclick="this.closest('.modal-backdrop').remove(); location.reload();" 
+                            class="flex-1 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+                            aria-label="关闭并刷新页面">
+                        确定
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // 导出批量创建结果
+    function exportBatchResult(result) {
+        // 创建Excel内容
+        const data = [];
+        
+        // 添加统计信息
+        data.push(['批量创建结果统计']);
+        data.push([]);
+        data.push(['创建成功', result.count || 0]);
+        data.push(['跳过（已存在）', result.skipped || 0]);
+        data.push(['解析失败', result.failed_count || 0]);
+        data.push([]);
+        
+        // 添加创建成功的车位号
+        if (result.created_list && result.created_list.length > 0) {
+            data.push(['创建成功的车位号']);
+            result.created_list.forEach(num => {
+                data.push([num]);
+            });
+            if (result.has_more_created) {
+                data.push(['... 还有更多']);
+            }
+            data.push([]);
+        }
+        
+        // 添加跳过的车位号
+        if (result.skipped_list && result.skipped_list.length > 0) {
+            data.push(['跳过的车位号（已存在）']);
+            result.skipped_list.forEach(num => {
+                data.push([num]);
+            });
+            if (result.has_more_skipped) {
+                data.push(['... 还有更多']);
+            }
+            data.push([]);
+        }
+        
+        // 添加解析失败的行
+        if (result.failed_lines && result.failed_lines.length > 0) {
+            data.push(['解析失败的行', '原因']);
+            result.failed_lines.forEach(f => {
+                data.push([`第${f.line}行: ${f.content}`, f.reason]);
+            });
+            if (result.has_more_failed) {
+                data.push(['... 还有更多', '']);
+            }
+        }
+        
+        // 转换为CSV格式（简单实现，也可以使用Excel库）
+        const csvContent = data.map(row => 
+            row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+        
+        // 添加BOM以支持中文
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `批量创建结果_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
+// API请求辅助函数
+async function apiRequest(url, options = {}) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        }
+    };
+    
+    const response = await fetch(url, { ...defaultOptions, ...options });
+    return await response.json();
+}
+</script>
+{% endblock %}
+

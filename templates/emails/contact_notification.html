@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新联系消息</title>
+</head>
+<body style="font-family: 'Noto Sans SC', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="color: white; margin: 0;">早点喝茶停车场</h1>
+  </div>
+  
+  <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+    <h2 style="color: #333; margin-top: 0;">新联系消息</h2>
+    
+    <p>管理员，您好！</p>
+    
+    <p>您收到了一条新的联系消息，详情如下：</p>
+    
+    <div style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <p style="margin: 0 0 10px 0;"><strong>消息类型：</strong>{{ message.get_message_type_display|default:message.message_type }}</p>
+      <p style="margin: 0 0 10px 0;"><strong>主题：</strong>{{ message.subject|default:"无标题" }}</p>
+      <p style="margin: 0 0 10px 0;"><strong>发件人：</strong>{{ message.name|default:"匿名" }}</p>
+      <p style="margin: 0 0 10px 0;"><strong>邮箱：</strong>{{ message.email|default:"未提供" }}</p>
+      {% if message.phone %}
+      <p style="margin: 0 0 10px 0;"><strong>电话：</strong>{{ message.phone }}</p>
+      {% endif %}
+      <p style="margin: 0 0 10px 0;"><strong>提交时间：</strong>{{ message.created_at|date:"Y-m-d H:i:s" }}</p>
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+        <p style="margin: 0 0 5px 0;"><strong>消息内容：</strong></p>
+        <p style="margin: 0; white-space: pre-wrap;">{{ message.content }}</p>
+      </div>
+    </div>
+    
+    <p style="color: #666; font-size: 14px;">
+      请及时查看并处理此消息。
+    </p>
+    
+    <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #e9ecef; padding-top: 20px;">
+      此邮件由系统自动发送，请勿回复。
+    </p>
+  </div>
+</body>
+</html>

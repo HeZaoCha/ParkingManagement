@@ -1,0 +1,175 @@
+---
+
+description: Python 3.13 特性和最佳实践规范，旨在帮助开发人员编写高效、现代化且可维护的代码，充分利用 Python 3.13 新特性提升性能和代码质量。
+
+globs: **/*.py
+alwaysApply: false
+
+---
+
+# Python 3.13 规则
+
+* **使用 Python 3.13 新特性**：
+  - **结构化模式匹配（`match` 语句）**：替换if/elif链，提高代码可读性
+  - **内置类型注解**：使用`list[int]`代替`List[int]`，`dict[str, int]`代替`Dict[str, int]`
+  - **联合类型语法**：使用`int | None`代替`Optional[int]`
+  - **Self类型注解（PEP 673）**：用于返回自身类型的方法
+
+```python
+# 结构化模式匹配示例（Python 3.10+，Python 3.13推荐）
+def handle_status(status: str):
+    match status:
+        case 'active':
+            return 'active'
+        case 'exited':
+            return 'exited'
+        case 'unpaid':
+            return 'unpaid'
+        case 'paid':
+            return 'paid'
+        case _:
+            return 'unknown'
+```
+
+* **类型提示（Type Hints）**：使用Python 3.13推荐的内置类型语法
+
+```python
+# Python 3.13推荐：使用内置类型
+def process_numbers(nums: list[int]) -> int:
+    return sum(nums)
+
+# 联合类型使用 | 语法
+def get_value(key: str) -> str | None:
+    return cache.get(key)
+
+# 字典类型
+def process_data(data: dict[str, int]) -> dict[str, float]:
+    return {k: float(v) for k, v in data.items()}
+```
+
+* **利用生成器（Generator）**：对于大规模数据的迭代，优先使用生成器表达式（`yield`）来减少内存占用。
+
+```python
+def generate_numbers(limit: int):
+    for i in range(limit):
+        yield i
+```
+
+* **精确类型推导**：利用 Python 3.13 的类型推导功能，通过 `TypeVar` 来简化泛型代码，提高代码复用性。
+
+```python
+from typing import TypeVar
+
+T = TypeVar("T")
+
+def repeat_item(item: T, times: int) -> list[T]:
+    return [item] * times
+```
+
+* **性能优化技巧**：
+  - 使用列表推导式代替循环（更高效）
+  - 使用生成器表达式处理大数据集（节省内存）
+  - 使用`@functools.lru_cache`缓存计算结果
+
+```python
+from functools import lru_cache
+
+# 缓存装饰器优化性能
+@lru_cache(maxsize=128)
+def expensive_computation(n: int) -> int:
+    # 计算结果会被缓存
+    return n * 2
+
+# 列表推导式优化
+numbers = [i * 2 for i in range(1000)]  # 比循环更高效
+
+# 生成器表达式节省内存
+large_range = (i * 2 for i in range(1000000))  # 延迟计算
+```
+
+* **异步编程优化**：使用 `asyncio` 和 `async/await` 处理并发任务，提升异步操作的性能。
+
+```python
+import asyncio
+
+async def fetch_data(url: str) -> str:
+    await asyncio.sleep(1)
+    return f"Data from {url}"
+
+async def main():
+    task1 = asyncio.create_task(fetch_data("https://example.com"))
+    task2 = asyncio.create_task(fetch_data("https://example.org"))
+    results = await asyncio.gather(task1, task2)
+    print(results)
+
+asyncio.run(main())
+```
+
+* **使用 `select_related` 和 `prefetch_related` 避免 N+1 查询问题**：使用 Django ORM 时，避免多次查询数据库，利用优化的查询策略。
+
+```python
+# 优化查询，避免 N+1 查询问题
+users = User.objects.select_related('profile').all()
+posts = Post.objects.prefetch_related('tags').all()
+```
+
+* **避免重复计算**：使用 `functools.lru_cache` 缓存计算结果，避免在循环中进行重复计算，提升性能。
+
+```python
+from functools import lru_cache
+
+@lru_cache
+def expensive_computation(n: int) -> int:
+    # 模拟一个昂贵的计算过程
+    return n * 2
+```
+
+* **资源管理**：使用 `with` 语句自动管理资源，确保文件和网络连接在使用后被正确关闭。
+
+```python
+# 使用 with 语句来管理文件资源
+with open("data.txt", "r") as file:
+    data = file.read()
+```
+
+* **避免过度优化**：在实际开发中，关注代码的可读性和简洁性，不要过早进行性能优化，避免造成不必要的复杂度。
+
+* **单元测试和代码覆盖率**：确保编写充分的单元测试，使用 `pytest` 等工具检查代码覆盖率，并确保代码质量。
+
+```bash
+pytest --cov=my_project tests/
+```
+
+* **虚拟环境管理**：使用 `venv` 或 `poetry` 创建和管理项目的虚拟环境，避免依赖冲突，并确保一致性。
+
+```bash
+python3.13 -m venv env
+source env/bin/activate
+```
+
+* **Python 3.13 新特性总结**：
+  - ✅ **内置类型注解**: `list[int]`, `dict[str, int]`, `tuple[int, str]`
+  - ✅ **联合类型**: `int | None` 代替 `Optional[int]`
+  - ✅ **match/case**: 结构化模式匹配，替代if/elif链
+  - ✅ **性能优化**: JIT编译器（实验性）、无GIL模式（实验性）
+  - ✅ **改进的错误消息**: 更清晰的错误提示和"Did you mean?"建议
+
+* **项目优化实践**：
+  - 优先使用内置类型注解，减少`typing`模块导入
+  - 使用match/case处理多分支逻辑
+  - 使用列表推导式代替循环（性能更好）
+  - 考虑使用`@functools.lru_cache`缓存计算结果
+  - 保持代码简洁和可读性
+  - 使用`from __future__ import annotations`支持前向引用
+
+* **已优化的代码模式**：
+  - ✅ 类型提示：`list[int]`, `dict[str, int]`, `int | None`
+  - ✅ match/case：状态筛选、文件类型、收费类型判断
+  - ✅ 列表推导式：车位号生成
+  - ✅ 前向引用：模型类型注解
+
+* **性能优化建议**：
+  - 对于频繁调用的计算函数，考虑使用`@lru_cache`
+  - 对于大数据集迭代，使用生成器表达式
+  - 对于I/O密集型操作，考虑使用async/await
+  - 关注Python 3.13的JIT编译器（实验性）和无GIL模式（实验性）

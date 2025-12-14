@@ -1,0 +1,285 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{% if vehicle %}编辑{% else %}新增{% endif %}通缉车辆{% endblock %}
+{% block page_title %}{% if vehicle %}编辑{% else %}新增{% endif %}通缉车辆{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <a href="{% url 'parking:admin_wanted_vehicle_list' %}" class="hover:text-white" aria-label="通缉车辆管理">通缉车辆管理</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">{% if vehicle %}编辑{% else %}新增{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+        <form id="wanted-form" method="post" class="space-y-6" novalidate data-validate>
+            {% csrf_token %}
+            
+            <!-- 基本信息 -->
+            <div class="space-y-4" role="region" aria-labelledby="wanted-basic-title">
+                <h3 id="wanted-basic-title" class="text-lg font-semibold text-white border-b border-slate-700/50 pb-3 mb-4">
+                    <i class="fas fa-info-circle text-primary-400 mr-2" aria-hidden="true"></i>
+                    基本信息
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 车牌号 -->
+                    <div>
+                        <label for="wanted_plate" class="block text-sm font-medium text-slate-300 mb-2">
+                            车牌号 <span class="text-red-400" aria-label="必填">*</span>
+                        </label>
+                        <input type="hidden" 
+                               id="wanted_plate" 
+                               name="license_plate" 
+                               value="{{ vehicle.license_plate|default:'' }}" 
+                               required
+                               data-plate-field="true"
+                               aria-describedby="wanted-plate-hint"
+                               aria-required="true">
+                        <div class="plate-grid" data-plate-grid-for="wanted_plate" aria-label="车牌号输入"></div>
+                        <p id="wanted-plate-hint" class="text-xs text-slate-500 mt-1 sr-only">请输入车牌号</p>
+                    </div>
+                    
+                    <!-- 车辆类型 -->
+                    <div>
+                        <label for="wanted-vehicle-type" class="block text-sm font-medium text-slate-300 mb-2">车辆类型</label>
+                        <select id="wanted-vehicle-type"
+                                name="vehicle_type" 
+                                class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                                aria-describedby="wanted-vehicle-type-hint">
+                            <option value="">请选择</option>
+                            <option value="car" {% if vehicle.vehicle_type == 'car' %}selected{% endif %}>小型汽车</option>
+                            <option value="truck" {% if vehicle.vehicle_type == 'truck' %}selected{% endif %}>货车</option>
+                            <option value="bus" {% if vehicle.vehicle_type == 'bus' %}selected{% endif %}>客车</option>
+                            <option value="motorcycle" {% if vehicle.vehicle_type == 'motorcycle' %}selected{% endif %}>摩托车</option>
+                        </select>
+                        <p id="wanted-vehicle-type-hint" class="text-xs text-slate-500 mt-1 sr-only">选择车辆类型</p>
+                    </div>
+                </div>
+                
+                <!-- 优先级 -->
+                <div>
+                    <label for="wanted-priority" class="block text-sm font-medium text-slate-300 mb-2">
+                        优先级 <span class="text-red-400" aria-label="必填">*</span>
+                        <span class="text-xs text-slate-500 ml-2">(1-10，数字越大优先级越高)</span>
+                    </label>
+                    <input type="number" 
+                           id="wanted-priority"
+                           name="priority" 
+                           value="{{ vehicle.priority|default:1 }}" 
+                           required
+                           data-validation="positive_integer"
+                           data-min="1"
+                           data-max="10"
+                           min="1" 
+                           max="10"
+                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                           aria-describedby="priority-hint wanted-priority-error"
+                           aria-required="true">
+                    <p id="priority-hint" class="text-xs text-slate-500 mt-1">优先级范围：1-10，数字越大优先级越高</p>
+                    <div id="wanted-priority-error" class="text-xs text-red-500 mt-1 hidden" role="alert" aria-live="polite"></div>
+                </div>
+                
+                <!-- 状态 -->
+                <div>
+                    <label for="wanted-status" class="block text-sm font-medium text-slate-300 mb-2">状态</label>
+                    <select id="wanted-status"
+                            name="status" 
+                            class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                            aria-describedby="status-hint">
+                        <option value="active" {% if not vehicle or vehicle.status == 'active' %}selected{% endif %}>通缉中</option>
+                        <option value="caught" {% if vehicle.status == 'caught' %}selected{% endif %}>已抓获</option>
+                        <option value="cancelled" {% if vehicle.status == 'cancelled' %}selected{% endif %}>已取消</option>
+                    </select>
+                    <p id="status-hint" class="text-xs text-slate-500 mt-1 sr-only">选择通缉状态</p>
+                </div>
+            </div>
+            
+            <!-- 案件信息 -->
+            <div class="space-y-4" role="region" aria-labelledby="case-info-title">
+                <h3 id="case-info-title" class="text-lg font-semibold text-white border-b border-slate-700/50 pb-3 mb-4">
+                    <i class="fas fa-gavel text-primary-400 mr-2" aria-hidden="true"></i>
+                    案件信息
+                </h3>
+                
+                <!-- 案件编号 -->
+                <div>
+                    <label for="case-number" class="block text-sm font-medium text-slate-300 mb-2">案件编号</label>
+                    <input type="text" 
+                           id="case-number"
+                           name="case_number" 
+                           value="{{ vehicle.case_number|default:'' }}" 
+                           placeholder="案件编号"
+                           class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                           aria-describedby="case-number-hint">
+                    <p id="case-number-hint" class="text-xs text-slate-500 mt-1 sr-only">输入案件编号（选填）</p>
+                </div>
+                
+                <!-- 通缉描述 -->
+                <div>
+                    <label for="wanted-description" class="block text-sm font-medium text-slate-300 mb-2">
+                        通缉描述 <span class="text-red-400" aria-label="必填">*</span>
+                    </label>
+                    <textarea id="wanted-description"
+                              name="description" 
+                              required
+                              rows="4"
+                              placeholder="请输入通缉原因、车辆特征等信息..."
+                              class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                              aria-describedby="description-hint"
+                              aria-required="true">{{ vehicle.description|default:'' }}</textarea>
+                    <p id="description-hint" class="text-xs text-slate-500 mt-1">请输入通缉原因、车辆特征等信息</p>
+                </div>
+            </div>
+            
+            <!-- 联系信息 -->
+            <div class="space-y-4" role="region" aria-labelledby="contact-info-title">
+                <h3 id="contact-info-title" class="text-lg font-semibold text-white border-b border-slate-700/50 pb-3 mb-4">
+                    <i class="fas fa-phone text-primary-400 mr-2" aria-hidden="true"></i>
+                    联系信息
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 联系人/单位 -->
+                    <div>
+                        <label for="contact-police" class="block text-sm font-medium text-slate-300 mb-2">联系人/单位</label>
+                        <input type="text" 
+                               id="contact-police"
+                               name="contact_police" 
+                               value="{{ vehicle.contact_police|default:'' }}" 
+                               placeholder="联系人姓名或单位名称"
+                               class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                               aria-describedby="contact-police-hint">
+                        <p id="contact-police-hint" class="text-xs text-slate-500 mt-1 sr-only">输入联系人姓名或单位名称（选填）</p>
+                    </div>
+                    
+                    <!-- 联系电话 -->
+                    <div>
+                        <label for="contact-phone" class="block text-sm font-medium text-slate-300 mb-2">联系电话</label>
+                        <input type="tel" 
+                               id="contact-phone"
+                               name="contact_phone" 
+                               value="{{ vehicle.contact_phone|default:'' }}" 
+                               placeholder="联系电话"
+                               class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-primary-500"
+                               aria-describedby="contact-phone-hint"
+                               autocomplete="tel">
+                        <p id="contact-phone-hint" class="text-xs text-slate-500 mt-1 sr-only">输入联系电话（选填）</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="flex gap-3 pt-4 border-t border-slate-700/50" role="group" aria-label="表单操作">
+                <button type="submit" 
+                        class="flex-1 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-medium"
+                        aria-label="保存通缉车辆信息">
+                    <i class="fas fa-save mr-2" aria-hidden="true"></i>
+                    保存
+                </button>
+                <a href="{% url 'parking:admin_wanted_vehicle_list' %}" 
+                   class="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                   aria-label="取消并返回通缉车辆列表">
+                    取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('wanted-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // ========== 前端验证（提交前） ==========
+    
+    // 1. 验证车牌号（必填）
+    const plateInput = document.querySelector('input[name="license_plate"]');
+    const plateField = document.querySelector('[data-plate-grid-for]');
+    let plate = '';
+    
+    if (plateField) {
+        // 从车牌网格获取
+        const plateCells = plateField.querySelectorAll('.plate-cell');
+        plate = Array.from(plateCells).map(cell => cell.textContent.trim()).join('');
+    } else if (plateInput) {
+        plate = plateInput.value.trim();
+    }
+    
+    if (!plate) {
+        alert('请输入车牌号');
+        if (plateField) {
+            const firstCell = plateField.querySelector('.plate-cell');
+            if (firstCell) firstCell.focus();
+        } else if (plateInput) {
+            plateInput.focus();
+        }
+        return;
+    }
+    
+    // 验证车牌号格式（7位普通车牌或8位新能源车牌）
+    const plateRegex = /^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]$/;
+    if (!plateRegex.test(plate)) {
+        alert('车牌号格式不正确，请输入有效的车牌号');
+        if (plateField) {
+            const firstCell = plateField.querySelector('.plate-cell');
+            if (firstCell) firstCell.focus();
+        } else if (plateInput) {
+            plateInput.focus();
+        }
+        return;
+    }
+    
+    // 2. 验证原因（必填）
+    const reasonInput = document.querySelector('textarea[name="reason"]') || document.querySelector('input[name="reason"]');
+    if (reasonInput) {
+        const reason = reasonInput.value.trim();
+        if (!reason) {
+            alert('请输入通缉原因');
+            reasonInput.focus();
+            return;
+        }
+        if (reason.length > 500) {
+            alert('通缉原因长度不能超过500个字符');
+            reasonInput.focus();
+            return;
+        }
+    }
+    
+    // 所有验证通过，准备提交
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    // 确保车牌号是大写
+    if (data.license_plate) {
+        data.license_plate = data.license_plate.toUpperCase();
+    }
+    
+    try {
+        const response = await fetch(this.action || window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': data.csrfmiddlewaretoken,
+            },
+            body: JSON.stringify(data),
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.location.href = '{% url "parking:admin_wanted_vehicle_list" %}';
+        } else {
+            alert('保存失败：' + result.message);
+        }
+    } catch (error) {
+        alert('保存失败，请稍后重试');
+    }
+});
+</script>
+{% endblock %}
+

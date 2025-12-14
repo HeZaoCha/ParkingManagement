@@ -1,0 +1,33 @@
+{# 统计卡片组件 - 可复用的数据统计展示 #}
+{# 使用方式: {% include 'components/stat_card.html' with title='标题' value=100 icon='fa-car' color='blue' %} #}
+<article class="bg-theme-card rounded-xl shadow-card p-6 transition-all-300 hover:shadow-card-hover" 
+         role="article" 
+         aria-labelledby="stat-{{ title|slugify }}-label">
+  <div class="flex items-center justify-between">
+    <div>
+      <p id="stat-{{ title|slugify }}-label" class="text-theme-secondary text-sm font-medium">{{ title }}</p>
+      <p class="text-3xl font-bold mt-2 
+                {% if color == 'red' %}text-red-600
+                {% elif color == 'green' %}text-green-600
+                {% elif color == 'yellow' %}text-yellow-600
+                {% else %}text-theme-primary{% endif %}"
+         aria-live="polite">
+        {% if prefix %}<span aria-hidden="true">{{ prefix }}</span>{% endif %}<span>{{ value }}</span>{% if suffix %}<span aria-hidden="true">{{ suffix }}</span>{% endif %}
+      </p>
+    </div>
+    <div class="rounded-full icon-container
+                {% if color == 'red' %}bg-red-100
+                {% elif color == 'green' %}bg-green-100
+                {% elif color == 'yellow' %}bg-yellow-100
+                {% else %}bg-blue-100{% endif %}"
+         aria-hidden="true">
+      <i class="fas {{ icon }} text-2xl
+                {% if color == 'red' %}text-red-600
+                {% elif color == 'green' %}text-green-600
+                {% elif color == 'yellow' %}text-yellow-600
+                {% else %}text-blue-600{% endif %}" 
+         title="{{ title }}"></i>
+    </div>
+  </div>
+</article>
+

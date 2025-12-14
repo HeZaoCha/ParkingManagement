@@ -1,0 +1,267 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}数据概览{% endblock %}
+{% block page_title %}数据概览{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- 统计卡片 -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="数据统计概览" role="region">
+        <!-- 总收入 -->
+        <article class="card-hover bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="revenue-label">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p id="revenue-label" class="text-slate-400 text-sm">今日收入</p>
+                    <p class="text-2xl font-bold text-emerald-400 number-animate mt-1" aria-live="polite">
+                        ¥{{ today_revenue|default:"0.00" }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        <span class="text-emerald-400"><i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>12.5%</span>
+                        较昨日
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center" aria-hidden="true">
+                    <i class="fas fa-dollar-sign text-emerald-400 text-2xl"></i>
+                </div>
+            </div>
+        </article>
+        
+        <!-- 在场车辆 -->
+        <article class="card-hover bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="vehicles-label">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p id="vehicles-label" class="text-slate-400 text-sm">在场车辆</p>
+                    <p class="text-2xl font-bold text-blue-400 number-animate mt-1" aria-live="polite">
+                        {{ current_vehicles|default:0 }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        共 {{ total_spaces|default:0 }} 个车位
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center" aria-hidden="true">
+                    <i class="fas fa-car text-blue-400 text-2xl"></i>
+                </div>
+            </div>
+        </article>
+        
+        <!-- 可用车位 -->
+        <article class="card-hover bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="spaces-label">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p id="spaces-label" class="text-slate-400 text-sm">可用车位</p>
+                    <p class="text-2xl font-bold text-amber-400 number-animate mt-1" aria-live="polite">
+                        {{ available_spaces|default:0 }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        使用率 {{ occupancy_rate|default:0 }}%
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-amber-500/20 rounded-2xl flex items-center justify-center" aria-hidden="true">
+                    <i class="fas fa-square-parking text-amber-400 text-2xl"></i>
+                </div>
+            </div>
+        </article>
+        
+        <!-- 待支付 -->
+        <article class="card-hover bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="article" aria-labelledby="unpaid-label">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p id="unpaid-label" class="text-slate-400 text-sm">待支付订单</p>
+                    <p class="text-2xl font-bold text-red-400 number-animate mt-1" aria-live="polite">
+                        {{ unpaid_count|default:0 }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-2">
+                        需要处理
+                    </p>
+                </div>
+                <div class="w-14 h-14 bg-red-500/20 rounded-2xl flex items-center justify-center" aria-hidden="true">
+                    <i class="fas fa-clock text-red-400 text-2xl"></i>
+                </div>
+            </div>
+        </article>
+    </section>
+    
+    <!-- 快捷操作 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6" aria-label="快捷操作和系统状态">
+        <!-- 快捷入口 -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="region" aria-labelledby="quick-actions-title">
+            <h3 id="quick-actions-title" class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-bolt text-amber-400" aria-hidden="true"></i>
+                快捷操作
+            </h3>
+            <nav class="grid grid-cols-2 gap-3" aria-label="快捷操作导航">
+                <a href="{% url 'parking:admin_parking_lot_add' %}" 
+                   class="flex flex-col items-center gap-2 p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors"
+                   aria-label="新增停车场">
+                    <div class="w-10 h-10 bg-primary-500/20 rounded-lg flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-plus text-primary-400"></i>
+                    </div>
+                    <span class="text-sm text-slate-300">新增停车场</span>
+                </a>
+                <a href="{% url 'parking:admin_vehicle_add' %}" 
+                   class="flex flex-col items-center gap-2 p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors"
+                   aria-label="登记车辆">
+                    <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-car text-emerald-400"></i>
+                    </div>
+                    <span class="text-sm text-slate-300">登记车辆</span>
+                </a>
+                <a href="{% url 'parking:admin_parking_space_add' %}" 
+                   class="flex flex-col items-center gap-2 p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors"
+                   aria-label="新增车位">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-square-parking text-blue-400"></i>
+                    </div>
+                    <span class="text-sm text-slate-300">新增车位</span>
+                </a>
+                <a href="{% url 'parking:admin_parking_record_list' %}?status=unpaid" 
+                   class="flex flex-col items-center gap-2 p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-colors"
+                   aria-label="待支付订单">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center" aria-hidden="true">
+                        <i class="fas fa-receipt text-red-400"></i>
+                    </div>
+                    <span class="text-sm text-slate-300">待支付订单</span>
+                </a>
+            </nav>
+        </div>
+        
+        <!-- 系统状态 -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5" role="region" aria-labelledby="system-status-title">
+            <h3 id="system-status-title" class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-server text-blue-400" aria-hidden="true"></i>
+                系统状态
+            </h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <span class="text-slate-300">数据库连接</span>
+                    </div>
+                    <span class="text-emerald-400 text-sm">正常</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                        <span class="text-slate-300">系统运行</span>
+                    </div>
+                    <span class="text-emerald-400 text-sm">正常</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">总车辆数</span>
+                    <span class="text-white number-animate">{{ total_vehicles|default:0 }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">总记录数</span>
+                    <span class="text-white number-animate">{{ total_records|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 占用率图表 -->
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-chart-pie text-purple-400"></i>
+                车位占用率
+            </h3>
+            <div class="flex items-center justify-center py-4">
+                <div class="relative w-32 h-32">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#334155"
+                            stroke-width="3"
+                        />
+                        <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#6366f1"
+                            stroke-width="3"
+                            stroke-dasharray="{{ occupancy_rate|default:0 }}, 100"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-2xl font-bold text-white number-animate">{{ occupancy_rate|default:0 }}%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center gap-6 mt-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-primary-500 rounded"></div>
+                    <span class="text-sm text-slate-400">已占用</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-slate-600 rounded"></div>
+                    <span class="text-sm text-slate-400">空闲</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 最近记录 -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+        <div class="p-5 border-b border-slate-700/50 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="fas fa-history text-slate-400"></i>
+                最近停车记录
+            </h3>
+            <a href="{% url 'parking:admin_parking_record_list' %}" 
+               class="text-sm text-primary-400 hover:text-primary-300 transition-colors">
+                查看全部 <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="text-left text-sm text-slate-400 bg-slate-800/50">
+                        <th class="px-5 py-3 font-medium">车牌号</th>
+                        <th class="px-5 py-3 font-medium">停车场</th>
+                        <th class="px-5 py-3 font-medium">车位</th>
+                        <th class="px-5 py-3 font-medium">入场时间</th>
+                        <th class="px-5 py-3 font-medium">状态</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700/50">
+                    {% for record in recent_records %}
+                    <tr class="table-row-hover">
+                        <td class="px-5 py-4">
+                            <span class="font-mono font-medium text-white">{{ record.vehicle.license_plate }}</span>
+                        </td>
+                        <td class="px-5 py-4 text-slate-300">{{ record.parking_space.parking_lot.name }}</td>
+                        <td class="px-5 py-4 text-slate-300">{{ record.parking_space.space_number }}</td>
+                        <td class="px-5 py-4 text-slate-400 text-sm">
+                            {{ record.entry_time|date:"m-d H:i" }}
+                        </td>
+                        <td class="px-5 py-4">
+                            {% if not record.exit_time %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full">
+                                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                                停车中
+                            </span>
+                            {% elif not record.is_paid %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 text-xs rounded-full">
+                                待支付
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 px-2 py-1 bg-slate-500/20 text-slate-400 text-xs rounded-full">
+                                已完成
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-12 text-center text-slate-400">
+                            <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                            <p>暂无停车记录</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

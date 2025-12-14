@@ -1,175 +1,234 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>停车场管理系统 - 登录</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet" />
-    <!-- 统一的 Tailwind 配置 -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#1e40af',
-              secondary: '#3b82f6',
-              accent: '#60a5fa',
-              neutral: '#f1f5f9',
-              'neutral-dark': '#94a3b8'
-            },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif']
-            },
-            boxShadow: {
-              card: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-              'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-            }
-          }
-        }
-      }
-    </script>
-    <style type="text/tailwindcss">
-      @layer utilities {
-        .bg-gradient-blue {
-          background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-        }
-        .text-shadow {
-          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .transition-all-300 {
-          transition: all 300ms ease-in-out;
-        }
-      }
-    </style>
-  </head>
-  <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
-      <!-- 登录卡片 -->
-      <div class="bg-white rounded-xl shadow-card overflow-hidden transition-all-300 hover:shadow-card-hover">
-        <!-- 卡片头部 -->
-        <div class="bg-gradient-blue p-6 text-center">
-          <img src="https://p3-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/f6ffd0a2f6d1463187ffc4f66c02aba7~tplv-a9rns2rl98-image.image?rcl=20251129182848DB28B011AA7CA4A7DC0A&rk3s=8e244e95&rrcfp=f06b921b&x-expires=1767004175&x-signature=LHE5d44CSRDVdAq8w1CjZpCxn7k%3D" alt="停车场管理系统" class="w-20 h-20 mx-auto mb-4" />
-          <h1 class="text-2xl font-bold text-white text-shadow">停车场管理系统</h1>
-          <p class="text-blue-100 mt-1">请登录您的账户</p>
+{# 登录页面 - 支持主题系统 #}
+{% extends 'base.html' %}
+
+{% block title %}停车场管理系统 - 登录{% endblock %}
+
+{% block body_class %}min-h-screen flex items-center justify-center p-4 relative overflow-hidden{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* 背景动画 */
+  .login-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(-45deg, var(--gradient-start), var(--gradient-end), var(--color-primary-400), var(--color-primary-700));
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+  }
+  
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /* 浮动装饰 */
+  .floating-shape {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    animation: float 20s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+  }
+  
+  /* 登录卡片动画 */
+  .login-card {
+    animation: cardEnter 0.6s ease-out;
+  }
+  
+  @keyframes cardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  /* 输入框聚焦效果 */
+  .input-glow:focus {
+    box-shadow: 0 0 0 3px var(--color-primary-200);
+  }
+  html.dark .input-glow:focus {
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-500), 0.3);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{# 动态背景 #}
+<div class="login-bg"></div>
+
+{# 浮动装饰元素 #}
+<div class="floating-shape w-64 h-64 -top-32 -left-32" style="animation-delay: 0s;"></div>
+<div class="floating-shape w-48 h-48 top-1/4 -right-24" style="animation-delay: -5s;"></div>
+<div class="floating-shape w-32 h-32 bottom-1/4 left-1/4" style="animation-delay: -10s;"></div>
+<div class="floating-shape w-40 h-40 -bottom-20 right-1/3" style="animation-delay: -15s;"></div>
+
+{# 主要内容 #}
+<div class="w-full max-w-md relative z-10">
+  {# 登录卡片 #}
+  <div class="login-card card-theme rounded-2xl overflow-hidden backdrop-blur-xl bg-opacity-90">
+    {# 卡片头部 #}
+    <div class="bg-gradient-theme p-8 text-center relative overflow-hidden">
+      <div class="absolute inset-0 bg-black/10"></div>
+      <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+      <div class="absolute -left-10 -bottom-10 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+      
+      <div class="relative z-10">
+        <div class="w-20 h-20 mx-auto mb-4 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center shadow-lg">
+          <i class="fas fa-parking text-white text-4xl" aria-hidden="true"></i>
         </div>
-
-        <!-- 登录表单 -->
-        <div class="p-8">
-          <form id="loginForm" class="space-y-6">
-            <!-- 用户名输入 -->
-            <div>
-              <label for="username" class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa fa-user"></i></span>
-                <input type="text" id="username" name="username" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300" placeholder="请输入用户名" required />
-              </div>
-            </div>
-
-            <!-- 密码输入 -->
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700 mb-1">密码</label>
-              <div class="relative">
-                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fa fa-lock"></i></span>
-                <input type="password" id="password" name="password" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all-300" placeholder="请输入密码" required />
-                <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-all-300"><i class="fa fa-eye-slash"></i></button>
-              </div>
-            </div>
-
-            <!-- 记住我和忘记密码 -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <input type="checkbox" id="remember" name="remember" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded transition-all-300" />
-                <label for="remember" class="ml-2 block text-sm text-gray-700">记住我</label>
-              </div>
-              <a href="#" class="text-sm text-primary hover:text-secondary transition-all-300">忘记密码?</a>
-            </div>
-
-            <!-- 登录按钮 -->
-            <div>
-              <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all-300 flex items-center justify-center">
-                <span>登录</span>
-                <i class="fa fa-sign-in ml-2"></i>
-              </button>
-            </div>
-          </form>
-
-          <!-- 错误提示 -->
-          <div id="errorMessage" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg hidden">
-            <i class="fa fa-exclamation-circle mr-2"></i>
-            <span>用户名或密码错误，请重试</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 页脚 -->
-      <div class="text-center mt-6 text-sm text-gray-500">
-        <p>&copy; 2025 停车场管理系统. 保留所有权利.</p>
+        <h1 class="text-2xl font-bold text-white text-shadow">停车场管理系统</h1>
+        <p class="text-white/80 mt-2 text-sm">Parking Management System</p>
       </div>
     </div>
 
-    <script>
-      // 登录表单处理
-      document.addEventListener('DOMContentLoaded', function () {
-        const loginForm = document.getElementById('loginForm')
-        const errorMessage = document.getElementById('errorMessage')
-        const togglePassword = document.getElementById('togglePassword')
-        const passwordInput = document.getElementById('password')
+    {# 登录表单 #}
+    <div class="p-8">
+      {# 消息提示 #}
+      {% include 'components/messages.html' %}
       
-        // 切换密码可见性
-        togglePassword.addEventListener('click', function () {
-          const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password'
-          passwordInput.setAttribute('type', type)
-          this.querySelector('i').classList.toggle('fa-eye')
-          this.querySelector('i').classList.toggle('fa-eye-slash')
-        })
+      <form id="loginForm" method="post" action="{% url 'login' %}" class="space-y-5" novalidate onsubmit="return validateLoginForm(event)">
+        {% csrf_token %}
+        
+        {# 用户名输入 #}
+        <div>
+          <label for="username" class="block text-sm font-medium text-theme-secondary mb-2">用户名</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-theme-muted" aria-hidden="true">
+              <i class="fas fa-user"></i>
+            </span>
+            <input type="text" 
+                   id="username" 
+                   name="username" 
+                   class="input-theme input-glow w-full pl-11 pr-4 py-3 rounded-xl transition-all" 
+                   placeholder="请输入用户名" 
+                   required 
+                   autocomplete="username"
+                   aria-describedby="username-hint"
+                   aria-invalid="false">
+          </div>
+          <p id="username-hint" class="text-xs text-theme-muted mt-1 hidden">请输入您的用户名</p>
+        </div>
+
+        {# 密码输入 #}
+        <div>
+          <label for="password" class="block text-sm font-medium text-theme-secondary mb-2">密码</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-theme-muted" aria-hidden="true">
+              <i class="fas fa-lock"></i>
+            </span>
+            <input type="password" 
+                   id="password" 
+                   name="password" 
+                   class="input-theme input-glow w-full pl-11 pr-12 py-3 rounded-xl transition-all" 
+                   placeholder="请输入密码" 
+                   required 
+                   autocomplete="current-password"
+                   aria-describedby="password-hint"
+                   aria-invalid="false">
+            <button type="button" 
+                    id="togglePassword" 
+                    class="absolute inset-y-0 right-0 flex items-center pr-4 text-theme-muted hover:text-primary-500 transition-colors"
+                    aria-label="切换密码可见性"
+                    aria-pressed="false">
+              <i class="fas fa-eye-slash" aria-hidden="true"></i>
+            </button>
+          </div>
+          <p id="password-hint" class="text-xs text-theme-muted mt-1 hidden">请输入您的密码</p>
+        </div>
+
+        {# 记住我和忘记密码 #}
+        <div class="flex items-center justify-between">
+          <label class="flex items-center cursor-pointer group">
+            <input type="checkbox" 
+                   id="remember" 
+                   name="remember" 
+                   class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+            <span class="ml-2 text-sm text-theme-secondary group-hover:text-theme-primary transition-colors">记住我</span>
+          </label>
+          <a href="{% url 'parking:forgot_password' %}" class="text-sm text-primary-500 hover:text-primary-600 transition-colors hover:underline">忘记密码?</a>
+        </div>
+
+        {# 登录按钮 #}
+        <button type="submit" 
+                class="w-full btn-primary py-3 px-4 rounded-xl font-medium flex items-center justify-center gap-2 group"
+                aria-label="登录系统">
+          <span>登录系统</span>
+          <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
+        </button>
+      </form>
       
-        // 表单提交处理
-        loginForm.addEventListener('submit', function (e) {
-          e.preventDefault()
+      {# 分割线 #}
+      <div class="flex items-center gap-4 my-6">
+        <div class="flex-1 h-px bg-theme-border"></div>
+        <span class="text-theme-muted text-sm">或</span>
+        <div class="flex-1 h-px bg-theme-border"></div>
+      </div>
       
-          const username = document.getElementById('username').value
-          const password = document.getElementById('password').value
-          const remember = document.getElementById('remember').checked
-      
-          // 模拟登录验证 (实际应用中应与后端API交互)
-          if (username === 'admin' && password === 'admin123') {
-            // 登录成功，存储登录状态
-            const userData = {
-              username: username,
-              role: 'admin',
-              name: '系统管理员'
-            }
-      
-            localStorage.setItem('user', JSON.stringify(userData))
-      
-            if (remember) {
-              localStorage.setItem('remember', 'true')
-            } else {
-              localStorage.removeItem('remember')
-            }
-      
-            // 跳转到仪表盘页面
-            window.location.href = 'dashboard.html'
-          } else {
-            // 登录失败，显示错误信息
-            errorMessage.classList.remove('hidden')
-      
-            // 3秒后自动隐藏错误信息
-            setTimeout(() => {
-              errorMessage.classList.add('hidden')
-            }, 3000)
-          }
-        })
-      
-        // 检查是否已登录
-        const user = localStorage.getItem('user')
-        if (user) {
-          window.location.href = 'dashboard.html'
-        }
-      })
-    </script>
-  </body>
-</html>
+      {# 注册选项 #}
+      <div class="text-center space-y-3">
+        <p class="text-theme-muted text-sm mb-3">
+          还没有账户？
+        </p>
+        <a href="{% url 'parking:register' %}" 
+           class="block w-full py-3 px-4 border-2 border-primary-500 text-primary-500 rounded-xl font-medium hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all flex items-center justify-center gap-2 group">
+          <i class="fas fa-user-plus group-hover:scale-110 transition-transform"></i>
+          <span>注册新账户</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {# 底部版权 #}
+  <div class="mt-8 text-center text-white/60 text-sm">
+    <p>&copy; 2025 停车场管理系统. 保留所有权利.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    // 切换密码可见性
+    if (togglePassword && passwordInput) {
+      togglePassword.addEventListener('click', function() {
+        const isPassword = passwordInput.getAttribute('type') === 'password';
+        const type = isPassword ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        const icon = this.querySelector('i');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+        this.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
+        this.setAttribute('aria-label', isPassword ? '隐藏密码' : '显示密码');
+      });
+    }
+    
+    // 输入框焦点动画
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.classList.add('ring-2', 'ring-primary-500/20', 'rounded-xl');
+      });
+      input.addEventListener('blur', function() {
+        this.parentElement.classList.remove('ring-2', 'ring-primary-500/20', 'rounded-xl');
+      });
+    });
+  });
+  
+  // 切换到注册页面
+  function switchToRegister() {
+    window.location.href = '{% url "parking:register" %}';
+  }
+</script>
+{% endblock %}

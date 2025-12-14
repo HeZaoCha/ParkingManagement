@@ -1,0 +1,189 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}{% if vehicle %}编辑车辆{% else %}登记车辆{% endif %}{% endblock %}
+{% block page_title %}{% if vehicle %}编辑车辆{% else %}登记车辆{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="flex items-center gap-2 text-sm text-slate-400 ml-4" aria-label="面包屑导航">
+    <a href="{% url 'parking:admin_index' %}" class="hover:text-white" aria-label="返回首页">首页</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <a href="{% url 'parking:admin_vehicle_list' %}" class="hover:text-white" aria-label="车辆管理">车辆管理</a>
+    <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+    <span class="text-slate-200" aria-current="page">{% if vehicle %}编辑{% else %}登记{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl">
+    <form method="post" class="space-y-6" novalidate onsubmit="return validateVehicleForm(event)">
+        {% csrf_token %}
+        
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 space-y-5" role="region" aria-labelledby="vehicle-info-title">
+            <h3 id="vehicle-info-title" class="text-lg font-semibold text-white border-b border-slate-700/50 pb-4 mb-5">
+                <i class="fas fa-car text-primary-400 mr-2" aria-hidden="true"></i>
+                车辆信息
+            </h3>
+            
+            <!-- 车牌号 -->
+            <div>
+                <label for="id_license_plate" class="block text-sm font-medium text-slate-300 mb-2">
+                    车牌号 <span class="text-red-400" aria-label="必填">*</span>
+                </label>
+                <input type="hidden" 
+                       id="id_license_plate" 
+                       name="license_plate" 
+                       value="{{ vehicle.license_plate|default:'' }}" 
+                       required
+                       data-plate-field="true"
+                       aria-describedby="license-plate-hint"
+                       aria-required="true">
+                <div class="plate-grid" data-plate-grid-for="id_license_plate" aria-label="车牌号输入"></div>
+                <p id="license-plate-hint" class="mt-1 text-xs text-slate-500 sr-only">请输入车牌号</p>
+            </div>
+            
+            <!-- 车辆类型 -->
+            <div>
+                <fieldset>
+                    <legend class="block text-sm font-medium text-slate-300 mb-2">车辆类型</legend>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" role="radiogroup" aria-labelledby="vehicle-type-legend">
+                        {% for value, label in vehicle_types %}
+                        <label class="relative cursor-pointer">
+                            <input type="radio" 
+                                   name="vehicle_type" 
+                                   value="{{ value }}" 
+                                   {% if vehicle.vehicle_type == value or not vehicle and value == 'car' %}checked{% endif %}
+                                   class="peer sr-only"
+                                   aria-describedby="vehicle-type-hint">
+                            <div class="p-4 bg-slate-900/50 border border-slate-700 rounded-lg text-center transition-all
+                                        peer-checked:border-primary-500 peer-checked:bg-primary-500/10
+                                        hover:border-slate-600">
+                                <i class="fas {% if value == 'car' %}fa-car{% elif value == 'suv' %}fa-truck-pickup{% elif value == 'motorcycle' %}fa-motorcycle{% elif value == 'truck' %}fa-truck{% else %}fa-car-side{% endif %} text-xl mb-2 
+                                          {% if value == 'car' %}text-blue-400{% elif value == 'suv' %}text-emerald-400{% elif value == 'motorcycle' %}text-amber-400{% elif value == 'truck' %}text-red-400{% else %}text-slate-400{% endif %}" aria-hidden="true"></i>
+                                <p class="text-sm text-slate-300">{{ label }}</p>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <p id="vehicle-type-hint" class="mt-1 text-xs text-slate-500 sr-only">选择车辆类型</p>
+                </fieldset>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 space-y-5" role="region" aria-labelledby="owner-info-title">
+            <h3 id="owner-info-title" class="text-lg font-semibold text-white border-b border-slate-700/50 pb-4 mb-5">
+                <i class="fas fa-user text-primary-400 mr-2" aria-hidden="true"></i>
+                车主信息 <span class="text-sm font-normal text-slate-500">(选填)</span>
+            </h3>
+            
+            <!-- 车主姓名 -->
+            <div>
+                <label for="owner-name-input" class="block text-sm font-medium text-slate-300 mb-2">
+                    车主姓名
+                </label>
+                <input type="text" 
+                       id="owner-name-input"
+                       name="owner_name" 
+                       value="{{ vehicle.owner_name|default:'' }}"
+                       placeholder="请输入车主姓名"
+                       class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                       aria-describedby="owner-name-hint"
+                       autocomplete="name">
+                <p id="owner-name-hint" class="mt-1 text-xs text-slate-500 sr-only">请输入车主姓名（选填）</p>
+            </div>
+            
+            <!-- 联系电话 -->
+            <div>
+                <label for="owner-phone-input" class="block text-sm font-medium text-slate-300 mb-2">
+                    联系电话
+                </label>
+                <input type="tel" 
+                       id="owner-phone-input"
+                       name="owner_phone" 
+                       value="{{ vehicle.owner_phone|default:'' }}"
+                       placeholder="请输入联系电话"
+                       class="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                       aria-describedby="owner-phone-hint"
+                       autocomplete="tel">
+                <p id="owner-phone-hint" class="mt-1 text-xs text-slate-500 sr-only">请输入联系电话（选填）</p>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="flex items-center gap-4" role="group" aria-label="表单操作">
+            <button type="submit" 
+                    class="btn-ripple inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                    aria-label="保存车辆信息">
+                <i class="fas fa-save" aria-hidden="true"></i>
+                保存
+            </button>
+            <a href="{% url 'parking:admin_vehicle_list' %}" 
+               class="px-6 py-3 text-slate-400 hover:text-white transition-colors"
+               aria-label="取消并返回车辆列表">
+                取消
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// 车辆表单前端验证（提交前）
+function validateVehicleForm(event) {
+    // ========== 前端验证（提交前） ==========
+    
+    // 1. 验证车牌号（必填）
+    const plateInput = document.getElementById('id_license_plate');
+    const plateGrid = document.querySelector('[data-plate-grid-for="id_license_plate"]');
+    let plate = '';
+    
+    if (plateInput) {
+        plate = plateInput.value.trim();
+    }
+    
+    if (!plate && plateGrid) {
+        // 尝试从车牌网格获取
+        const plateCells = plateGrid.querySelectorAll('.plate-cell');
+        plate = Array.from(plateCells).map(cell => cell.textContent.trim()).join('');
+    }
+    
+    if (!plate || plate.trim() === '') {
+        alert('请输入车牌号');
+        if (plateGrid) {
+            const firstCell = plateGrid.querySelector('.plate-cell');
+            if (firstCell) firstCell.focus();
+        } else if (plateInput) {
+            plateInput.focus();
+        }
+        event.preventDefault();
+        return false;
+    }
+    
+    plate = plate.toUpperCase().trim();
+    
+    // 验证车牌号格式（7位普通车牌或8位新能源车牌）
+    const plateRegex = /^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-HJ-NP-Z0-9]{4,5}[A-HJ-NP-Z0-9挂学警港澳]$/;
+    if (!plateRegex.test(plate)) {
+        alert('车牌号格式不正确，请输入有效的车牌号');
+        if (plateGrid) {
+            const firstCell = plateGrid.querySelector('.plate-cell');
+            if (firstCell) firstCell.focus();
+        } else if (plateInput) {
+            plateInput.focus();
+        }
+        event.preventDefault();
+        return false;
+    }
+    
+    // 2. 验证车辆类型（必填）
+    const vehicleTypeRadio = document.querySelector('input[name="vehicle_type"]:checked');
+    if (!vehicleTypeRadio) {
+        alert('请选择车辆类型');
+        event.preventDefault();
+        return false;
+    }
+    
+    // 所有验证通过，允许提交
+    return true;
+}
+</script>
+{% endblock %}
+
