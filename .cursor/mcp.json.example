@@ -1,0 +1,22 @@
+{
+    "mcpServers": {
+        "sqlite": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/path/to/your/project",
+                "run",
+                "mcp-server-sqlite",
+                "--db-path",
+                "db.sqlite3"
+            ]
+        },
+        "github": {
+            "url": "https://api.githubcopilot.com/mcp/",
+            "headers": {
+                "Authorization": "YOUR_GITHUB_PERSONAL_ACCESS_TOKEN_HERE"
+            }
+        }
+    }
+}
+

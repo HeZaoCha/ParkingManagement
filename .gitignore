@@ -134,6 +134,10 @@ docker-compose.local.yml
 .vscode/
 *.code-workspace
 
+# Cursor IDE
+.cursor/mcp.json
+.cursor/*.json
+
 # JetBrains / PyCharm
 .idea/
 *.iml
