@@ -2,17 +2,19 @@
 
 ## 问题描述
 
-在提交 `659f8d8` 中，`.cursor/mcp.json` 文件包含了 GitHub Personal Access Token，这违反了 GitHub 的安全策略。
+在提交 `6ffd503` 中，`.cursor/mcp.json` 文件包含了 GitHub Personal Access Token，这违反了 GitHub 的安全策略。
 
 ## 已完成的修复
 
 1. ✅ 将 `.cursor/mcp.json` 添加到 `.gitignore`
 2. ✅ 从 Git 跟踪中移除了包含敏感信息的文件
 3. ✅ 创建了 `.cursor/mcp.json.example` 作为模板文件
+4. ✅ **使用 git filter-branch 从所有 Git 历史中彻底移除了敏感文件**
+5. ✅ **强制推送到远程仓库，历史已清理**
 
-## 重要：需要从 Git 历史中完全移除敏感信息
+## ✅ 修复完成
 
-**当前状态**：虽然文件已从当前提交中移除，但敏感信息仍然存在于 Git 历史记录中（提交 `659f8d8`）。
+**当前状态**：敏感信息已从所有 Git 历史记录中完全移除，包括所有分支和提交。
 
 ### 选项 1：使用 git filter-branch（推荐）
 
