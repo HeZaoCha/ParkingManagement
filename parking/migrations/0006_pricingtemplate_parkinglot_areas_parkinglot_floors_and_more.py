@@ -7,98 +7,290 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parking', '0005_userprofile_verificationcode_contactmessage_and_more'),
+        ("parking", "0005_userprofile_verificationcode_contactmessage_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PricingTemplate',
+            name="PricingTemplate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='费率模板的名称，如"标准阶梯收费"、"优惠收费"等', max_length=100, unique=True, verbose_name='模板名称')),
-                ('description', models.TextField(blank=True, help_text='模板的详细说明', null=True, verbose_name='模板描述')),
-                ('free_minutes', models.PositiveIntegerField(default=15, help_text='停车多长时间内免费，如15分钟、30分钟', verbose_name='免费时长（分钟）')),
-                ('daily_max_fee', models.DecimalField(blank=True, decimal_places=2, help_text='设置每日最高收费，超过此金额不再计费。为空表示不设上限', max_digits=10, null=True, verbose_name='每日收费上限（元）')),
-                ('is_active', models.BooleanField(default=True, help_text='模板是否可用', verbose_name='是否启用')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text='费率模板的名称，如"标准阶梯收费"、"优惠收费"等',
+                        max_length=100,
+                        unique=True,
+                        verbose_name="模板名称",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True, help_text="模板的详细说明", null=True, verbose_name="模板描述"
+                    ),
+                ),
+                (
+                    "free_minutes",
+                    models.PositiveIntegerField(
+                        default=15,
+                        help_text="停车多长时间内免费，如15分钟、30分钟",
+                        verbose_name="免费时长（分钟）",
+                    ),
+                ),
+                (
+                    "daily_max_fee",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="设置每日最高收费，超过此金额不再计费。为空表示不设上限",
+                        max_digits=10,
+                        null=True,
+                        verbose_name="每日收费上限（元）",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True, help_text="模板是否可用", verbose_name="是否启用"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
             ],
             options={
-                'verbose_name': '费率模板',
-                'verbose_name_plural': '费率模板',
-                'db_table': 'parking_pricing_template',
-                'ordering': ['-created_at'],
+                "verbose_name": "费率模板",
+                "verbose_name_plural": "费率模板",
+                "db_table": "parking_pricing_template",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.AddField(
-            model_name='parkinglot',
-            name='areas',
-            field=models.JSONField(blank=True, default=dict, help_text='各楼层的区域划分，格式：{"楼层": ["区域1", "区域2"]}', verbose_name='区域信息'),
+            model_name="parkinglot",
+            name="areas",
+            field=models.JSONField(
+                blank=True,
+                default=dict,
+                help_text='各楼层的区域划分，格式：{"楼层": ["区域1", "区域2"]}',
+                verbose_name="区域信息",
+            ),
         ),
         migrations.AddField(
-            model_name='parkinglot',
-            name='floors',
-            field=models.JSONField(blank=True, default=list, help_text='停车场的楼层信息，如["B2", "B3", "1F"]。露天停车场可为空', verbose_name='楼层列表'),
+            model_name="parkinglot",
+            name="floors",
+            field=models.JSONField(
+                blank=True,
+                default=list,
+                help_text='停车场的楼层信息，如["B2", "B3", "1F"]。露天停车场可为空',
+                verbose_name="楼层列表",
+            ),
         ),
         migrations.AddField(
-            model_name='parkinglot',
-            name='lot_type',
-            field=models.CharField(choices=[('outdoor', '露天停车场'), ('multi_story', '立体停车楼'), ('street', '街道停车场'), ('underground', '地下停车场')], default='outdoor', help_text='选择停车场类型：露天、立体停车楼、街道、地下', max_length=20, verbose_name='停车场类型'),
+            model_name="parkinglot",
+            name="lot_type",
+            field=models.CharField(
+                choices=[
+                    ("outdoor", "露天停车场"),
+                    ("multi_story", "立体停车楼"),
+                    ("street", "街道停车场"),
+                    ("underground", "地下停车场"),
+                ],
+                default="outdoor",
+                help_text="选择停车场类型：露天、立体停车楼、街道、地下",
+                max_length=20,
+                verbose_name="停车场类型",
+            ),
         ),
         migrations.AddField(
-            model_name='parkingspace',
-            name='area',
-            field=models.CharField(blank=True, help_text='停车位所在区域，如"A区"、"B区"等', max_length=50, null=True, verbose_name='区域'),
+            model_name="parkingspace",
+            name="area",
+            field=models.CharField(
+                blank=True,
+                help_text='停车位所在区域，如"A区"、"B区"等',
+                max_length=50,
+                null=True,
+                verbose_name="区域",
+            ),
         ),
         migrations.AddField(
-            model_name='parkingspace',
-            name='floor',
-            field=models.CharField(blank=True, help_text='停车位所在楼层，如"B2"、"1F"等。露天停车场可为空', max_length=20, null=True, verbose_name='楼层'),
+            model_name="parkingspace",
+            name="floor",
+            field=models.CharField(
+                blank=True,
+                help_text='停车位所在楼层，如"B2"、"1F"等。露天停车场可为空',
+                max_length=20,
+                null=True,
+                verbose_name="楼层",
+            ),
         ),
         migrations.AlterField(
-            model_name='parkinglot',
-            name='hourly_rate',
-            field=models.DecimalField(decimal_places=2, default=Decimal('5.00'), help_text='停车每小时收费（元），仅在固定收费模式下使用', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='每小时费率'),
+            model_name="parkinglot",
+            name="hourly_rate",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal("5.00"),
+                help_text="停车每小时收费（元），仅在固定收费模式下使用",
+                max_digits=10,
+                validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                verbose_name="每小时费率",
+            ),
         ),
         migrations.CreateModel(
-            name='ParkingLotPricing',
+            name="ParkingLotPricing",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('charge_type', models.CharField(choices=[('fixed', '固定小时收费'), ('tiered', '阶梯制收费')], default='fixed', help_text='固定小时收费或阶梯制收费', max_length=20, verbose_name='收费类型')),
-                ('hourly_rate', models.DecimalField(blank=True, decimal_places=2, help_text='固定收费模式下的每小时收费', max_digits=10, null=True, verbose_name='每小时费率（元）')),
-                ('free_minutes', models.PositiveIntegerField(blank=True, help_text='阶梯收费模式下的免费时长', null=True, verbose_name='免费时长（分钟）')),
-                ('daily_max_fee', models.DecimalField(blank=True, decimal_places=2, help_text='设置每日最高收费，超过此金额不再计费', max_digits=10, null=True, verbose_name='每日收费上限（元）')),
-                ('custom_rules', models.JSONField(blank=True, default=list, help_text='自定义的阶梯收费规则，格式：[{"start_minutes": 15, "end_minutes": 60, "rate_per_hour": 5.00}, ...]', verbose_name='自定义费率规则')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
-                ('parking_lot', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='pricing_config', to='parking.parkinglot', verbose_name='停车场')),
-                ('template', models.ForeignKey(blank=True, help_text='选择已保存的费率模板，或留空使用自定义费率', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='parking_lots', to='parking.pricingtemplate', verbose_name='费率模板')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "charge_type",
+                    models.CharField(
+                        choices=[("fixed", "固定小时收费"), ("tiered", "阶梯制收费")],
+                        default="fixed",
+                        help_text="固定小时收费或阶梯制收费",
+                        max_length=20,
+                        verbose_name="收费类型",
+                    ),
+                ),
+                (
+                    "hourly_rate",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="固定收费模式下的每小时收费",
+                        max_digits=10,
+                        null=True,
+                        verbose_name="每小时费率（元）",
+                    ),
+                ),
+                (
+                    "free_minutes",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="阶梯收费模式下的免费时长",
+                        null=True,
+                        verbose_name="免费时长（分钟）",
+                    ),
+                ),
+                (
+                    "daily_max_fee",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="设置每日最高收费，超过此金额不再计费",
+                        max_digits=10,
+                        null=True,
+                        verbose_name="每日收费上限（元）",
+                    ),
+                ),
+                (
+                    "custom_rules",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text='自定义的阶梯收费规则，格式：[{"start_minutes": 15, "end_minutes": 60, "rate_per_hour": 5.00}, ...]',
+                        verbose_name="自定义费率规则",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
+                (
+                    "parking_lot",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="pricing_config",
+                        to="parking.parkinglot",
+                        verbose_name="停车场",
+                    ),
+                ),
+                (
+                    "template",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="选择已保存的费率模板，或留空使用自定义费率",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="parking_lots",
+                        to="parking.pricingtemplate",
+                        verbose_name="费率模板",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '停车场费率配置',
-                'verbose_name_plural': '停车场费率配置',
-                'db_table': 'parking_lot_pricing',
+                "verbose_name": "停车场费率配置",
+                "verbose_name_plural": "停车场费率配置",
+                "db_table": "parking_lot_pricing",
             },
         ),
         migrations.CreateModel(
-            name='PricingRule',
+            name="PricingRule",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start_minutes', models.PositiveIntegerField(help_text='此规则开始生效的分钟数（包含）', verbose_name='起始分钟')),
-                ('end_minutes', models.PositiveIntegerField(blank=True, help_text='此规则结束的分钟数（不包含）。为空表示无上限', null=True, verbose_name='结束分钟')),
-                ('rate_per_hour', models.DecimalField(decimal_places=2, help_text='此时间段内每小时收费金额', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='每小时费率（元）')),
-                ('order', models.PositiveIntegerField(default=0, help_text='规则执行顺序，数字越小越先执行', verbose_name='排序')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('template', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rules', to='parking.pricingtemplate', verbose_name='费率模板')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "start_minutes",
+                    models.PositiveIntegerField(
+                        help_text="此规则开始生效的分钟数（包含）", verbose_name="起始分钟"
+                    ),
+                ),
+                (
+                    "end_minutes",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="此规则结束的分钟数（不包含）。为空表示无上限",
+                        null=True,
+                        verbose_name="结束分钟",
+                    ),
+                ),
+                (
+                    "rate_per_hour",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="此时间段内每小时收费金额",
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                        verbose_name="每小时费率（元）",
+                    ),
+                ),
+                (
+                    "order",
+                    models.PositiveIntegerField(
+                        default=0, help_text="规则执行顺序，数字越小越先执行", verbose_name="排序"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                (
+                    "template",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rules",
+                        to="parking.pricingtemplate",
+                        verbose_name="费率模板",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '费率规则',
-                'verbose_name_plural': '费率规则',
-                'db_table': 'parking_pricing_rule',
-                'ordering': ['template', 'order', 'start_minutes'],
-                'indexes': [models.Index(fields=['template', 'order'], name='parking_pri_templat_21a925_idx')],
+                "verbose_name": "费率规则",
+                "verbose_name_plural": "费率规则",
+                "db_table": "parking_pricing_rule",
+                "ordering": ["template", "order", "start_minutes"],
+                "indexes": [
+                    models.Index(
+                        fields=["template", "order"], name="parking_pri_templat_21a925_idx"
+                    )
+                ],
             },
         ),
     ]

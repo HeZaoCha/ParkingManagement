@@ -41,9 +41,15 @@ test_*.py
 ########################################
 # Python env
 .env
-.env.*
 .env.local
 .env.*.local
+# 环境变量配置文件（不提交）
+.env.dev
+.env.staging
+.env.production
+.env.prod
+# 但提交示例文件
+!.env.*.example
 .venv/
 venv/
 env/
@@ -79,8 +85,7 @@ htmlcov/
 .nox/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
+coverage.json
 coverage.xml
 *.cover
 *.py.cover
@@ -89,6 +94,8 @@ coverage.xml
 .pytest/
 test-results/
 junit.xml
+.cache
+nosetests.xml
 
 # 日志文件
 logs/

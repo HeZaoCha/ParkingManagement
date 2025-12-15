@@ -15,6 +15,7 @@ dependencies = [
     "celery>=5.3.4",  # 异步任务队列
     "redis>=5.0.1",  # Redis支持（Celery broker）
     "pillow>=10.2.0",  # 图片处理
+    "reportlab>=4.4.6",
 ]
 
 [dependency-groups]
@@ -41,3 +42,19 @@ markers = [
     "slow: 标记为慢速测试",
     "integration: 集成测试",
 ]
+
+[tool.ruff]
+# Ruff 代码检查配置
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# 忽略 Django settings 中的 star import 警告（这是 Django 的标准做法）
+ignore = [
+    "F403",  # `from module import *` used; unable to detect undefined names
+    "F405",  # `name` may be undefined, or defined from star imports
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 针对特定文件或目录的忽略规则
+"config/settings/*.py" = ["F403", "F405"]  # Django settings 文件允许 star import

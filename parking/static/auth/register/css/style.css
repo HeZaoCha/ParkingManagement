@@ -1,0 +1,160 @@
+.register-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(-45deg, var(--gradient-start), var(--gradient-end), var(--color-primary-400), var(--color-primary-700));
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+  }
+  
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .register-card {
+    animation: cardEnter 0.6s ease-out;
+  }
+  
+  @keyframes cardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  /* 步骤指示器样式 */
+  .step-indicator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+  
+  .step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border-color, #e5e7eb);
+    z-index: 0;
+  }
+  
+  .dark .step-indicator::before {
+    background: var(--border-color-dark, #374151);
+  }
+  
+  .step-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+  }
+  
+  .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: var(--bg-secondary, #f3f4f6);
+    color: var(--text-secondary, #6b7280);
+    border: 2px solid var(--border-color, #e5e7eb);
+  }
+  
+  .dark .step-number {
+    background: var(--bg-secondary-dark, #2a2a2a);
+    color: var(--text-secondary-dark, #9ca3af);
+    border-color: var(--border-color-dark, #374151);
+  }
+  
+  .step-item.active .step-number {
+    background: var(--color-primary-500);
+    color: white;
+    border-color: var(--color-primary-500);
+    transform: scale(1.1);
+  }
+  
+  .step-item.completed .step-number {
+    background: var(--color-primary-500);
+    color: white;
+    border-color: var(--color-primary-500);
+  }
+  
+  .step-item.completed .step-number::after {
+    content: '✓';
+    font-size: 20px;
+  }
+  
+  .step-title {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #6b7280);
+    text-align: center;
+  }
+  
+  .dark .step-title {
+    color: var(--text-secondary-dark, #9ca3af);
+  }
+  
+  .step-item.active .step-title {
+    color: var(--color-primary-500);
+    font-weight: 600;
+  }
+  
+  /* 步骤内容区域 */
+  .step-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  .step-content.active {
+    display: block;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 确保电话号码输入框的区号显示在国旗区域 */
+  .iti__selected-flag {
+    width: auto !important;
+    padding-right: 8px !important;
+  }
+  
+  .iti__selected-dial-code {
+    display: inline-block !important;
+    margin-left: 6px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary, #111827) !important;
+    font-size: 14px !important;
+  }
+  
+  .dark .iti__selected-dial-code {
+    color: var(--text-primary-dark, #f9fafb) !important;
+  }
+  
+  /* 确保输入框有足够的左边距为国旗和区号留出空间 */
+  .iti__flag-container + input,
+  .iti input {
+    padding-left: 90px !important;
+  }

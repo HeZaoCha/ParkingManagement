@@ -63,7 +63,67 @@ ParkingManagement/
 │   ├── services.py           # 业务服务
 │   └── ...
 ├── templates/                 # 模板文件
-├── static/                    # 静态文件
+│   ├── admin/                 # 管理后台模板
+│   ├── auth/                  # 认证相关模板
+│   ├── contact/               # 联系页面模板
+│   └── ...
+├── parking/static/            # 静态文件（按模板路径组织）
+│   ├── base/                  # 基础模板静态文件
+│   │   ├── css/              # 基础样式
+│   │   │   ├── theme_system.css      # 主题系统样式
+│   │   │   └── intl_tel_input.css    # 国际手机号输入组件样式
+│   │   └── js/               # 基础脚本
+│   │       ├── tailwind_config.js    # Tailwind 配置
+│   │       └── theme_manager.js      # 主题管理器
+│   ├── admin/                 # 管理后台静态文件
+│   │   ├── base/             # 管理后台基础模板
+│   │   │   ├── css/
+│   │   │   │   └── style.css         # 管理后台样式
+│   │   │   └── js/
+│   │   │       ├── tailwind_config.js # Tailwind 配置
+│   │   │       └── script.js          # 管理后台脚本
+│   │   ├── pricing/          # 费率管理
+│   │   │   ├── template_edit/
+│   │   │   │   └── js/
+│   │   │   │       └── script.js     # 费率模板编辑脚本
+│   │   │   └── template_list/
+│   │   │       └── js/
+│   │   │           └── script.js     # 费率模板列表脚本
+│   │   └── ...               # 其他管理后台页面
+│   ├── auth/                  # 认证页面静态文件
+│   │   ├── register/
+│   │   │   ├── css/
+│   │   │   │   └── style.css
+│   │   │   └── js/
+│   │   │       └── script.js
+│   │   ├── forgot_password/
+│   │   │   ├── css/
+│   │   │   └── js/
+│   │   └── reset_password/
+│   │       ├── css/
+│   │       └── js/
+│   ├── customer/              # 客户端静态文件
+│   │   ├── base/
+│   │   │   └── css/
+│   │   │       └── style.css
+│   │   └── index/
+│   │       └── js/
+│   ├── contact/               # 联系页面静态文件
+│   │   └── form/
+│   │       ├── css/
+│   │       │   └── style.css
+│   │       └── js/
+│   │           └── script.js
+│   ├── components/            # 组件静态文件
+│   │   ├── loader/
+│   │   ├── navbar/
+│   │   └── quick_modals/
+│   ├── dashboard/             # 仪表盘静态文件
+│   │   ├── css/
+│   │   └── js/
+│   └── index/                 # 首页静态文件
+│       ├── css/
+│       └── js/
 ├── tests/                     # 测试文件
 │   ├── unit/                 # 单元测试
 │   └── integration/          # 集成测试

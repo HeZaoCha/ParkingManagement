@@ -7,9 +7,14 @@
 | 组件 | 最低版本 | 推荐版本 |
 |------|---------|---------|
 | Python | 3.10+ | 3.13 |
-| PostgreSQL | 13+ | 16 |
+| PostgreSQL | 13+ | **17** |
+| Redis | 6.0+ | **8.0** |
 | Nginx | 1.18+ | 1.24 |
+| Docker | 20.10+ | 最新 |
+| Docker Compose | 2.0+ | 最新 |
 | uv | 0.1+ | 最新 |
+
+> **注意**: 生产环境推荐使用 PostgreSQL 17 和 Redis 8.0，详细技术栈方案请参考 [生产环境技术栈方案](./PRODUCTION_TECH_STACK.md)
 
 ## 部署架构
 

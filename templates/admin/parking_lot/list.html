@@ -1,4 +1,5 @@
 {% extends 'admin/base.html' %}
+{% load static %}
 
 {% block title %}停车场管理{% endblock %}
 {% block page_title %}停车场管理{% endblock %}
@@ -198,13 +199,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-async function toggleStatus(pk, name) {
-    const result = await apiRequest(`/manage/lots/${pk}/toggle/`, { method: 'POST' });
-    if (result.success) {
-        setTimeout(() => location.reload(), 500);
-    }
-}
-</script>
+
+<script src="{% static 'admin/parking_lot/list/js/script.js' %}"></script>
 {% endblock %}
 

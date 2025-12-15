@@ -1,4 +1,5 @@
 {% extends 'admin/base.html' %}
+{% load static %}
 
 {% block title %}通缉车辆详情{% endblock %}
 {% block page_title %}通缉车辆详情 - {{ vehicle.license_plate }}{% endblock %}
@@ -191,25 +192,7 @@
     </div>
 </div>
 
-<script>
-function cancelWanted(id) {
-    if (!confirm('确定要取消此通缉吗？')) return;
-    
-    fetch(`/parking/manage/alert/wanted/${id}/cancel/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
-        },
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('操作失败：' + data.message);
-        }
-    });
-}
-</script>
+
+<script src="{% static 'admin/alert/wanted_detail/js/script.js' %}"></script>
 {% endblock %}
 

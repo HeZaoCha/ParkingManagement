@@ -5,45 +5,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parking', '0001_initial'),
+        ("parking", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RenameIndex(
-            model_name='parkingrecord',
-            new_name='record_entry_time_idx',
-            old_name='parking_par_entry_t_647a06_idx',
+            model_name="parkingrecord",
+            new_name="record_entry_time_idx",
+            old_name="parking_par_entry_t_647a06_idx",
         ),
         migrations.RenameIndex(
-            model_name='parkingrecord',
-            new_name='record_vehicle_entry_idx',
-            old_name='parking_par_vehicle_361e1e_idx',
+            model_name="parkingrecord",
+            new_name="record_vehicle_entry_idx",
+            old_name="parking_par_vehicle_361e1e_idx",
         ),
         migrations.AddIndex(
-            model_name='parkinglot',
-            index=models.Index(fields=['is_active'], name='lot_active_idx'),
+            model_name="parkinglot",
+            index=models.Index(fields=["is_active"], name="lot_active_idx"),
         ),
         migrations.AddIndex(
-            model_name='parkingrecord',
-            index=models.Index(fields=['exit_time'], name='record_exit_time_idx'),
+            model_name="parkingrecord",
+            index=models.Index(fields=["exit_time"], name="record_exit_time_idx"),
         ),
         migrations.AddIndex(
-            model_name='parkingrecord',
-            index=models.Index(fields=['is_paid'], name='record_is_paid_idx'),
+            model_name="parkingrecord",
+            index=models.Index(fields=["is_paid"], name="record_is_paid_idx"),
         ),
         migrations.AddIndex(
-            model_name='parkingrecord',
-            index=models.Index(fields=['parking_space', 'entry_time'], name='record_space_entry_idx'),
+            model_name="parkingrecord",
+            index=models.Index(
+                fields=["parking_space", "entry_time"], name="record_space_entry_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='parkingspace',
-            index=models.Index(fields=['parking_lot', 'is_occupied'], name='space_lot_occupied_idx'),
+            model_name="parkingspace",
+            index=models.Index(
+                fields=["parking_lot", "is_occupied"], name="space_lot_occupied_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='parkingspace',
-            index=models.Index(fields=['is_occupied'], name='space_occupied_idx'),
+            model_name="parkingspace",
+            index=models.Index(fields=["is_occupied"], name="space_occupied_idx"),
         ),
     ]

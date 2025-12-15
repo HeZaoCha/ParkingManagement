@@ -11,7 +11,7 @@ from django.conf import settings
 def send_email_async(self, subject, message, recipient_list, from_email=None):
     """
     异步发送邮件
-    
+
     Args:
         subject: 邮件主题
         message: 邮件内容
@@ -26,17 +26,17 @@ def send_email_async(self, subject, message, recipient_list, from_email=None):
             recipient_list=recipient_list,
             fail_silently=False,
         )
-        return {'status': 'success', 'recipients': recipient_list}
+        return {"status": "success", "recipients": recipient_list}
     except Exception as exc:
         # 重试
         raise self.retry(exc=exc, countdown=60)
 
 
 @shared_task(bind=True, max_retries=3)
-def send_verification_code_async(self, email, code, code_type='email'):
+def send_verification_code_async(self, email, code, code_type="email"):
     """
     异步发送验证码
-    
+
     Args:
         email: 邮箱地址
         code: 验证码
@@ -44,9 +44,8 @@ def send_verification_code_async(self, email, code, code_type='email'):
     """
     try:
         from parking.email_service import EmailService
-        
+
         EmailService.send_verification_code(email, code, code_type)
-        return {'status': 'success', 'email': email}
+        return {"status": "success", "email": email}
     except Exception as exc:
         raise self.retry(exc=exc, countdown=60)
-

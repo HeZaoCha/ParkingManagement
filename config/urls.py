@@ -14,32 +14,36 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
 from parking.views.auth import login_view, logout_view
+from parking.views.health import health_check
 from parking.views.i18n import set_language
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('login/', login_view, name='login'),
-    path('logout/', logout_view, name='logout'),
-    path('i18n/setlang/', set_language, name='set_language'),
-    path('parking/', include('parking.urls', namespace='parking')),
-    path('', include('parking.urls', namespace='parking_main')),
+    path("admin/", admin.site.urls),
+    path("health/", health_check, name="health_check"),
+    path("login/", login_view, name="login"),
+    path("logout/", logout_view, name="logout"),
+    path("i18n/setlang/", set_language, name="set_language"),
+    path("parking/", include("parking.urls", namespace="parking")),
+    path("", include("parking.urls", namespace="parking_main")),
 ]
 
 # 开发环境下提供媒体文件服务
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
+
     # Django Debug Toolbar（仅开发环境）
     try:
         import debug_toolbar
+
         urlpatterns = [
-            path('__debug__/', include(debug_toolbar.urls)),
+            path("__debug__/", include(debug_toolbar.urls)),
         ] + urlpatterns
     except ImportError:
         pass

@@ -6,4 +6,4 @@
 
 from .common import TimestampMixin, SoftDeleteMixin, BaseModel
 
-__all__ = ['TimestampMixin', 'SoftDeleteMixin', 'BaseModel']
+__all__ = ["TimestampMixin", "SoftDeleteMixin", "BaseModel"]

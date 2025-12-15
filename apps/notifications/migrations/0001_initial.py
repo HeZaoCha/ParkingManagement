@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,44 +14,185 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='NotificationTemplate',
+            name="NotificationTemplate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='记录创建时间', verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='记录最后更新时间', verbose_name='更新时间')),
-                ('name', models.CharField(help_text='模板的唯一名称', max_length=100, unique=True, verbose_name='模板名称')),
-                ('title_template', models.CharField(help_text='通知标题模板（支持变量替换）', max_length=200, verbose_name='标题模板')),
-                ('message_template', models.TextField(help_text='通知内容模板（支持变量替换）', verbose_name='内容模板')),
-                ('notification_type', models.CharField(choices=[('info', '信息'), ('success', '成功'), ('warning', '警告'), ('error', '错误'), ('system', '系统')], default='info', help_text='使用此模板的通知类型', max_length=20, verbose_name='通知类型')),
-                ('description', models.CharField(blank=True, help_text='模板的说明', max_length=200, verbose_name='模板描述')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="记录创建时间", verbose_name="创建时间"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, help_text="记录最后更新时间", verbose_name="更新时间"
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="模板的唯一名称",
+                        max_length=100,
+                        unique=True,
+                        verbose_name="模板名称",
+                    ),
+                ),
+                (
+                    "title_template",
+                    models.CharField(
+                        help_text="通知标题模板（支持变量替换）",
+                        max_length=200,
+                        verbose_name="标题模板",
+                    ),
+                ),
+                (
+                    "message_template",
+                    models.TextField(
+                        help_text="通知内容模板（支持变量替换）", verbose_name="内容模板"
+                    ),
+                ),
+                (
+                    "notification_type",
+                    models.CharField(
+                        choices=[
+                            ("info", "信息"),
+                            ("success", "成功"),
+                            ("warning", "警告"),
+                            ("error", "错误"),
+                            ("system", "系统"),
+                        ],
+                        default="info",
+                        help_text="使用此模板的通知类型",
+                        max_length=20,
+                        verbose_name="通知类型",
+                    ),
+                ),
+                (
+                    "description",
+                    models.CharField(
+                        blank=True, help_text="模板的说明", max_length=200, verbose_name="模板描述"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '通知模板',
-                'verbose_name_plural': '通知模板',
-                'ordering': ['name'],
+                "verbose_name": "通知模板",
+                "verbose_name_plural": "通知模板",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='记录创建时间', verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='记录最后更新时间', verbose_name='更新时间')),
-                ('title', models.CharField(help_text='通知的标题', max_length=200, verbose_name='通知标题')),
-                ('message', models.TextField(help_text='通知的详细内容', verbose_name='通知内容')),
-                ('notification_type', models.CharField(choices=[('info', '信息'), ('success', '成功'), ('warning', '警告'), ('error', '错误'), ('system', '系统')], default='info', help_text='通知的类型', max_length=20, verbose_name='通知类型')),
-                ('is_read', models.BooleanField(db_index=True, default=False, help_text='用户是否已阅读此通知', verbose_name='是否已读')),
-                ('read_at', models.DateTimeField(blank=True, help_text='用户阅读通知的时间', null=True, verbose_name='阅读时间')),
-                ('link', models.URLField(blank=True, help_text='通知相关的链接地址', verbose_name='相关链接')),
-                ('related_object_type', models.CharField(blank=True, help_text='关联的模型类型', max_length=100, verbose_name='关联对象类型')),
-                ('related_object_id', models.CharField(blank=True, help_text='关联的对象ID', max_length=100, verbose_name='关联对象ID')),
-                ('user', models.ForeignKey(help_text='接收通知的用户', on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL, verbose_name='接收用户')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="记录创建时间", verbose_name="创建时间"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, help_text="记录最后更新时间", verbose_name="更新时间"
+                    ),
+                ),
+                (
+                    "title",
+                    models.CharField(
+                        help_text="通知的标题", max_length=200, verbose_name="通知标题"
+                    ),
+                ),
+                ("message", models.TextField(help_text="通知的详细内容", verbose_name="通知内容")),
+                (
+                    "notification_type",
+                    models.CharField(
+                        choices=[
+                            ("info", "信息"),
+                            ("success", "成功"),
+                            ("warning", "警告"),
+                            ("error", "错误"),
+                            ("system", "系统"),
+                        ],
+                        default="info",
+                        help_text="通知的类型",
+                        max_length=20,
+                        verbose_name="通知类型",
+                    ),
+                ),
+                (
+                    "is_read",
+                    models.BooleanField(
+                        db_index=True,
+                        default=False,
+                        help_text="用户是否已阅读此通知",
+                        verbose_name="是否已读",
+                    ),
+                ),
+                (
+                    "read_at",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="用户阅读通知的时间",
+                        null=True,
+                        verbose_name="阅读时间",
+                    ),
+                ),
+                (
+                    "link",
+                    models.URLField(
+                        blank=True, help_text="通知相关的链接地址", verbose_name="相关链接"
+                    ),
+                ),
+                (
+                    "related_object_type",
+                    models.CharField(
+                        blank=True,
+                        help_text="关联的模型类型",
+                        max_length=100,
+                        verbose_name="关联对象类型",
+                    ),
+                ),
+                (
+                    "related_object_id",
+                    models.CharField(
+                        blank=True,
+                        help_text="关联的对象ID",
+                        max_length=100,
+                        verbose_name="关联对象ID",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="接收通知的用户",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="接收用户",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '通知',
-                'verbose_name_plural': '通知',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['user', 'is_read', '-created_at'], name='notif_user_read_idx'), models.Index(fields=['-created_at'], name='notif_created_idx')],
+                "verbose_name": "通知",
+                "verbose_name_plural": "通知",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["user", "is_read", "-created_at"], name="notif_user_read_idx"
+                    ),
+                    models.Index(fields=["-created_at"], name="notif_created_idx"),
+                ],
             },
         ),
     ]

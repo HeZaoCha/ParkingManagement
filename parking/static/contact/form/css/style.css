@@ -1,0 +1,327 @@
+/* 联系页面专用样式 - 每个卡片使用不同主题色 */
+  .contact-page {
+    /* 背景色根据当前选择的主题色变化，而非仅由亮暗模式控制 */
+    /* 使用主题色定义的背景色，确保背景色随主题色变化 */
+    background: var(--bg-secondary);
+    min-height: 100vh;
+    /* 为联系页面添加微妙的主题色背景渐变 */
+    position: relative;
+  }
+  
+  /* 根据主题色添加背景渐变效果（可选，增强视觉层次） */
+  .contact-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 50%, 
+      var(--color-primary-100, transparent) 0%, 
+      transparent 50%),
+                radial-gradient(circle at 80% 50%, 
+      var(--color-primary-100, transparent) 0%, 
+      transparent 50%);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  html.dark .contact-page::before {
+    background: radial-gradient(circle at 20% 50%, 
+      var(--color-primary-900, transparent) 0%, 
+      transparent 50%),
+                radial-gradient(circle at 80% 50%, 
+      var(--color-primary-900, transparent) 0%, 
+      transparent 50%);
+    opacity: 0.2;
+  }
+  
+  .contact-page > * {
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* 邮件联系卡片 - 蓝色主题 */
+  .contact-card-email {
+    background: linear-gradient(135deg, 
+      var(--contact-email-50) 0%, 
+      var(--contact-email-100) 50%,
+      var(--contact-email-50) 100%);
+    border: 2px solid var(--contact-email-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-email {
+    background: linear-gradient(135deg, 
+      var(--contact-email-900) 0%, 
+      var(--contact-email-800) 50%,
+      var(--contact-email-900) 100%);
+    border-color: var(--contact-email-700);
+  }
+  
+  .contact-card-email::before {
+    background: linear-gradient(90deg, 
+      var(--contact-email-500) 0%, 
+      var(--contact-email-400) 50%, 
+      var(--contact-email-500) 100%);
+  }
+  
+  .contact-card-email .icon-bg {
+    background: var(--contact-email-100);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+  }
+  
+  html.dark .contact-card-email .icon-bg {
+    background: var(--contact-email-800);
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  }
+  
+  .contact-card-email .icon {
+    color: var(--contact-email-600);
+  }
+  
+  html.dark .contact-card-email .icon {
+    color: var(--contact-email-400);
+  }
+  
+  .contact-card-email .btn {
+    background: var(--contact-email-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+  }
+  
+  .contact-card-email .btn:hover {
+    background: var(--contact-email-600);
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+  }
+  
+  /* GitHub Issues 卡片 - 紫色主题 */
+  .contact-card-github {
+    background: linear-gradient(135deg, 
+      var(--contact-github-50) 0%, 
+      var(--contact-github-100) 50%,
+      var(--contact-github-50) 100%);
+    border: 2px solid var(--contact-github-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-github {
+    background: linear-gradient(135deg, 
+      var(--contact-github-900) 0%, 
+      var(--contact-github-800) 50%,
+      var(--contact-github-900) 100%);
+    border-color: var(--contact-github-700);
+  }
+  
+  .contact-card-github::before {
+    background: linear-gradient(90deg, 
+      var(--contact-github-500) 0%, 
+      var(--contact-github-400) 50%, 
+      var(--contact-github-500) 100%);
+  }
+  
+  .contact-card-github .icon-bg {
+    background: var(--contact-github-100);
+    box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.2);
+  }
+  
+  html.dark .contact-card-github .icon-bg {
+    background: var(--contact-github-800);
+    box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.3);
+  }
+  
+  .contact-card-github .icon {
+    color: var(--contact-github-600);
+  }
+  
+  html.dark .contact-card-github .icon {
+    color: var(--contact-github-400);
+  }
+  
+  .contact-card-github .btn {
+    background: var(--contact-github-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(168, 85, 247, 0.3);
+  }
+  
+  .contact-card-github .btn:hover {
+    background: var(--contact-github-600);
+    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.4);
+  }
+  
+  /* CSDN私信卡片 - 绿色主题 */
+  .contact-card-csdn {
+    background: linear-gradient(135deg, 
+      var(--contact-csdn-50) 0%, 
+      var(--contact-csdn-100) 50%,
+      var(--contact-csdn-50) 100%);
+    border: 2px solid var(--contact-csdn-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-csdn {
+    background: linear-gradient(135deg, 
+      var(--contact-csdn-900) 0%, 
+      var(--contact-csdn-800) 50%,
+      var(--contact-csdn-900) 100%);
+    border-color: var(--contact-csdn-700);
+  }
+  
+  .contact-card-csdn::before {
+    background: linear-gradient(90deg, 
+      var(--contact-csdn-500) 0%, 
+      var(--contact-csdn-400) 50%, 
+      var(--contact-csdn-500) 100%);
+  }
+  
+  .contact-card-csdn .icon-bg {
+    background: var(--contact-csdn-100);
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.2);
+  }
+  
+  html.dark .contact-card-csdn .icon-bg {
+    background: var(--contact-csdn-800);
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+  }
+  
+  .contact-card-csdn .icon {
+    color: var(--contact-csdn-600);
+  }
+  
+  html.dark .contact-card-csdn .icon {
+    color: var(--contact-csdn-400);
+  }
+  
+  .contact-card-csdn .btn {
+    background: var(--contact-csdn-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.3);
+  }
+  
+  .contact-card-csdn .btn:hover {
+    background: var(--contact-csdn-600);
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.4);
+  }
+  
+  /* 在岗工作人员卡片 - 橙色主题 */
+  .contact-card-staff {
+    background: linear-gradient(135deg, 
+      var(--contact-staff-50) 0%, 
+      var(--contact-staff-100) 50%,
+      var(--contact-staff-50) 100%);
+    border: 2px solid var(--contact-staff-200);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  html.dark .contact-card-staff {
+    background: linear-gradient(135deg, 
+      var(--contact-staff-900) 0%, 
+      var(--contact-staff-800) 50%,
+      var(--contact-staff-900) 100%);
+    border-color: var(--contact-staff-700);
+  }
+  
+  .contact-card-staff::before {
+    background: linear-gradient(90deg, 
+      var(--contact-staff-500) 0%, 
+      var(--contact-staff-400) 50%, 
+      var(--contact-staff-500) 100%);
+  }
+  
+  .contact-card-staff .icon-bg {
+    background: var(--contact-staff-100);
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.2);
+  }
+  
+  html.dark .contact-card-staff .icon-bg {
+    background: var(--contact-staff-800);
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  }
+  
+  .contact-card-staff .icon {
+    color: var(--contact-staff-600);
+  }
+  
+  html.dark .contact-card-staff .icon {
+    color: var(--contact-staff-400);
+  }
+  
+  .contact-card-staff .btn {
+    background: var(--contact-staff-500);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  }
+  
+  .contact-card-staff .btn:hover {
+    background: var(--contact-staff-600);
+    box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.4);
+  }
+  
+  /* 通用卡片样式增强 */
+  .contact-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+  }
+  
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    transform: scaleX(0);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+  
+  .contact-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .contact-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 
+                0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 确保文本对比度符合WCAG要求 */
+  .contact-card h3 {
+    color: var(--text-primary);
+  }
+  
+  .contact-card p {
+    color: var(--text-secondary);
+  }
+  
+  /* 确保联系表单电话号码输入框的区号显示 */
+  /* 确保联系表单电话号码输入框的区号显示在国旗区域 */
+  .contact-form .iti__selected-flag {
+    width: auto !important;
+    padding-right: 8px !important;
+  }
+  
+  .contact-form .iti__selected-dial-code {
+    display: inline-block !important;
+    margin-left: 6px !important;
+    font-weight: 500 !important;
+    color: var(--text-primary, #111827) !important;
+    font-size: 14px !important;
+  }
+  
+  .dark .contact-form .iti__selected-dial-code {
+    color: var(--text-primary-dark, #f9fafb) !important;
+  }
+  
+  /* 确保输入框有足够的左边距为国旗和区号留出空间 */
+  .contact-form .iti__flag-container + input,
+  .contact-form .iti input {
+    padding-left: 90px !important;
+  }

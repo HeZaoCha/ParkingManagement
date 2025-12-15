@@ -18,14 +18,14 @@ from parking.models.validators import (
 )
 
 __all__ = [
-    'ParkingLot',
-    'ParkingSpace',
-    'Vehicle',
-    'VIPVehicle',
-    'ParkingRecord',
-    'validate_license_plate',
-    'license_plate_validator',
-    'PROVINCE_ABBREVIATIONS',
-    'CITY_CODES',
-    'LICENSE_PLATE_PATTERN',
+    "ParkingLot",
+    "ParkingSpace",
+    "Vehicle",
+    "VIPVehicle",
+    "ParkingRecord",
+    "validate_license_plate",
+    "license_plate_validator",
+    "PROVINCE_ABBREVIATIONS",
+    "CITY_CODES",
+    "LICENSE_PLATE_PATTERN",
 ]

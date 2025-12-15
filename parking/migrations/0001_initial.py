@@ -8,7 +8,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -17,80 +16,279 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='ParkingLot',
+            name="ParkingLot",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='停车场的名称', max_length=100, verbose_name='停车场名称')),
-                ('address', models.CharField(help_text='停车场的详细地址', max_length=200, verbose_name='地址')),
-                ('total_spaces', models.PositiveIntegerField(default=0, help_text='停车场的总车位数', validators=[django.core.validators.MinValueValidator(0)], verbose_name='总车位数')),
-                ('hourly_rate', models.DecimalField(decimal_places=2, default=Decimal('5.00'), help_text='停车每小时收费（元）', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='每小时费率')),
-                ('is_active', models.BooleanField(default=True, help_text='停车场是否正在运营', verbose_name='是否启用')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="停车场的名称", max_length=100, verbose_name="停车场名称"
+                    ),
+                ),
+                (
+                    "address",
+                    models.CharField(
+                        help_text="停车场的详细地址", max_length=200, verbose_name="地址"
+                    ),
+                ),
+                (
+                    "total_spaces",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="停车场的总车位数",
+                        validators=[django.core.validators.MinValueValidator(0)],
+                        verbose_name="总车位数",
+                    ),
+                ),
+                (
+                    "hourly_rate",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=Decimal("5.00"),
+                        help_text="停车每小时收费（元）",
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                        verbose_name="每小时费率",
+                    ),
+                ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True, help_text="停车场是否正在运营", verbose_name="是否启用"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
             ],
             options={
-                'verbose_name': '停车场',
-                'verbose_name_plural': '停车场',
-                'ordering': ['-created_at'],
+                "verbose_name": "停车场",
+                "verbose_name_plural": "停车场",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Vehicle',
+            name="Vehicle",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('license_plate', models.CharField(db_index=True, help_text='车辆的车牌号码', max_length=20, unique=True, verbose_name='车牌号')),
-                ('vehicle_type', models.CharField(choices=[('car', '小型车'), ('suv', 'SUV'), ('truck', '货车'), ('motorcycle', '摩托车')], default='car', max_length=20, verbose_name='车辆类型')),
-                ('owner_name', models.CharField(blank=True, help_text='车辆所有者的姓名', max_length=100, verbose_name='车主姓名')),
-                ('owner_phone', models.CharField(blank=True, help_text='车辆所有者的联系电话', max_length=20, verbose_name='车主电话')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "license_plate",
+                    models.CharField(
+                        db_index=True,
+                        help_text="车辆的车牌号码",
+                        max_length=20,
+                        unique=True,
+                        verbose_name="车牌号",
+                    ),
+                ),
+                (
+                    "vehicle_type",
+                    models.CharField(
+                        choices=[
+                            ("car", "小型车"),
+                            ("suv", "SUV"),
+                            ("truck", "货车"),
+                            ("motorcycle", "摩托车"),
+                        ],
+                        default="car",
+                        max_length=20,
+                        verbose_name="车辆类型",
+                    ),
+                ),
+                (
+                    "owner_name",
+                    models.CharField(
+                        blank=True,
+                        help_text="车辆所有者的姓名",
+                        max_length=100,
+                        verbose_name="车主姓名",
+                    ),
+                ),
+                (
+                    "owner_phone",
+                    models.CharField(
+                        blank=True,
+                        help_text="车辆所有者的联系电话",
+                        max_length=20,
+                        verbose_name="车主电话",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
             ],
             options={
-                'verbose_name': '车辆',
-                'verbose_name_plural': '车辆',
-                'ordering': ['-created_at'],
+                "verbose_name": "车辆",
+                "verbose_name_plural": "车辆",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ParkingSpace',
+            name="ParkingSpace",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('space_number', models.CharField(help_text='车位的唯一编号', max_length=20, verbose_name='车位编号')),
-                ('space_type', models.CharField(choices=[('standard', '标准车位'), ('disabled', '残疾人车位'), ('vip', 'VIP车位'), ('large', '大型车位')], default='standard', max_length=20, verbose_name='车位类型')),
-                ('is_occupied', models.BooleanField(default=False, help_text='车位当前是否被占用', verbose_name='是否占用')),
-                ('is_reserved', models.BooleanField(default=False, help_text='车位是否被预留', verbose_name='是否预留')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
-                ('parking_lot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parking_spaces', to='parking.parkinglot', verbose_name='所属停车场')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "space_number",
+                    models.CharField(
+                        help_text="车位的唯一编号", max_length=20, verbose_name="车位编号"
+                    ),
+                ),
+                (
+                    "space_type",
+                    models.CharField(
+                        choices=[
+                            ("standard", "标准车位"),
+                            ("disabled", "残疾人车位"),
+                            ("vip", "VIP车位"),
+                            ("large", "大型车位"),
+                        ],
+                        default="standard",
+                        max_length=20,
+                        verbose_name="车位类型",
+                    ),
+                ),
+                (
+                    "is_occupied",
+                    models.BooleanField(
+                        default=False, help_text="车位当前是否被占用", verbose_name="是否占用"
+                    ),
+                ),
+                (
+                    "is_reserved",
+                    models.BooleanField(
+                        default=False, help_text="车位是否被预留", verbose_name="是否预留"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
+                (
+                    "parking_lot",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="parking_spaces",
+                        to="parking.parkinglot",
+                        verbose_name="所属停车场",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '停车位',
-                'verbose_name_plural': '停车位',
-                'ordering': ['parking_lot', 'space_number'],
-                'unique_together': {('parking_lot', 'space_number')},
+                "verbose_name": "停车位",
+                "verbose_name_plural": "停车位",
+                "ordering": ["parking_lot", "space_number"],
+                "unique_together": {("parking_lot", "space_number")},
             },
         ),
         migrations.CreateModel(
-            name='ParkingRecord',
+            name="ParkingRecord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('entry_time', models.DateTimeField(help_text='车辆进入停车场的时间', verbose_name='入场时间')),
-                ('exit_time', models.DateTimeField(blank=True, help_text='车辆离开停车场的时间', null=True, verbose_name='出场时间')),
-                ('duration_minutes', models.PositiveIntegerField(blank=True, help_text='车辆停车的总时长（分钟）', null=True, verbose_name='停车时长（分钟）')),
-                ('fee', models.DecimalField(blank=True, decimal_places=2, help_text='本次停车的费用（元）', max_digits=10, null=True, validators=[django.core.validators.MinValueValidator(Decimal('0.00'))], verbose_name='停车费用')),
-                ('is_paid', models.BooleanField(default=False, help_text='停车费用是否已支付', verbose_name='是否已支付')),
-                ('notes', models.TextField(blank=True, help_text='关于本次停车记录的备注信息', verbose_name='备注')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
-                ('operator', models.ForeignKey(blank=True, help_text='处理该停车记录的操作员', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='parking_records', to=settings.AUTH_USER_MODEL, verbose_name='操作员')),
-                ('parking_space', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parking_records', to='parking.parkingspace', verbose_name='停车位')),
-                ('vehicle', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parking_records', to='parking.vehicle', verbose_name='车辆')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "entry_time",
+                    models.DateTimeField(help_text="车辆进入停车场的时间", verbose_name="入场时间"),
+                ),
+                (
+                    "exit_time",
+                    models.DateTimeField(
+                        blank=True,
+                        help_text="车辆离开停车场的时间",
+                        null=True,
+                        verbose_name="出场时间",
+                    ),
+                ),
+                (
+                    "duration_minutes",
+                    models.PositiveIntegerField(
+                        blank=True,
+                        help_text="车辆停车的总时长（分钟）",
+                        null=True,
+                        verbose_name="停车时长（分钟）",
+                    ),
+                ),
+                (
+                    "fee",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="本次停车的费用（元）",
+                        max_digits=10,
+                        null=True,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.00"))],
+                        verbose_name="停车费用",
+                    ),
+                ),
+                (
+                    "is_paid",
+                    models.BooleanField(
+                        default=False, help_text="停车费用是否已支付", verbose_name="是否已支付"
+                    ),
+                ),
+                (
+                    "notes",
+                    models.TextField(
+                        blank=True, help_text="关于本次停车记录的备注信息", verbose_name="备注"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
+                (
+                    "operator",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="处理该停车记录的操作员",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="parking_records",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="操作员",
+                    ),
+                ),
+                (
+                    "parking_space",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="parking_records",
+                        to="parking.parkingspace",
+                        verbose_name="停车位",
+                    ),
+                ),
+                (
+                    "vehicle",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="parking_records",
+                        to="parking.vehicle",
+                        verbose_name="车辆",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '停车记录',
-                'verbose_name_plural': '停车记录',
-                'ordering': ['-entry_time'],
-                'indexes': [models.Index(fields=['-entry_time'], name='parking_par_entry_t_647a06_idx'), models.Index(fields=['vehicle', '-entry_time'], name='parking_par_vehicle_361e1e_idx')],
+                "verbose_name": "停车记录",
+                "verbose_name_plural": "停车记录",
+                "ordering": ["-entry_time"],
+                "indexes": [
+                    models.Index(fields=["-entry_time"], name="parking_par_entry_t_647a06_idx"),
+                    models.Index(
+                        fields=["vehicle", "-entry_time"], name="parking_par_vehicle_361e1e_idx"
+                    ),
+                ],
             },
         ),
     ]

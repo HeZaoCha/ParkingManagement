@@ -1,4 +1,5 @@
 {% extends 'admin/base.html' %}
+{% load static %}
 
 {% block title %}公安查询{% endblock %}
 {% block page_title %}公安查询 - 车辆停车记录查询{% endblock %}
@@ -251,12 +252,7 @@
     </div>
 </div>
 
-<script>
-function exportData() {
-    const params = new URLSearchParams(window.location.search);
-    params.set('format', 'json');
-    window.location.href = '{% url "parking:api_police_query" %}?' + params.toString();
-}
-</script>
+
+<script src="{% static 'admin/police/query/js/script.js' %}"></script>
 {% endblock %}
 

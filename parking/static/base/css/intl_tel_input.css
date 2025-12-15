@@ -1,0 +1,87 @@
+/* 确保 intl-tel-input 与主题系统兼容 */
+    .iti {
+      width: 100%;
+    }
+    
+    .iti__selected-flag {
+      background-color: var(--bg-card-light, #ffffff);
+      border-right: 1px solid var(--border-color, #e5e7eb);
+      padding: 0 8px;
+      width: auto !important;
+    }
+    
+    .dark .iti__selected-flag {
+      background-color: var(--bg-card-dark, #1e1e1e);
+      border-right-color: var(--border-color-dark, #374151);
+    }
+    
+    .iti__selected-flag:hover {
+      background-color: var(--bg-hover, #f3f4f6);
+    }
+    
+    .dark .iti__selected-flag:hover {
+      background-color: var(--bg-hover-dark, #2a2a2a);
+    }
+    
+    /* 区号显示在国旗区域（国旗旁边） */
+    .iti__selected-dial-code {
+      display: inline-block !important;
+      margin-left: 6px !important;
+      font-weight: 500 !important;
+      color: var(--text-primary, #111827) !important;
+      font-size: 14px !important;
+      line-height: 1.5 !important;
+    }
+    
+    .dark .iti__selected-dial-code {
+      color: var(--text-primary-dark, #f9fafb) !important;
+    }
+    
+    .iti__country-list {
+      background-color: var(--bg-card-light, #ffffff);
+      border: 1px solid var(--border-color, #e5e7eb);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dark .iti__country-list {
+      background-color: var(--bg-card-dark, #1e1e1e);
+      border-color: var(--border-color-dark, #374151);
+    }
+    
+    .iti__country {
+      color: var(--text-primary, #111827);
+    }
+    
+    .dark .iti__country {
+      color: var(--text-primary-dark, #f9fafb);
+    }
+    
+    .iti__country:hover,
+    .iti__country.iti__highlight {
+      background-color: var(--bg-hover, #f3f4f6);
+    }
+    
+    .dark .iti__country:hover,
+    .dark .iti__country.iti__highlight {
+      background-color: var(--bg-hover-dark, #2a2a2a);
+    }
+    
+    .iti__search-input {
+      background-color: var(--bg-card-light, #ffffff);
+      color: var(--text-primary, #111827);
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
+    }
+    
+    .dark .iti__search-input {
+      background-color: var(--bg-card-dark, #1e1e1e);
+      color: var(--text-primary-dark, #f9fafb);
+      border-bottom-color: var(--border-color-dark, #374151);
+    }
+    
+    .iti__search-input::placeholder {
+      color: var(--text-muted, #6b7280);
+    }
+    
+    .dark .iti__search-input::placeholder {
+      color: var(--text-muted-dark, #9ca3af);
+    }

@@ -9,55 +9,171 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parking', '0003_alter_vehicle_license_plate'),
+        ("parking", "0003_alter_vehicle_license_plate"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='parkingrecord',
-            name='discount_rate',
-            field=models.DecimalField(decimal_places=2, default=Decimal('0.00'), help_text='应用的折扣率', max_digits=3, verbose_name='折扣率'),
+            model_name="parkingrecord",
+            name="discount_rate",
+            field=models.DecimalField(
+                decimal_places=2,
+                default=Decimal("0.00"),
+                help_text="应用的折扣率",
+                max_digits=3,
+                verbose_name="折扣率",
+            ),
         ),
         migrations.AddField(
-            model_name='parkingrecord',
-            name='is_free_parking',
-            field=models.BooleanField(default=False, help_text='本次停车是否免费（VIP/员工车辆）', verbose_name='免费停车'),
+            model_name="parkingrecord",
+            name="is_free_parking",
+            field=models.BooleanField(
+                default=False, help_text="本次停车是否免费（VIP/员工车辆）", verbose_name="免费停车"
+            ),
         ),
         migrations.AlterField(
-            model_name='vehicle',
-            name='license_plate',
-            field=models.CharField(db_index=True, help_text='车辆的车牌号码（如：粤E9KM03）', max_length=10, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_license_plate', message='请输入有效的中国车牌号码（如：粤E9KM03）', regex=re.compile('^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-HJ-NP-Z](?:[A-HJ-NP-Z0-9]{5}|[DF][A-HJ-NP-Z0-9]{5}|[A-HJ-NP-Z0-9]{4}[DF])[挂学警港澳]?$'))], verbose_name='车牌号'),
+            model_name="vehicle",
+            name="license_plate",
+            field=models.CharField(
+                db_index=True,
+                help_text="车辆的车牌号码（如：粤E9KM03）",
+                max_length=10,
+                unique=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        code="invalid_license_plate",
+                        message="请输入有效的中国车牌号码（如：粤E9KM03）",
+                        regex=re.compile(
+                            "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-HJ-NP-Z](?:[A-HJ-NP-Z0-9]{5}|[DF][A-HJ-NP-Z0-9]{5}|[A-HJ-NP-Z0-9]{4}[DF])[挂学警港澳]?$"
+                        ),
+                    )
+                ],
+                verbose_name="车牌号",
+            ),
         ),
         migrations.AlterField(
-            model_name='vehicle',
-            name='vehicle_type',
-            field=models.CharField(choices=[('car', '小型车'), ('suv', 'SUV'), ('truck', '货车'), ('motorcycle', '摩托车'), ('new_energy', '新能源车')], default='car', max_length=20, verbose_name='车辆类型'),
+            model_name="vehicle",
+            name="vehicle_type",
+            field=models.CharField(
+                choices=[
+                    ("car", "小型车"),
+                    ("suv", "SUV"),
+                    ("truck", "货车"),
+                    ("motorcycle", "摩托车"),
+                    ("new_energy", "新能源车"),
+                ],
+                default="car",
+                max_length=20,
+                verbose_name="车辆类型",
+            ),
         ),
         migrations.CreateModel(
-            name='VIPVehicle',
+            name="VIPVehicle",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('license_plate', models.CharField(db_index=True, help_text='享有免费/优惠停车的车牌号', max_length=10, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_license_plate', message='请输入有效的中国车牌号码（如：粤E9KM03）', regex=re.compile('^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-HJ-NP-Z](?:[A-HJ-NP-Z0-9]{5}|[DF][A-HJ-NP-Z0-9]{5}|[A-HJ-NP-Z0-9]{4}[DF])[挂学警港澳]?$'))], verbose_name='车牌号')),
-                ('vip_type', models.CharField(choices=[('employee', '员工车辆'), ('vip', 'VIP客户'), ('partner', '合作伙伴'), ('government', '政府公务'), ('other', '其他')], default='employee', max_length=20, verbose_name='类型')),
-                ('owner_name', models.CharField(help_text='车主/员工姓名', max_length=100, verbose_name='车主姓名')),
-                ('department', models.CharField(blank=True, help_text='所属部门（员工车辆）', max_length=100, verbose_name='部门')),
-                ('discount_rate', models.DecimalField(decimal_places=2, default=Decimal('1.00'), help_text='1.00表示免费，0.50表示半价', max_digits=3, validators=[django.core.validators.MinValueValidator(Decimal('0.00'))], verbose_name='折扣率')),
-                ('valid_from', models.DateField(help_text='免费/优惠开始日期', verbose_name='生效日期')),
-                ('valid_until', models.DateField(blank=True, help_text='免费/优惠结束日期，空表示永久有效', null=True, verbose_name='失效日期')),
-                ('is_active', models.BooleanField(default=True, verbose_name='是否启用')),
-                ('notes', models.TextField(blank=True, verbose_name='备注')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_vip_vehicles', to=settings.AUTH_USER_MODEL, verbose_name='创建人')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "license_plate",
+                    models.CharField(
+                        db_index=True,
+                        help_text="享有免费/优惠停车的车牌号",
+                        max_length=10,
+                        unique=True,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                code="invalid_license_plate",
+                                message="请输入有效的中国车牌号码（如：粤E9KM03）",
+                                regex=re.compile(
+                                    "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-HJ-NP-Z](?:[A-HJ-NP-Z0-9]{5}|[DF][A-HJ-NP-Z0-9]{5}|[A-HJ-NP-Z0-9]{4}[DF])[挂学警港澳]?$"
+                                ),
+                            )
+                        ],
+                        verbose_name="车牌号",
+                    ),
+                ),
+                (
+                    "vip_type",
+                    models.CharField(
+                        choices=[
+                            ("employee", "员工车辆"),
+                            ("vip", "VIP客户"),
+                            ("partner", "合作伙伴"),
+                            ("government", "政府公务"),
+                            ("other", "其他"),
+                        ],
+                        default="employee",
+                        max_length=20,
+                        verbose_name="类型",
+                    ),
+                ),
+                (
+                    "owner_name",
+                    models.CharField(
+                        help_text="车主/员工姓名", max_length=100, verbose_name="车主姓名"
+                    ),
+                ),
+                (
+                    "department",
+                    models.CharField(
+                        blank=True,
+                        help_text="所属部门（员工车辆）",
+                        max_length=100,
+                        verbose_name="部门",
+                    ),
+                ),
+                (
+                    "discount_rate",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=Decimal("1.00"),
+                        help_text="1.00表示免费，0.50表示半价",
+                        max_digits=3,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.00"))],
+                        verbose_name="折扣率",
+                    ),
+                ),
+                (
+                    "valid_from",
+                    models.DateField(help_text="免费/优惠开始日期", verbose_name="生效日期"),
+                ),
+                (
+                    "valid_until",
+                    models.DateField(
+                        blank=True,
+                        help_text="免费/优惠结束日期，空表示永久有效",
+                        null=True,
+                        verbose_name="失效日期",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True, verbose_name="是否启用")),
+                ("notes", models.TextField(blank=True, verbose_name="备注")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_vip_vehicles",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="创建人",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'VIP/免费车辆',
-                'verbose_name_plural': 'VIP/免费车辆',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['license_plate'], name='vip_plate_idx'), models.Index(fields=['is_active', 'valid_until'], name='vip_active_valid_idx')],
+                "verbose_name": "VIP/免费车辆",
+                "verbose_name_plural": "VIP/免费车辆",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(fields=["license_plate"], name="vip_plate_idx"),
+                    models.Index(fields=["is_active", "valid_until"], name="vip_active_valid_idx"),
+                ],
             },
         ),
     ]

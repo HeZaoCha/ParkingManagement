@@ -1,4 +1,5 @@
 {% extends 'admin/base.html' %}
+{% load static %}
 
 {% block title %}费率模板管理{% endblock %}
 {% block page_title %}费率模板管理{% endblock %}
@@ -28,7 +29,10 @@
     </div>
     
     <!-- 模板列表 -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="费率模板列表" role="region">
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" 
+             aria-label="费率模板列表" 
+             role="region"
+             data-delete-url-template="{% url 'parking:admin_pricing_template_delete' 0 %}">
         {% for template in templates %}
         <article class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 hover:border-primary-500/50 transition-colors" role="article" aria-labelledby="template-{{ template.id }}-title">
             <div class="flex items-start justify-between mb-4">
@@ -92,33 +96,7 @@
     </section>
 </div>
 
-<script>
-async function deleteTemplate(id, name) {
-    if (!confirm(`确定要删除模板 "${name}" 吗？\n\n如果该模板正在被使用，将无法删除。`)) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`{% url 'parking:admin_pricing_template_delete' 0 %}`.replace('0', id), {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('删除成功');
-            location.reload();
-        } else {
-            alert('删除失败：' + result.message);
-        }
-    } catch (error) {
-        alert('删除失败：' + error.message);
-    }
-}
-</script>
+
+<script src="{% static 'admin/pricing/template_list/js/script.js' %}"></script>
 {% endblock %}
 

@@ -13,12 +13,12 @@ from loguru import logger
 def configure_loguru():
     """
     配置 loguru 日志系统
-    
+
     在应用启动时调用此函数来配置日志系统。
     """
     # 移除默认的 handler
     logger.remove()
-    
+
     # 日志格式
     log_format = (
         "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
@@ -26,17 +26,17 @@ def configure_loguru():
         "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
         "<level>{message}</level>"
     )
-    
+
     # 控制台输出（开发环境）
     logger.add(
-        lambda msg: print(msg, end=''),
+        lambda msg: print(msg, end=""),
         format=log_format,
         level="DEBUG" if settings.DEBUG else "INFO",
         colorize=True,
     )
-    
+
     # 文件输出
-    log_file = Path(settings.BASE_DIR) / 'logs' / 'parking_management.log'
+    log_file = Path(settings.BASE_DIR) / "logs" / "parking_management.log"
     logger.add(
         str(log_file),
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} | {message}",
@@ -46,9 +46,9 @@ def configure_loguru():
         compression="zip",
         encoding="utf-8",
     )
-    
+
     # 错误日志单独文件
-    error_log_file = Path(settings.BASE_DIR) / 'logs' / 'errors.log'
+    error_log_file = Path(settings.BASE_DIR) / "logs" / "errors.log"
     logger.add(
         str(error_log_file),
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} | {message}",

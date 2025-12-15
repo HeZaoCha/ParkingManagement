@@ -11,6 +11,6 @@ from .middleware import (
 )
 
 __all__ = [
-    'RequestLoggingMiddleware',
-    'PerformanceMonitoringMiddleware',
+    "RequestLoggingMiddleware",
+    "PerformanceMonitoringMiddleware",
 ]

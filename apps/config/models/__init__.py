@@ -6,4 +6,4 @@
 
 from .config import SystemConfig
 
-__all__ = ['SystemConfig']
+__all__ = ["SystemConfig"]

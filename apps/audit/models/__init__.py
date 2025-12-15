@@ -6,4 +6,4 @@
 
 from .audit_log import AuditLog
 
-__all__ = ['AuditLog']
+__all__ = ["AuditLog"]

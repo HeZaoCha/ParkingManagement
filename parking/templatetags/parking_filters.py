@@ -3,6 +3,7 @@
 
 提供常用的模板过滤器，用于数据格式化和计算。
 """
+
 from django import template
 
 register = template.Library()
@@ -12,14 +13,14 @@ register = template.Library()
 def mod(value: int, arg: int) -> int:
     """
     取模运算过滤器
-    
+
     Args:
         value: 被除数
         arg: 除数
-        
+
     Returns:
         int: 余数
-        
+
     Example:
         {{ duration|mod:60 }}
     """
@@ -33,14 +34,14 @@ def mod(value: int, arg: int) -> int:
 def div(value: int, arg: int) -> int:
     """
     整除运算过滤器
-    
+
     Args:
         value: 被除数
         arg: 除数
-        
+
     Returns:
         int: 商（整数部分）
-        
+
     Example:
         {{ duration|div:60 }}
     """
@@ -54,15 +55,15 @@ def div(value: int, arg: int) -> int:
 def duration_format(minutes: int) -> str:
     """
     时长格式化过滤器
-    
+
     将分钟数转换为可读的时长格式。
-    
+
     Args:
         minutes: 分钟数
-        
+
     Returns:
         str: 格式化后的时长字符串
-        
+
     Example:
         {{ record.duration_minutes|duration_format }}
         输出: "2小时30分钟" 或 "45分钟"
@@ -71,10 +72,10 @@ def duration_format(minutes: int) -> str:
         minutes = int(minutes)
         if minutes < 0:
             return "-"
-        
+
         hours = minutes // 60
         mins = minutes % 60
-        
+
         if hours > 0 and mins > 0:
             return f"{hours}小时{mins}分钟"
         elif hours > 0:
@@ -89,14 +90,14 @@ def duration_format(minutes: int) -> str:
 def percentage(value: int, total: int) -> int:
     """
     计算百分比过滤器
-    
+
     Args:
         value: 分子
         total: 分母
-        
+
     Returns:
         int: 百分比值（0-100）
-        
+
     Example:
         {{ occupied|percentage:total }}
     """
@@ -112,13 +113,13 @@ def percentage(value: int, total: int) -> int:
 def currency(value) -> str:
     """
     货币格式化过滤器
-    
+
     Args:
         value: 金额数值
-        
+
     Returns:
         str: 格式化后的货币字符串
-        
+
     Example:
         {{ record.fee|currency }}
         输出: "¥123.45"
@@ -127,4 +128,3 @@ def currency(value) -> str:
         return f"¥{float(value):,.2f}"
     except (ValueError, TypeError):
         return "¥0.00"
-

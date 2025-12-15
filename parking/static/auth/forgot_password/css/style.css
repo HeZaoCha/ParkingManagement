@@ -1,0 +1,65 @@
+.forgot-password-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(-45deg, var(--gradient-start), var(--gradient-end), var(--color-primary-400), var(--color-primary-700));
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+  }
+  
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .forgot-password-card {
+    animation: cardEnter 0.6s ease-out;
+  }
+  
+  @keyframes cardEnter {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  /* 邮箱后缀建议列表 */
+  .email-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    margin-top: 0.25rem;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    box-shadow: 0 10px 25px -5px var(--shadow-color);
+  }
+  
+  .email-suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .email-suggestion-item:last-child {
+    border-bottom: none;
+  }
+  
+  .email-suggestion-item:hover,
+  .email-suggestion-item.selected {
+    background: var(--bg-hover);
+    color: var(--color-primary-600);
+  }
+  
+  .email-input-wrapper {
+    position: relative;
+  }

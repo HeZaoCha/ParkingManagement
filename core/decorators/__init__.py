@@ -13,8 +13,8 @@ from .decorators import (
 )
 
 __all__ = [
-    'timing_decorator',
-    'cache_result',
-    'require_ajax',
-    'handle_exceptions',
+    "timing_decorator",
+    "cache_result",
+    "require_ajax",
+    "handle_exceptions",
 ]

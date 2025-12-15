@@ -1,4 +1,5 @@
 {% extends 'admin/base.html' %}
+{% load static %}
 {% load parking_filters %}
 
 {% block title %}停车记录详情{% endblock %}
@@ -185,20 +186,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-async function checkoutRecord(pk) {
-    const result = await apiRequest(`/manage/records/${pk}/checkout/`, { method: 'POST' });
-    if (result.success) {
-        setTimeout(() => location.reload(), 500);
-    }
-}
 
-async function payRecord(pk) {
-    const result = await apiRequest(`/manage/records/${pk}/pay/`, { method: 'POST' });
-    if (result.success) {
-        setTimeout(() => location.reload(), 500);
-    }
-}
-</script>
+<script src="{% static 'admin/parking_record/detail/js/script.js' %}"></script>
 {% endblock %}
 

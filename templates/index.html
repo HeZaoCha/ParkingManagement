@@ -1,67 +1,17 @@
 {# 登录页面 - 支持主题系统 #}
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}停车场管理系统 - 登录{% endblock %}
 
 {% block body_class %}min-h-screen flex items-center justify-center p-4 relative overflow-hidden{% endblock %}
 
 {% block extra_css %}
-<style>
-  /* 背景动画 */
-  .login-bg {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(-45deg, var(--gradient-start), var(--gradient-end), var(--color-primary-400), var(--color-primary-700));
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-  }
-  
-  @keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  
-  /* 浮动装饰 */
-  .floating-shape {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    animation: float 20s ease-in-out infinite;
-  }
-  
-  @keyframes float {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(180deg); }
-  }
-  
-  /* 登录卡片动画 */
-  .login-card {
-    animation: cardEnter 0.6s ease-out;
-  }
-  
-  @keyframes cardEnter {
-    from {
-      opacity: 0;
-      transform: translateY(30px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-  
-  /* 输入框聚焦效果 */
-  .input-glow:focus {
-    box-shadow: 0 0 0 3px var(--color-primary-200);
-  }
-  html.dark .input-glow:focus {
-    box-shadow: 0 0 0 3px rgba(var(--color-primary-500), 0.3);
-  }
-</style>
+
 {% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'index/css/style.css' %}">
 {# 动态背景 #}
 <div class="login-bg"></div>
 
@@ -195,40 +145,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordInput = document.getElementById('password');
-    
-    // 切换密码可见性
-    if (togglePassword && passwordInput) {
-      togglePassword.addEventListener('click', function() {
-        const isPassword = passwordInput.getAttribute('type') === 'password';
-        const type = isPassword ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        const icon = this.querySelector('i');
-        icon.classList.toggle('fa-eye');
-        icon.classList.toggle('fa-eye-slash');
-        this.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
-        this.setAttribute('aria-label', isPassword ? '隐藏密码' : '显示密码');
-      });
-    }
-    
-    // 输入框焦点动画
-    const inputs = document.querySelectorAll('input');
-    inputs.forEach(input => {
-      input.addEventListener('focus', function() {
-        this.parentElement.classList.add('ring-2', 'ring-primary-500/20', 'rounded-xl');
-      });
-      input.addEventListener('blur', function() {
-        this.parentElement.classList.remove('ring-2', 'ring-primary-500/20', 'rounded-xl');
-      });
-    });
-  });
-  
-  // 切换到注册页面
-  function switchToRegister() {
-    window.location.href = '{% url "parking:register" %}';
-  }
-</script>
+
+<script src="{% static 'index/js/script.js' %}"></script>
 {% endblock %}

@@ -1,0 +1,132 @@
+/* 导入字体 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        /* 全局滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* 侧边栏菜单动画 - 使用主题变量 */
+        .sidebar-link {
+            transition: all 0.2s ease;
+        }
+        .sidebar-link:hover {
+            transform: translateX(4px);
+        }
+        .sidebar-link.active {
+            background: linear-gradient(90deg, rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.15) 0%, transparent 100%);
+            border-left: 3px solid var(--color-primary-500, #6366f1);
+        }
+        
+        /* 卡片悬浮效果 */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 表格行悬浮增强 - 使用主题变量 */
+        .table-row-hover {
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .table-row-hover:hover {
+            background-color: rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.08);
+            transform: translateX(2px);
+            box-shadow: -2px 0 0 rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.5);
+        }
+        
+        /* 按钮涟漪效果 */
+        .btn-ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        .btn-ripple:active::after {
+            width: 200px;
+            height: 200px;
+        }
+        
+        /* Toast 和 Loading 样式已移至 common/css/components.css */
+        
+        /* 数字跳动效果 */
+        .number-animate {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        /* 渐变背景 - 使用主题变量 */
+        .gradient-bg {
+            background: linear-gradient(135deg, 
+                var(--bg-primary-dark, #121212) 0%, 
+                var(--bg-secondary-dark, #1e1e1e) 50%, 
+                var(--bg-primary-dark, #121212) 100%);
+        }
+        
+        /* 模态框动画样式已移至 common/css/components.css */
+        
+        /* 输入框焦点增强 - 使用主题变量 */
+        .input-focus-enhanced:focus {
+            border-color: var(--color-primary-500, #6366f1) !important;
+            box-shadow: 0 0 0 3px rgba(var(--color-primary-500-rgb, 99, 102, 241), 0.1) !important;
+            outline: none;
+        }
+        
+        /* 按钮交互增强 */
+        .btn-interactive {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .btn-interactive:hover {
+            transform: translateY(-1px);
+        }
+        .btn-interactive:active {
+            transform: translateY(0);
+        }
+        .btn-interactive:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* 响应式表格 */
+        @media (max-width: 768px) {
+            .table-responsive {
+                position: relative;
+            }
+            .table-responsive::after {
+                content: '← 滑动查看更多 →';
+                display: block;
+                text-align: center;
+                padding: 8px;
+                color: #64748b;
+                font-size: 0.75rem;
+                background: rgba(30, 41, 59, 0.5);
+                border-top: 1px solid rgba(71, 85, 105, 0.5);
+            }
+        }

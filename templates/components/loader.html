@@ -1,3 +1,4 @@
+{% load static %}
 {# 加载动画组件 - 支持主题系统 #}
 <div id="page-loader" 
      class="fixed inset-0 bg-theme-primary z-[100] flex items-center justify-center transition-opacity duration-300"
@@ -20,15 +21,6 @@
   </div>
 </div>
 
-<script>
-  // 页面加载完成后淡出加载动画
-  window.addEventListener('load', function() {
-    const loader = document.getElementById('page-loader');
-    if (loader) {
-      setTimeout(() => {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 300);
-      }, 300);
-    }
-  });
-</script>
+
+
+<script src="{% static 'components/loader/js/script.js' %}"></script>

@@ -117,6 +117,9 @@ uv run python manage.py migrate --settings=config.settings.dev
 
 # 初始化测试数据（可选）
 uv run python manage.py init_test_data --clear --settings=config.settings.dev
+
+# 初始化默认费率模板（可选）
+uv run python manage.py init_default_pricing_template --settings=config.settings.dev
 ```
 
 ### 4. 启动服务
@@ -233,7 +236,28 @@ ParkingManagement/
 | start_minutes | Integer | 起始分钟 |
 | end_minutes | Integer | 结束分钟（可选） |
 | rate_per_hour | Decimal | 每小时费率（元） |
+| vehicle_type | CharField | 车位类型（standard/disabled/vip/large/all） |
 | order | Integer | 排序顺序 |
+
+### MonthYearRate（包月/包年费率）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| template | ForeignKey | 所属模板 |
+| rate_type | CharField | 类型（month/quarter/year） |
+| price | Decimal | 价格（元） |
+| vehicle_type | CharField | 车位类型 |
+| description | TextField | 说明 |
+| is_active | Boolean | 是否启用 |
+
+### OvertimeRate（超时收费）
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| template | ForeignKey | 所属模板 |
+| overtime_fee | Decimal | 超时费用（元/小时） |
+| overtime_start_hours | Integer | 超时起始小时（默认24） |
+| vehicle_type | CharField | 车位类型 |
+| description | TextField | 说明 |
+| is_active | Boolean | 是否启用 |
 
 ### ParkingSpace（停车位）
 | 字段 | 类型 | 说明 |
@@ -291,7 +315,7 @@ ParkingManagement/
 
 ## Docker部署
 
-### 使用Docker Compose（推荐）
+### 开发环境部署
 
 ```bash
 # 启动所有服务（数据库、Redis、Web应用）
@@ -301,7 +325,7 @@ docker-compose up -d
 docker-compose logs -f web
 
 # 执行数据库迁移
-docker-compose exec web uv run python manage.py migrate --settings=config.settings.prod
+docker-compose exec web uv run python manage.py migrate
 
 # 停止服务
 docker-compose down
@@ -309,27 +333,36 @@ docker-compose down
 
 ### 生产环境部署
 
-1. **设置环境变量**：
+**快速开始**:
 ```bash
-export SECRET_KEY=your-secret-key
-export ALLOWED_HOSTS=your-domain.com
-export DB_NAME=parking_management
-export DB_USER=postgres
-export DB_PASSWORD=your-password
-export DB_HOST=db
-export REDIS_URL=redis://redis:6379/1
+# 1. 配置环境变量
+cp .env.production.example .env.production
+vim .env.production
+
+# 2. 构建和启动
+docker-compose -f docker-compose.prod.yml build
+docker-compose -f docker-compose.prod.yml up -d
+
+# 3. 初始化数据库
+docker-compose -f docker-compose.prod.yml exec web python manage.py migrate
+docker-compose -f docker-compose.prod.yml exec web python manage.py createsuperuser
+docker-compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput
 ```
 
-2. **使用生产环境配置**：
-```bash
-export DJANGO_SETTINGS_MODULE=config.settings.prod
-```
+**详细部署指南**:
+- [Docker Compose 多环境配置指南](docs/deployment/DOCKER_COMPOSE_GUIDE.md) - 多环境配置最佳实践
+- [Docker 开发测试环境](docs/deployment/DEVELOPMENT_DOCKER.md) - 开发测试环境完整指南
+- [快速部署指南](docs/deployment/QUICK_START.md) - 生产环境快速上手指南
+- [完整技术栈方案](docs/deployment/PRODUCTION_TECH_STACK.md) - 完整的技术栈方案和最佳实践
+- [传统部署方式](docs/deployment/DEPLOYMENT.md) - 非 Docker 部署方式
 
-3. **运行迁移和收集静态文件**：
-```bash
-uv run python manage.py migrate --settings=config.settings.prod
-uv run python manage.py collectstatic --noinput --settings=config.settings.prod
-```
+**技术栈版本**:
+- PostgreSQL: 17.7
+- Redis: 8.4
+- Nginx: 1.29.4
+- Django: 5.2
+- Python: 3.13
+- Docker Compose: v5.0.0
 
 ## 测试
 
@@ -380,6 +413,12 @@ uv run pytest --settings=config.settings.test
 - 多时间段不同费率（如：15-60分钟5元/小时，60-180分钟4元/小时）
 - 每日收费上限
 - 费率模板保存和复用
+- 支持不同车位类型的费率规则（标准/VIP/残疾人/大型车位）
+- 包月/包年费率管理（月卡、季卡、年卡）
+- 超时收费配置
+- Excel批量导入费率模板
+- 模板拷贝和基于模板创建功能
+- 默认费率模板初始化
 
 ### 停车场类型
 
@@ -399,7 +438,7 @@ uv run pytest --settings=config.settings.test
 
 详见 [CHANGELOG.md](CHANGELOG.md)
 
-当前版本：**v1.1.0** (2025-12-11)
+当前版本：**v2.3.0** (2025-12-15)
 
 ## 许可证
 

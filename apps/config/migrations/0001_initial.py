@@ -4,31 +4,90 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='SystemConfig',
+            name="SystemConfig",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='记录创建时间', verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='记录最后更新时间', verbose_name='更新时间')),
-                ('key', models.CharField(db_index=True, help_text='配置的唯一标识符', max_length=100, unique=True, verbose_name='配置键')),
-                ('value', models.TextField(help_text='配置的值（存储为文本）', verbose_name='配置值')),
-                ('config_type', models.CharField(choices=[('string', '字符串'), ('integer', '整数'), ('float', '浮点数'), ('boolean', '布尔值'), ('json', 'JSON')], default='string', help_text='配置值的数据类型', max_length=20, verbose_name='配置类型')),
-                ('group', models.CharField(db_index=True, default='general', help_text='配置的分组名称', max_length=50, verbose_name='配置分组')),
-                ('description', models.CharField(blank=True, help_text='配置的说明', max_length=200, verbose_name='配置描述')),
-                ('is_public', models.BooleanField(default=False, help_text='是否允许前端访问此配置', verbose_name='是否公开')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True, help_text="记录创建时间", verbose_name="创建时间"
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True, help_text="记录最后更新时间", verbose_name="更新时间"
+                    ),
+                ),
+                (
+                    "key",
+                    models.CharField(
+                        db_index=True,
+                        help_text="配置的唯一标识符",
+                        max_length=100,
+                        unique=True,
+                        verbose_name="配置键",
+                    ),
+                ),
+                (
+                    "value",
+                    models.TextField(help_text="配置的值（存储为文本）", verbose_name="配置值"),
+                ),
+                (
+                    "config_type",
+                    models.CharField(
+                        choices=[
+                            ("string", "字符串"),
+                            ("integer", "整数"),
+                            ("float", "浮点数"),
+                            ("boolean", "布尔值"),
+                            ("json", "JSON"),
+                        ],
+                        default="string",
+                        help_text="配置值的数据类型",
+                        max_length=20,
+                        verbose_name="配置类型",
+                    ),
+                ),
+                (
+                    "group",
+                    models.CharField(
+                        db_index=True,
+                        default="general",
+                        help_text="配置的分组名称",
+                        max_length=50,
+                        verbose_name="配置分组",
+                    ),
+                ),
+                (
+                    "description",
+                    models.CharField(
+                        blank=True, help_text="配置的说明", max_length=200, verbose_name="配置描述"
+                    ),
+                ),
+                (
+                    "is_public",
+                    models.BooleanField(
+                        default=False, help_text="是否允许前端访问此配置", verbose_name="是否公开"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': '系统配置',
-                'verbose_name_plural': '系统配置',
-                'ordering': ['group', 'key'],
-                'indexes': [models.Index(fields=['group', 'key'], name='config_group_key_idx')],
+                "verbose_name": "系统配置",
+                "verbose_name_plural": "系统配置",
+                "ordering": ["group", "key"],
+                "indexes": [models.Index(fields=["group", "key"], name="config_group_key_idx")],
             },
         ),
     ]

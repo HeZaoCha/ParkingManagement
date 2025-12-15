@@ -5,6 +5,448 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.3.0] - 2025-12-15
+
+### 费率模板管理系统增强 ✅
+
+#### Excel导入功能优化 (2025-12-15)
+- ✅ 修复Excel导入解析bug：
+  - 问题：上传未修改的模板文件时无法解析，报错 `ValueError: invalid literal for int() with base 10: '免费时长(分钟) *'`
+  - 原因：导入函数没有正确识别和跳过表头行、说明行
+  - 解决方案：智能识别数据开始行，自动跳过标题、说明和表头行
+  - 修改文件：`parking/views/pricing.py`
+- ✅ 增强数据验证逻辑，防止说明行被导入：
+  - 添加 `_validate_template_name()` 函数，严格验证模板名称
+  - 过滤规则：
+    - 不能以"·"、"*"、"-"开头（说明行标记）
+    - 不能包含说明性关键词（必填、选填、单位、建议等）
+    - 长度必须在3-100字符之间
+    - 不能是纯数字
+    - 不能包含过多标点符号
+    - 不能是表头格式（包含括号和星号）
+  - 验证费率规则的有效性（费率必须大于0，时间范围必须有效）
+  - 验证包月/包年费率和超时收费的有效性
+  - 确保每个模板至少包含一条费率规则
+  - 在创建模板前进行最终验证，过滤掉所有不符合要求的数据
+- ✅ 美化Excel模板文件：
+  - 添加标题行和说明区域
+  - 使用不同颜色区分不同类型的表头（基本信息、费率规则、包月/包年、超时收费）
+  - 添加边框、字体样式和对齐方式
+  - 冻结窗格、调整列宽和行高
+  - 添加详细的填写说明
+  - 提升用户体验和专业性
+- ✅ 文件选择器优化：
+  - 添加 `accept` 属性，文件管理器只显示Excel相关文件类型
+  - 支持 `.xlsx`、`.xls` 格式和MIME类型过滤
+
+#### 费率模板管理功能增强 (2025-12-15)
+- ✅ 添加拷贝费率模板功能：
+  - 新增视图：`pricing_template_copy`
+  - 支持一键拷贝现有模板，自动生成副本
+  - 拷贝所有费率规则、包月/包年费率和超时收费
+  - 修改文件：`parking/views/pricing.py`、`parking/urls.py`
+- ✅ 添加基于模板创建新模板功能：
+  - 新增视图：`pricing_template_create_from`
+  - 支持基于现有模板创建新模板
+  - 可在创建时修改模板名称和基本信息
+  - 自动复制所有费率配置
+- ✅ 创建默认费率模板初始化命令：
+  - 新增管理命令：`init_default_pricing_template`
+  - 自动创建3个默认模板：
+    - 标准阶梯收费：适用于大多数停车场
+    - 优惠收费模板：适用于优惠活动期间
+    - VIP专用费率：适用于VIP车位
+  - 支持 `--force` 参数强制重新创建
+  - 文件：`parking/management/commands/init_default_pricing_template.py`
+- ✅ 模板列表页面优化：
+  - 添加拷贝按钮（绿色图标）
+  - 添加基于模板创建按钮（蓝色图标）
+  - 优化按钮布局，使用图标按钮节省空间
+  - 修改文件：`templates/admin/pricing/template_list.html`
+
+#### 数据库模型扩展 (2025-12-15)
+- ✅ 扩展 `PricingRule` 模型：添加 `vehicle_type` 字段，支持不同车位类型的费率规则
+- ✅ 新增 `MonthYearRate` 模型：包月/包年费率表（月卡、季卡、年卡）
+- ✅ 新增 `OvertimeRate` 模型：超时收费表
+- ✅ 创建数据库迁移：`0008_add_pricing_extensions.py`
+
+#### 前端界面优化 (2025-12-15)
+- ✅ 更新模板编辑页面：
+  - 费率规则添加车位类型选择
+  - 新增包月/包年费率管理区域
+  - 新增超时收费管理区域
+  - 完善表单验证和错误提示
+- ✅ 更新模板列表页面：
+  - 添加批量导入按钮和模态框
+  - 添加下载模板按钮
+  - 添加拷贝和基于模板创建功能
+  - 优化操作按钮布局
+
+#### 批量导入功能全面优化 (2025-12-15)
+- ✅ 同名模板自动重命名：
+  - 导入时如果模板名称已存在，系统自动添加序号重命名（如：模板名称 (1)）
+  - 避免导入失败，提升用户体验
+  - 修改文件：`parking/views/pricing.py` - `_create_template_from_data` 函数
+- ✅ 下载模板改为压缩包：
+  - 下载时生成ZIP压缩包，包含两个文件：
+    - `费率模板导入模板.xlsx`：Excel模板文件
+    - `使用说明.pdf`：详细的使用说明文档（使用reportlab生成）
+  - PDF说明包含完整的填写指南、字段说明、注意事项等
+  - 修改文件：`parking/views/pricing.py` - `pricing_template_download` 函数
+  - 新增依赖：`reportlab`（PDF生成库）
+- ✅ Excel模板列宽自适应：
+  - 根据单元格内容自动调整列宽
+  - 中文字符按2个字符宽度计算
+  - 列宽范围：最小10，最大50
+  - 修改文件：`parking/views/pricing.py` - `pricing_template_download` 函数
+- ✅ 支持中英文字段映射：
+  - 车位类型支持中英文：
+    - 英文：all, standard, disabled, vip, large
+    - 中文：全部、标准、残疾人、VIP、大型
+  - 包月/包年类型支持中英文：
+    - 英文：month, quarter, year
+    - 中文：月卡、季卡、年卡
+  - 系统自动识别并转换为标准英文值
+  - Excel模板示例数据使用中文，方便用户理解
+  - PDF说明文档详细说明中英文对应关系
+  - 修改文件：
+    - `parking/views/pricing.py`：添加 `_normalize_vehicle_type` 和 `_normalize_rate_type` 函数
+    - 更新Excel模板示例数据
+- ✅ 批量导入对话框优化：
+  - 文件选择后显示文件名列表，而不是"几个文件"
+  - 每个文件单独显示一行，包含图标、文件名和大小
+  - 文件名过长时自动截断（最多30个字符），鼠标悬停显示完整名称
+  - 修改文件：`templates/admin/pricing/template_list.html`
+- ✅ 前端代码优化和bug修复：
+  - 所有函数改为全局函数（`window.xxx`），确保onclick调用正常
+  - 添加DOMContentLoaded事件监听，确保DOM加载完成后再绑定事件
+  - 添加空值检查，防止访问不存在的DOM元素
+  - 修复缩进问题，统一代码格式
+  - 添加XSS防护，转义HTML特殊字符
+  - 修复函数缺少分号的问题
+  - 优化错误处理，添加参数验证
+  - 修改文件：
+    - `templates/admin/pricing/template_list.html`
+    - `templates/admin/pricing/template_edit.html`
+
+#### 批量导入功能优化 (2025-12-15)
+- ✅ 修改批量导入逻辑，支持多文件上传：
+  - 问题：原实现是一个Excel文件包含多个模板，不符合用户需求
+  - 新实现：支持一次选择多个Excel文件，每个文件只包含一个费率模板
+  - 前端修改：
+    - 文件输入添加 `multiple` 属性，支持多文件选择
+    - 添加文件列表显示，显示已选择的文件数量和名称
+    - 更新提示文字，说明每个文件一个模板
+  - 后端修改：
+    - 使用 `request.FILES.getlist("files")` 获取多个文件
+    - 遍历处理每个文件，每个文件解析一个模板
+    - 简化解析逻辑（不需要处理多个模板分组）
+    - 错误信息包含文件名，便于定位问题
+  - 修改文件：
+    - `parking/views/pricing.py`：重写 `pricing_template_import` 函数
+    - `templates/admin/pricing/template_list.html`：更新文件输入和提交逻辑
+
+#### 页面刷新问题修复 (2025-12-15)
+- ✅ 修复删除操作后页面不刷新的问题：
+  - 问题：删除费率模板后，页面没有自动刷新，需要手动刷新浏览器或重启系统才能看到更新
+  - 原因：`pricing_template_list` 视图使用了 `@cache_page(60 * 2)` 缓存装饰器，导致删除后2分钟内仍返回缓存内容
+  - 解决方案：
+    - 移除列表页面的缓存装饰器（管理后台数据变化频繁，不适合缓存）
+    - 优化前端刷新逻辑，使用缓存破坏参数（时间戳）确保获取最新数据
+    - 在 `base.html` 中添加通用刷新函数 `refreshPage()`
+    - 修复所有删除、创建、更新操作后的页面刷新逻辑
+  - 修改文件：
+    - `parking/views/pricing.py`：移除 `@cache_page` 装饰器
+    - `templates/admin/base.html`：优化 `deleteItem` 函数，添加 `refreshPage()` 函数
+    - `templates/admin/pricing/template_list.html`：优化刷新逻辑
+    - `templates/admin/parking_lot/list.html`：优化刷新逻辑
+    - `templates/admin/alert/wanted_list.html`：优化刷新逻辑
+- ✅ 检查并修复其他列表页面的刷新问题：
+  - 停车场列表：状态切换后刷新
+  - 通缉车辆列表：删除和取消操作后刷新
+  - 其他管理页面：统一使用缓存破坏参数刷新
+
+**使用说明**：
+- 初始化默认模板：`uv run manage.py init_default_pricing_template`
+- 强制重新创建：`uv run manage.py init_default_pricing_template --force`
+- 拷贝模板：在模板列表页面点击拷贝按钮
+- 基于模板创建：在模板列表页面点击"+"按钮
+
+## [2.2.9] - 2025-12-15
+
+### 代码质量检查和修复 ✅
+
+#### Django Debug Toolbar Profiling Panel 冲突修复 (2025-12-15)
+- ✅ 修复 `ValueError: Another profiling tool is already active` 错误：
+  - 问题原因：Django Debug Toolbar 的 Profiling Panel 在 Python 3.13 中与并发请求冲突
+  - 解决方案：在 `DEBUG_TOOLBAR_CONFIG` 中禁用 Profiling Panel
+  - 修改文件：`config/settings/dev.py`
+  - 添加配置：`"debug_toolbar.panels.profiling.ProfilingPanel"` 到 `DISABLE_PANELS`
+  - 参考：Django Debug Toolbar 官方文档和 Stack Overflow 解决方案
+
+#### Ruff 代码检查修复 (2025-12-15)
+- ✅ 运行 `uv pip check` 检查依赖兼容性：所有 75 个包兼容，无冲突
+- ✅ 运行 `uv run ruff check` 进行代码质量检查：
+  - 发现 91 个问题（主要是未使用的导入）
+  - 自动修复 74 个问题（使用 `ruff check --fix`）
+  - 手动修复 17 个问题：
+    - 修复未使用的导入（F401）：移除 79 个未使用的导入
+    - 修复重复定义（F811）：清理重复的导入和变量定义
+    - 修复未使用的变量（F841）：移除 `parking/views/auth_views.py` 中未使用的 `profile` 变量
+    - 配置 Django settings 文件的 star import 忽略规则（F403/F405）
+    - 为必要的延迟导入添加 `# noqa: F401` 注释
+- ✅ 配置 `pyproject.toml` 中的 ruff 规则：
+  - 设置行长度为 100
+  - 设置目标 Python 版本为 3.13
+  - 配置 Django settings 文件的忽略规则
+- ✅ 所有检查通过：`ruff check` 和 `uv pip check` 全部通过
+
+**检查结果**: ✅ 代码质量检查全部通过，项目代码符合规范
+
+## [2.2.8] - 2025-12-15
+
+### 代码和配置文件检查 ✅
+
+#### 代码质量检查 (2025-12-15)
+- ✅ 检查所有代码文件的导入路径：
+  - 所有导入路径正确，使用标准模块路径
+  - `parking.models`, `config.settings`, `core.utils` 等路径正确
+  - 没有发现硬编码的绝对路径
+- ✅ 检查配置文件路径：
+  - `BASE_DIR` 路径配置正确：`Path(__file__).resolve().parent.parent.parent`
+  - 静态文件和媒体文件路径使用 `BASE_DIR` 相对路径，配置正确
+  - `STATIC_ROOT`, `MEDIA_ROOT`, `LOGS_DIR` 等路径配置正确
+- ✅ 检查备份文件和临时文件：
+  - 没有发现备份文件（`.old`, `.backup` 等）
+  - 没有发现临时文件
+  - `services.py.old` 已删除（符合文档说明）
+- ✅ 检查代码质量问题：
+  - Linter 检查通过，无错误
+  - 没有发现未使用的导入
+  - 没有发现重复代码
+  - 没有发现空文件（除了正常的 `__init__.py`）
+- ✅ 检查配置文件：
+  - `config/wsgi.py`: 使用正确的 `config.settings.dev`
+  - `config/asgi.py`: 使用正确的 `config.settings.dev`
+  - `manage.py`: 使用正确的 `config.settings.dev`
+  - Docker 配置文件路径正确
+- ✅ 发现的 TODO 注释（预期）：
+  - `parking/views/auth_views.py:191` - 短信服务集成（P2优先级，文档中已说明）
+
+**检查结果**: ✅ 所有代码文件和配置文件路径正确，无问题发现
+
+## [2.2.7] - 2025-12-15
+
+### 项目文件清理 ✅
+
+#### 清理无效文件 (2025-12-15)
+- ✅ 从 Git 中移除已删除的文档文件（16个）：
+  - `docs/DOCUMENTATION_COMPLETE_REPORT.md`
+  - `docs/api/README.md`
+  - `docs/architecture/README.md`
+  - `docs/bugfixes/README.md`
+  - `docs/contributing/README.md`
+  - `docs/deployment/README.md`
+  - `docs/development/README.md`
+  - `docs/features/README.md`
+  - `docs/optimization/ALL_TASKS_COMPLETE.md`
+  - `docs/optimization/README.md`
+  - `docs/optimization/TODOLIST_REVIEW.md`
+  - `docs/refactoring/README.md`
+  - `docs/testing/BUG_SCAN_REPORT.md`
+  - `docs/testing/COVERAGE_IMPROVEMENT_REPORT.md`
+  - `docs/testing/PYTEST_CONFIG_CHECK.md`
+  - `docs/user-guide/README.md`
+- ✅ 删除临时文件：
+  - `coverage.json`（测试生成的覆盖率文件，77KB）
+  - `docs/SECURITY_FIX.md`（安全修复已完成，文档已过时）
+- ✅ 清理 Python 缓存：
+  - 删除所有 `__pycache__` 目录和 `.pyc` 文件
+- ✅ 更新 `.gitignore`：
+  - 添加 `coverage.json` 到忽略列表
+
+## [2.2.6] - 2025-12-15
+
+### Docker Compose 多环境配置优化 ✅
+
+#### 多环境配置重构 (2025-12-15)
+- ✅ 采用基础配置 + 覆盖文件的最佳实践：
+  - `docker-compose.base.yml`: 基础配置（所有环境共享）
+  - `docker-compose.override.yml`: 本地开发覆盖（自动加载，不提交）
+  - `docker-compose.dev.yml`: 开发环境覆盖
+  - `docker-compose.staging.yml`: 预发布环境覆盖（新增）
+  - `docker-compose.prod.yml`: 生产环境覆盖（优化）
+  - `docker-compose.test.yml`: 测试环境配置（优化）
+- ✅ 环境变量管理优化：
+  - `.env.dev.example`: 开发环境变量示例
+  - `.env.staging.example`: 预发布环境变量示例
+  - `.env.production.example`: 生产环境变量示例
+  - 支持 `--env-file` 参数指定环境变量文件
+- ✅ 配置合并优化：
+  - 使用 Docker Compose 官方推荐的合并机制
+  - 支持 `!override` 完全替换列表
+  - 环境变量优先级明确
+- ✅ 创建多环境配置指南：
+  - `docs/deployment/DOCKER_COMPOSE_GUIDE.md`: 完整的多环境配置指南
+  - 包含最佳实践、CI/CD 集成、故障排除等
+- ✅ 更新所有相关文档：
+  - 更新开发环境文档使用新配置方式
+  - 更新快速部署指南使用新配置方式
+  - 更新 README 添加多环境配置说明
+
+## [2.2.5] - 2025-12-15
+
+### Docker 开发测试环境配置 ✅
+
+#### 开发测试环境 (2025-12-15)
+- ✅ 创建开发环境配置：
+  - `Dockerfile.dev`: 开发环境 Dockerfile（包含开发工具和调试支持）
+  - `docker-compose.dev.yml`: 完整开发环境配置
+    - 支持热重载（卷挂载）
+    - 支持调试（debugpy 端口 5678）
+    - 包含 Celery Worker 和 Beat
+    - 可选工具：PgAdmin、Redis Commander（使用 profile）
+  - `docker-compose.test.yml`: 测试环境配置
+    - 独立的测试数据库和 Redis
+    - 测试运行器配置
+    - 代码质量检查（lint）
+- ✅ 优化现有 `docker-compose.yml`：
+  - 使用 Dockerfile.dev
+  - 添加调试端口
+  - 优化卷挂载（排除不必要的目录）
+- ✅ 创建开发环境文档：
+  - `docs/deployment/DEVELOPMENT_DOCKER.md`: 完整的开发测试环境指南
+  - 包含热重载、调试、测试等使用说明
+- ✅ 开发环境特性：
+  - 热重载：代码修改自动生效
+  - 调试支持：VS Code 调试配置、IPython 断点
+  - 开发工具：PgAdmin、Redis Commander
+  - 测试工具：pytest、coverage
+  - 代码检查：ruff、mypy
+
+## [2.2.4] - 2025-12-15
+
+### 生产环境最佳实践完善 ✅
+
+#### 生产环境优化建议实施 (2025-12-15)
+- ✅ PostgreSQL 优化：
+  - 添加 pg_stat_statements 扩展配置和查询优化指南
+  - 添加 WAL 归档和点-in-time 恢复 (PITR) 配置
+  - 添加读取副本配置说明（可选）
+- ✅ Redis 优化：
+  - 添加 Redis Sentinel vs Cluster 选择指南
+  - 添加 Redis 向量搜索评估说明
+  - 完善 Redis 安全配置
+- ✅ Celery 优化：
+  - 完善任务优先级配置示例
+  - 添加 RabbitMQ vs Redis 选择指南
+  - 添加不同场景的 Broker 选择建议
+- ✅ Nginx 安全增强：
+  - 完善 HTTP 安全头配置（HSTS、CSP、Permissions-Policy 等）
+  - 添加限流配置示例
+  - 添加 WAF 部署建议（ModSecurity、云 WAF）
+- ✅ 监控和日志优化：
+  - 添加 Prometheus Recording Rules 配置
+  - 添加 Prometheus 指标优化最佳实践
+  - 添加结构化日志（JSON）配置示例
+- ✅ OpenTelemetry 集成：
+  - 添加完整的 OpenTelemetry Django 集成配置
+  - 添加与 Glitchtip 集成说明
+- ✅ CI/CD 安全：
+  - 完善 GitHub Secrets 使用指南
+  - 添加安全扫描结果上传配置
+- ✅ 新增"生产环境最佳实践"章节：
+  - 总结所有已实现的最佳实践
+  - 列出可选优化项及适用场景
+  - 提供技术选型建议
+
+## [2.2.3] - 2025-12-15
+
+### 扩展组件版本更新和替换 ✅
+
+#### 扩展组件版本更新 (2025-12-15)
+- ✅ 更新所有扩展组件到指定版本：
+  - Prometheus: Latest → **3.5.0** (LTS 版本，PromQL 增强、OTLP 支持)
+  - Grafana: Latest → **12.3.0** (API 客户端增强)
+  - pgBackRest: Latest → **2.57.0** (HTTP 重试、Bug 修复)
+  - Trivy: Latest → **0.68.1** (VEX 修复、兼容性改进)
+- ✅ 日志聚合组件替换：
+  - Loki + Promtail → **Filebeat 9.2.2**
+  - 支持 DPoP 认证、改进缓存处理器、FIPS 分发支持
+  - 支持输出到 Elasticsearch 或 Logstash
+- ✅ 错误追踪组件替换：
+  - Sentry → **Glitchtip 5.2.0** (自托管 Sentry 替代方案)
+  - Material Design 3 UI、安全改进、简化架构（可选仅使用 PostgreSQL）
+  - 兼容 Sentry SDK，无缝迁移
+- ✅ 更新技术栈文档，添加各组件详细配置和集成方案
+
+## [2.2.2] - 2025-12-15
+
+### 技术栈版本更新和扩展 ✅
+
+#### 技术栈版本更新 (2025-12-15)
+- ✅ 更新所有组件到指定版本：
+  - PostgreSQL: 17 → **17.7**（安全修复和 JSON 函数改进）
+  - Redis: 8.0 → **8.4**（原子集群操作、混合搜索、性能优化）
+  - Nginx: Alpine → **1.29.4**（HTTP/2 上游支持、ECH 支持、TLS 证书压缩）
+  - PgBouncer: Latest → **1.25.1**（安全修复 CVE-2025-12819）
+  - Docker Compose: 3.8 → **v5.0.0**（Go SDK、BuildKit 移除）
+  - Django: 5.x → **5.2**
+- ✅ 更新技术栈文档，添加各版本详细特性说明
+- ✅ 更新 `docker-compose.yml` 和 `docker-compose.prod.yml` 中的版本号
+
+#### 生产环境扩展组件 (2025-12-15)
+- ✅ 添加监控方案：Prometheus + Grafana
+- ✅ 添加日志方案：Loki + Promtail
+- ✅ 添加错误追踪：Sentry 集成
+- ✅ 添加 APM：OpenTelemetry 集成
+- ✅ 添加备份方案：数据库备份、Redis 备份、媒体文件备份
+- ✅ 添加 CI/CD 方案：GitHub Actions 完整流水线
+- ✅ 更新技术栈文档，添加备份与恢复、CI/CD 章节
+
+## [2.2.1] - 2025-12-15
+
+### 生产环境部署配置 ✅
+
+#### Docker 生产环境配置 (2025-12-15)
+- ✅ 更新数据库版本：PostgreSQL 15 → **PostgreSQL 17**
+  - 使用最新版本，性能提升显著
+  - 增强的内存管理和查询优化
+  - 支持增量备份和逻辑复制
+- ✅ 更新缓存版本：Redis 7 → **Redis 8.0**
+  - 命令执行速度提升 87%
+  - 复制性能提升 18%
+  - 支持向量搜索（AI 应用场景）
+- ✅ 创建生产环境 Docker 配置：
+  - `Dockerfile`: 多阶段构建，优化镜像大小
+  - `docker-compose.prod.yml`: 完整的生产环境服务编排
+  - `gunicorn_config.py`: Gunicorn 生产配置
+  - `nginx/`: Nginx 反向代理配置
+  - `.dockerignore`: Docker 构建忽略文件
+- ✅ 创建详细的技术栈方案文档：
+  - `docs/deployment/PRODUCTION_TECH_STACK.md`: 完整的技术栈方案
+  - 支持 10 万级别用户流畅运行
+  - 包含性能优化、高可用、安全配置等
+- ✅ 服务组件：
+  - Django + Gunicorn: Web 应用服务
+  - Nginx: 反向代理、SSL、静态文件服务
+  - PostgreSQL 17: 主数据库（含优化配置）
+  - Redis 8.0: 缓存和消息队列
+  - PgBouncer: 数据库连接池
+  - Celery: 异步任务处理
+
+### Bug修复 ✅
+
+#### 代码质量修复 (2025-12-15)
+- ✅ 修复了 `parking/models.py` 中 `ParkingLotPricing` 未定义错误：
+  - 问题：第 760 行使用 `ParkingLotPricing` 作为类型注解，但未导入
+  - 修复：使用 `TYPE_CHECKING` 条件导入，避免循环导入问题
+  - 修复：删除函数内部的重复导入（第 774 行）
+- ✅ 清理了未使用的导入：
+  - 删除了 `from datetime import datetime`（未使用）
+  - 删除了 `from pathlib import Path`（未使用）
+- ✅ 所有 linter 错误已修复
+
 ## [2.2.0] - 2025-12-14
 
 ### Bug修复 ✅

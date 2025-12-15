@@ -12,7 +12,7 @@
 ### 🏗️ [架构文档](./architecture/)
 系统架构、数据库设计、模块说明等核心架构文档。
 
-- [系统架构](./architecture/ARCHITECTURE.md) - 整体架构设计
+- [系统架构](./architecture/ARCHITECTURE.md) - 整体架构设计（包含静态文件组织说明）
 - [数据库设计](./architecture/DATABASE.md) - 数据库模型和关系
 - [模块说明](./architecture/MODULES.md) - 各功能模块说明
 
@@ -25,13 +25,17 @@
 测试报告、测试配置、测试指南等测试相关文档。
 
 - [测试报告](./testing/TEST_REPORT.md) - 完整的测试报告（237+个测试用例，100%通过，覆盖率73%+）
-- [覆盖率提升报告](./testing/COVERAGE_IMPROVEMENT_REPORT.md) - 代码覆盖率提升详情（从61%提升到73%）
-- [Pytest配置检查](./testing/PYTEST_CONFIG_CHECK.md) - pytest配置检查报告
+- [Bug修复报告](./testing/BUG_FIX_REPORT.md) - Bug修复详情
+- [最终覆盖率报告](./testing/FINAL_COVERAGE_REPORT.md) - 代码覆盖率详情（从61%提升到75%）
 
 ### 🚀 [部署文档](./deployment/)
 生产环境部署、服务器配置、运维相关文档。
 
-- [部署指南](./deployment/DEPLOYMENT.md) - 生产环境部署步骤、服务器配置、SSL配置
+- [Docker Compose 多环境配置指南](./deployment/DOCKER_COMPOSE_GUIDE.md) - 多环境配置最佳实践（基础配置+覆盖）
+- [Docker 开发测试环境](./deployment/DEVELOPMENT_DOCKER.md) - Docker 开发测试环境完整指南（热重载、调试、测试）
+- [快速部署指南](./deployment/QUICK_START.md) - Docker 生产环境快速部署
+- [部署指南](./deployment/DEPLOYMENT.md) - 传统部署方式（非 Docker）
+- [生产环境技术栈方案](./deployment/PRODUCTION_TECH_STACK.md) - 完整的技术栈方案（支持10万用户，包含最佳实践和优化建议）
 
 ### 📖 [用户指南](./user-guide/)
 用户手册、操作指南、界面设计等用户相关文档。
@@ -59,9 +63,6 @@
 
 - [优化最终报告](./optimization/FINAL_OPTIMIZATION_REPORT.md) - 所有优化工作的完整总结
 
-### 📚 [文档完善报告](./DOCUMENTATION_COMPLETE_REPORT.md)
-文档完善工作完成报告，记录所有已完成的文档任务。
-
 ### ✨ [功能文档](./features/)
 新功能开发、功能优化、功能设计等文档。
 
@@ -71,7 +72,6 @@
 API接口文档、API使用指南等。
 
 - [RESTful API文档](./api/API.md) - 完整的API接口文档（568行，包含所有接口说明）
-- [API文档索引](./api/README.md) - API文档导航
 
 ---
 
@@ -157,4 +157,4 @@ API接口文档、API使用指南等。
 ---
 
 **文档维护**: HeZaoCha  
-**最后更新**: 2025-12-14
+**最后更新**: 2025-12-15

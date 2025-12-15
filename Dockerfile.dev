@@ -1,0 +1,44 @@
+# 开发环境 Dockerfile
+# 用于开发测试，包含开发工具和调试支持
+
+FROM python:3.13-slim
+
+# 设置工作目录
+WORKDIR /app
+
+# 安装系统依赖（包含开发工具）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    git \
+    vim \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 uv
+RUN pip install --no-cache-dir uv
+
+# 复制依赖文件
+COPY pyproject.toml uv.lock* ./
+
+# 安装所有依赖（包括开发依赖）
+RUN uv sync --frozen
+
+# 复制项目文件
+COPY . .
+
+# 设置环境变量
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DJANGO_SETTINGS_MODULE=config.settings.dev \
+    PYTHONBREAKPOINT=ipdb.set_trace
+
+# 暴露端口
+# 8000: Django 开发服务器
+# 5678: debugpy 调试端口
+EXPOSE 8000 5678
+
+# 开发环境使用 Django 开发服务器（支持热重载）
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

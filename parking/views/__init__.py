@@ -21,8 +21,8 @@ from parking.views.dashboard import (
 # 使用新路径：from parking.views import admin, api, etc.
 
 __all__ = [
-    'login_view',
-    'logout_view',
-    'home_view',
-    'dashboard_view',
+    "login_view",
+    "logout_view",
+    "home_view",
+    "dashboard_view",
 ]
