@@ -91,7 +91,14 @@ async function submitReply() {
     // 所有验证通过，准备提交
     
     try {
-        const response = await fetch(`{% url 'parking:admin_contact_message_reply' 0 %}`.replace('0', currentMessageId), {
+        const replyModal = document.getElementById('reply-modal');
+        if (!replyModal || !replyModal.dataset.replyUrlTemplate) {
+            alert('回复URL未找到');
+            return;
+        }
+        
+        const replyUrl = replyModal.dataset.replyUrlTemplate.replace('0', currentMessageId);
+        const response = await fetch(replyUrl, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCsrfToken(),

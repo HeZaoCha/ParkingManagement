@@ -107,11 +107,14 @@ function closeModal(id) {
   }
   
 function showLotDetail(lotId) {
-    {% if user.is_staff %}
-    window.location.href = `/manage/lots/${lotId}/`;
-    {% else %}
-    alert('请联系管理员查看详情');
-    {% endif %}
+    const mainElement = document.querySelector('main[data-is-staff]');
+    const isStaff = mainElement && mainElement.dataset.isStaff === 'true';
+    
+    if (isStaff) {
+      window.location.href = `/manage/lots/${lotId}/`;
+    } else {
+      alert('请联系管理员查看详情');
+    }
   }
   
 // 初始化进度条

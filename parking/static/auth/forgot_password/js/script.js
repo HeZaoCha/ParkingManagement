@@ -237,7 +237,7 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
         </div>
         ${result.email ? `<p class="text-xs mt-2 text-emerald-600 dark:text-emerald-400">验证码已发送到：${result.email}</p>` : ''}
         <div class="mt-3">
-          <a href="{% url 'parking:reset_password' %}?email=${encodeURIComponent(document.getElementById('username_or_email').value)}" 
+          <a href="${form.dataset.resetPasswordUrl}?email=${encodeURIComponent(document.getElementById('username_or_email').value)}" 
              class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors hover:scale-105 active:scale-95">
             <i class="fas fa-arrow-right"></i>
             前往重置密码
@@ -248,9 +248,12 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
       // 如果知道邮箱，自动跳转（延迟2秒）
       const emailInput = document.getElementById('username_or_email').value;
       if (emailInput) {
-        setTimeout(() => {
-          window.location.href = `{% url 'parking:reset_password' %}?email=${encodeURIComponent(emailInput)}`;
-        }, 2000);
+        const resetPasswordUrl = form.dataset.resetPasswordUrl;
+        if (resetPasswordUrl) {
+          setTimeout(() => {
+            window.location.href = `${resetPasswordUrl}?email=${encodeURIComponent(emailInput)}`;
+          }, 2000);
+        }
       }
     } else {
       messageContent.className = 'p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300';

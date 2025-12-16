@@ -20,7 +20,7 @@
             <i class="fas fa-search text-primary-400" aria-hidden="true"></i>
             查询条件
         </h3>
-        <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="search" aria-label="公安查询" novalidate data-validate>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" role="search" aria-label="公安查询" novalidate data-validate data-api-police-query-url="{% url 'parking:api_police_query' %}">
             <!-- 省份 -->
             <div>
                 <label for="province-select" class="block text-sm font-medium text-slate-300 mb-2">省份</label>

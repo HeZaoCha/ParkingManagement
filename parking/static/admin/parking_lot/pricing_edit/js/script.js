@@ -16,7 +16,7 @@ function toggleChargeType() {
 }
 
 function loadTemplate() {
-    const templateId = document.getElementById('template-select').value;
+    const templateId = document.getElementById('template-select-pricing').value;
     if (templateId) {
         // 如果选择了模板，可以在这里加载模板的详细配置
         // 这里简化处理，实际应该通过AJAX获取模板详情
@@ -37,19 +37,35 @@ async function calculatePreview() {
         return;
     }
     
+    // 获取表单元素
+    const form = document.getElementById('pricing-form');
+    if (!form) {
+        previewFee.textContent = '计算失败';
+        previewDetails.classList.add('hidden');
+        return;
+    }
+    
     // 准备请求数据
     const data = {
         duration_minutes: duration,
         charge_type: chargeType,
-        lot_id: parseInt(form?.dataset.lotId || '0'),
-        hourly_rate: chargeType === 'fixed' ? (document.getElementById('hourly-rate').value || 0) : null,
-        free_minutes: chargeType === 'tiered' ? (parseInt(document.getElementById('free-minutes').value) || 15) : null,
-        daily_max_fee: chargeType === 'tiered' ? (document.getElementById('daily-max-fee').value || null) : null,
-        template_id: chargeType === 'tiered' ? (document.getElementById('template-select').value || null) : null
+        lot_id: parseInt(form.dataset.lotId || '0'),
+        hourly_rate: chargeType === 'fixed' ? (document.getElementById('hourly-rate-pricing').value || 0) : null,
+        free_minutes: chargeType === 'tiered' ? (parseInt(document.getElementById('free-minutes-pricing').value) || 15) : null,
+        daily_max_fee: chargeType === 'tiered' ? (document.getElementById('daily-max-fee-pricing').value || null) : null,
+        template_id: chargeType === 'tiered' ? (document.getElementById('template-select-pricing').value || null) : null
     };
     
     try {
-        const response = await fetch('{% url "parking:api_pricing_preview" %}', {
+        const previewUrl = form.dataset.previewUrl;
+        if (!previewUrl) {
+            console.error('Preview URL not found');
+            previewFee.textContent = '计算失败';
+            previewDetails.classList.add('hidden');
+            return;
+        }
+        
+        const response = await fetch(previewUrl, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': window.getCsrfToken(),
@@ -81,10 +97,10 @@ async function calculatePreview() {
 }
 
 // 监听费率配置变化
-document.getElementById('hourly-rate')?.addEventListener('input', calculatePreview);
-document.getElementById('free-minutes')?.addEventListener('input', calculatePreview);
-document.getElementById('daily-max-fee')?.addEventListener('input', calculatePreview);
-document.getElementById('template-select')?.addEventListener('change', calculatePreview);
+document.getElementById('hourly-rate-pricing')?.addEventListener('input', calculatePreview);
+document.getElementById('free-minutes-pricing')?.addEventListener('input', calculatePreview);
+document.getElementById('daily-max-fee-pricing')?.addEventListener('input', calculatePreview);
+document.getElementById('template-select-pricing')?.addEventListener('change', calculatePreview);
 document.querySelectorAll('input[name="charge_type"]').forEach(radio => {
     radio.addEventListener('change', function() {
         toggleChargeType();
@@ -110,7 +126,7 @@ document.getElementById('pricing-form').addEventListener('submit', async functio
     
     // 2. 验证固定费率
     if (chargeType === 'fixed') {
-        const hourlyRateInput = document.getElementById('hourly-rate');
+        const hourlyRateInput = document.getElementById('hourly-rate-pricing');
         const hourlyRate = parseFloat(hourlyRateInput.value);
         if (!hourlyRateInput.value || isNaN(hourlyRate) || hourlyRate < 0) {
             alert('请输入有效的小时费率（非负数）');
@@ -121,7 +137,7 @@ document.getElementById('pricing-form').addEventListener('submit', async functio
     
     // 3. 验证阶梯费率
     if (chargeType === 'tiered') {
-        const templateSelect = document.getElementById('template-select');
+        const templateSelect = document.getElementById('template-select-pricing');
         const templateId = templateSelect.value;
         
         if (!templateId) {
@@ -131,7 +147,7 @@ document.getElementById('pricing-form').addEventListener('submit', async functio
         }
         
         // 验证免费时长（可选，但如果有值必须是正整数）
-        const freeMinutesInput = document.getElementById('free-minutes');
+        const freeMinutesInput = document.getElementById('free-minutes-pricing');
         if (freeMinutesInput.value) {
             const freeMinutes = parseInt(freeMinutesInput.value);
             if (isNaN(freeMinutes) || freeMinutes < 0) {
@@ -142,7 +158,7 @@ document.getElementById('pricing-form').addEventListener('submit', async functio
         }
         
         // 验证每日上限（可选，但如果有值必须是非负数）
-        const dailyMaxFeeInput = document.getElementById('daily-max-fee');
+        const dailyMaxFeeInput = document.getElementById('daily-max-fee-pricing');
         if (dailyMaxFeeInput.value) {
             const dailyMaxFee = parseFloat(dailyMaxFeeInput.value);
             if (isNaN(dailyMaxFee) || dailyMaxFee < 0) {
@@ -154,17 +170,23 @@ document.getElementById('pricing-form').addEventListener('submit', async functio
     }
     
     // 所有验证通过，准备提交
+    const form = document.getElementById('pricing-form');
+    if (!form) {
+        alert('表单未找到');
+        return;
+    }
+    
     const data = {
         charge_type: chargeType,
-        template_id: chargeType === 'tiered' ? document.getElementById('template-select').value : null,
-        hourly_rate: chargeType === 'fixed' ? parseFloat(document.getElementById('hourly-rate').value) : null,
-        free_minutes: chargeType === 'tiered' ? (document.getElementById('free-minutes').value ? parseInt(document.getElementById('free-minutes').value) : 15) : null,
-        daily_max_fee: chargeType === 'tiered' ? (document.getElementById('daily-max-fee').value ? parseFloat(document.getElementById('daily-max-fee').value) : null) : null
+        template_id: chargeType === 'tiered' ? document.getElementById('template-select-pricing').value : null,
+        hourly_rate: chargeType === 'fixed' ? parseFloat(document.getElementById('hourly-rate-pricing').value) : null,
+        free_minutes: chargeType === 'tiered' ? (document.getElementById('free-minutes-pricing').value ? parseInt(document.getElementById('free-minutes-pricing').value) : 15) : null,
+        daily_max_fee: chargeType === 'tiered' ? (document.getElementById('daily-max-fee-pricing').value ? parseFloat(document.getElementById('daily-max-fee-pricing').value) : null) : null
     };
     
     try {
-        const saveUrl = form?.dataset.saveUrl || '';
-        const detailUrl = form?.dataset.detailUrl || '';
+        const saveUrl = form.dataset.saveUrl || '';
+        const detailUrl = form.dataset.detailUrl || '';
         
         const response = await fetch(saveUrl, {
             method: 'POST',
