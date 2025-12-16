@@ -628,23 +628,4 @@ async function sendVerificationCode() {
   }
 }
 
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  if (!cookieValue) {
-    const metaTag = document.querySelector('meta[name=csrf-token]');
-    if (metaTag) {
-      cookieValue = metaTag.getAttribute('content');
-    }
-  }
-  return cookieValue;
-}
+// getCookie 函数已由 utils.js 中的 getCsrfToken 替代

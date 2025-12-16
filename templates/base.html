@@ -22,18 +22,6 @@
   
   {# 预加载关键资源 #}
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style">
-  <link rel="preload" href="{% static 'parking/css/license_plate_input.css' %}" as="style">
-  <link rel="preload" href="{% static 'parking/css/components.css' %}" as="style">
-  <link rel="preload" href="{% static 'parking/js/license_plate_input.js' %}" as="script">
-  <link rel="preload" href="{% static 'parking/js/form_validation.js' %}" as="script">
-  
-  {# 预获取非关键资源 #}
-  <link rel="prefetch" href="{% static 'parking/css/image_lazy_load.css' %}" as="style">
-  <link rel="prefetch" href="{% static 'parking/css/skeleton.css' %}" as="style">
-  <link rel="prefetch" href="{% static 'parking/js/components.js' %}" as="script">
-  <link rel="prefetch" href="{% static 'parking/js/network_optimization.js' %}" as="script">
-  <link rel="prefetch" href="{% static 'parking/js/image_lazy_load.js' %}" as="script">
-  <link rel="prefetch" href="{% static 'parking/js/skeleton.js' %}" as="script">
   
   {# Tailwind CSS #}
   <script src="https://cdn.tailwindcss.com"></script>
@@ -57,6 +45,7 @@
   
   {# 公共工具库（必须在其他脚本之前加载） #}
   <script src="{% static 'common/js/utils.js' %}"></script>
+  <script src="{% static 'common/js/dom_utils.js' %}"></script>
   
   {# 公共组件样式 #}
   <link rel="stylesheet" href="{% static 'common/css/components.css' %}">
@@ -82,9 +71,6 @@
       }
     }
   </style>
-  
-  {# 车牌号输入组件样式 #}
-  <link rel="stylesheet" href="{% static 'parking/css/license_plate_input.css' %}">
   
   {% block extra_css %}{% endblock %}
 </head>
@@ -209,71 +195,6 @@
   
   {# 主题系统脚本 #}
   <script src="{% static 'base/js/theme_manager.js' %}"></script>
-  {# 车牌号输入组件脚本 #}
-  <script src="{% static 'parking/js/license_plate_input.js' %}"></script>
-  {# 表单验证工具 #}
-  <script src="{% static 'parking/js/form_validation.js' %}"></script>
-  {# 网络资源优化工具 #}
-  <script src="{% static 'parking/js/network_optimization.js' %}"></script>
-  {# 统一组件库 #}
-  <link rel="stylesheet" href="{% static 'parking/css/components.css' %}">
-  <script src="{% static 'parking/js/components.js' %}"></script>
-  {# 图片懒加载 #}
-  <link rel="stylesheet" href="{% static 'parking/css/image_lazy_load.css' %}">
-  <script src="{% static 'parking/js/image_lazy_load.js' %}"></script>
-  {# 骨架屏 #}
-  <link rel="stylesheet" href="{% static 'parking/css/skeleton.css' %}">
-  <script src="{% static 'parking/js/skeleton.js' %}"></script>
-  {# 键盘导航 #}
-  <script src="{% static 'parking/js/keyboard_navigation.js' %}"></script>
-  {# 面包屑导航 #}
-  <script src="{% static 'parking/js/breadcrumb.js' %}"></script>
-  {# 表单自动保存 #}
-  <script src="{% static 'parking/js/form_autosave.js' %}"></script>
-  {# 全局搜索 #}
-  <script src="{% static 'parking/js/search.js' %}"></script>
-  {# 语言切换器 #}
-  <script src="{% static 'parking/js/language_switcher.js' %}"></script>
-  {# 移动端优化 #}
-  <link rel="stylesheet" href="{% static 'parking/css/mobile.css' %}">
-  <script src="{% static 'parking/js/mobile.js' %}"></script>
-  {# 动画效果 #}
-  <link rel="stylesheet" href="{% static 'parking/css/animations.css' %}">
-  {# UI组件样式 #}
-  <link rel="stylesheet" href="{% static 'parking/css/ui_components.css' %}">
-  {# 图片优化样式 #}
-  <link rel="stylesheet" href="{% static 'parking/css/image_optimization.css' %}">
-  {# UI组件脚本 #}
-  <script src="{% static 'parking/js/ui_components.js' %}"></script>
-  {# 虚拟滚动 #}
-  <script src="{% static 'parking/js/virtual_scroll.js' %}"></script>
-  {# 图片优化 #}
-  <script src="{% static 'parking/js/image_optimization.js' %}"></script>
-  {# Service Worker #}
-  <script src="{% static 'parking/js/service_worker.js' %}"></script>
-  {# 缓存预热 #}
-  <script src="{% static 'parking/js/cache_warmup.js' %}"></script>
-  {# 智能填充 #}
-  <script src="{% static 'parking/js/smart_fill.js' %}"></script>
-  {# 无障碍功能 #}
-  <link rel="stylesheet" href="{% static 'parking/css/accessibility.css' %}">
-  <script src="{% static 'parking/js/accessibility.js' %}"></script>
-  {# 资源合并 #}
-  <script src="{% static 'parking/js/resource_bundler.js' %}"></script>
-  {# Web Workers #}
-  <script src="{% static 'parking/js/web_workers.js' %}"></script>
-  {# 预渲染 #}
-  <script src="{% static 'parking/js/prerender.js' %}"></script>
-  {# 图标系统 #}
-  <link rel="stylesheet" href="{% static 'parking/css/icon_system.css' %}">
-  <script src="{% static 'parking/js/icon_system.js' %}"></script>
-  {# 布局系统 #}
-  <link rel="stylesheet" href="{% static 'parking/css/layout_system.css' %}">
-  <script src="{% static 'parking/js/layout_system.js' %}"></script>
-  {# 错误恢复 #}
-  <script src="{% static 'parking/js/error_recovery.js' %}"></script>
-  {# 语言包管理 #}
-  <script src="{% static 'parking/js/language_manager.js' %}"></script>
   
   {# 国际手机号输入组件样式定制（与主题系统兼容） #}
   <link rel="stylesheet" href="{% static 'base/css/intl_tel_input.css' %}">

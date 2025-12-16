@@ -10,10 +10,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from loguru import logger
 
 
+@ensure_csrf_cookie
 @require_http_methods(["GET", "POST"])
 def login_view(request: HttpRequest) -> HttpResponse:
     """
@@ -101,14 +103,22 @@ def _set_session_expiry(request: HttpRequest, remember: bool) -> None:
     """
     设置会话过期时间
 
+    根据"记住我"选项设置session过期时间：
+    - remember=True: 设置30天过期时间
+    - remember=False: 设置浏览器关闭时过期（0或None）
+
     Args:
         request: HTTP请求对象
         remember: 是否记住登录状态
     """
     if remember:
-        request.session.set_expiry(2592000)  # 30天
+        # 30天 = 2592000秒
+        request.session.set_expiry(2592000)
     else:
-        request.session.set_expiry(0)  # 浏览器关闭时过期
+        # 0 表示浏览器关闭时过期
+        # 注意：即使全局设置了 SESSION_EXPIRE_AT_BROWSER_CLOSE = True，
+        # request.session.set_expiry(0) 也会覆盖它
+        request.session.set_expiry(0)
 
 
 @login_required

@@ -304,36 +304,66 @@
       
       <div class="space-y-3 max-h-96 overflow-y-auto" id="activity-feed">
         {% for record in recent_records %}
-          <div class="flex items-start gap-3 p-3 bg-theme-secondary rounded-xl table-row">
+          <div class="activity-item flex items-start gap-3 p-3 bg-theme-secondary rounded-xl transition-all duration-300 hover:bg-theme-secondary/80"
+               data-record-id="{{ record.id }}"
+               data-entry-time="{{ record.entry_time|date:'c' }}"
+               data-exit-time="{% if record.exit_time %}{{ record.exit_time|date:'c' }}{% endif %}">
             <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0
                         {% if not record.exit_time %}bg-emerald-100 dark:bg-emerald-900/30
                         {% elif not record.is_paid %}bg-amber-100 dark:bg-amber-900/30
                         {% else %}bg-slate-100 dark:bg-slate-900/30{% endif %}">
-              <i class="fas {% if not record.exit_time %}fa-arrow-right{% elif not record.is_paid %}fa-clock{% else %}fa-check{% endif %}
+              <i class="fas {% if not record.exit_time %}fa-arrow-right{% elif not record.is_paid %}fa-clock{% else %}fa-check-circle{% endif %}
                         {% if not record.exit_time %}text-emerald-500
                         {% elif not record.is_paid %}text-amber-500
                         {% else %}text-slate-500{% endif %}"></i>
             </div>
             <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
                 <span class="font-mono font-medium text-theme-primary">{{ record.vehicle.license_plate }}</span>
                 {% if not record.exit_time %}
-                  <span class="text-xs px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded">停车中</span>
+                  <span class="text-xs px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    车辆入场
+                  </span>
                 {% elif not record.is_paid %}
-                  <span class="text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded">待支付</span>
+                  <span class="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full flex items-center gap-1">
+                    <i class="fas fa-exclamation-circle text-xs"></i>
+                    已出场待支付
+                  </span>
                 {% else %}
-                  <span class="text-xs px-1.5 py-0.5 bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 rounded">已完成</span>
+                  <span class="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 rounded-full flex items-center gap-1">
+                    <i class="fas fa-check-circle text-xs"></i>
+                    已出场并支付
+                  </span>
                 {% endif %}
               </div>
-              <p class="text-sm text-theme-muted truncate">
+              <p class="text-sm text-theme-muted truncate mb-1">
+                <i class="fas fa-map-marker-alt text-xs mr-1"></i>
                 {{ record.parking_space.parking_lot.name }} · {{ record.parking_space.space_number }}
               </p>
-              <p class="text-xs text-theme-muted mt-1">
-                <i class="far fa-clock mr-1"></i>{{ record.entry_time|date:"H:i" }}
-                {% if record.fee %}
-                  · <span class="text-amber-500">¥{{ record.fee }}</span>
+              <div class="flex items-center gap-2 text-xs text-theme-muted flex-wrap">
+                {% if not record.exit_time %}
+                  <span class="flex items-center gap-1">
+                    <i class="far fa-clock"></i>
+                    <span class="relative-time" data-time="{{ record.entry_time|date:'c' }}">刚刚</span>
+                  </span>
+                {% else %}
+                  <span class="flex items-center gap-1">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span class="relative-time" data-time="{{ record.exit_time|date:'c' }}">刚刚</span>
+                  </span>
                 {% endif %}
-              </p>
+                {% if record.fee %}
+                  <span class="text-amber-500 font-medium">
+                    <i class="fas fa-yen-sign"></i>{{ record.fee }}
+                  </span>
+                {% endif %}
+                {% if record.duration_minutes %}
+                  <span class="text-theme-muted">
+                    <i class="far fa-hourglass-half"></i>{{ record.duration_minutes }}分钟
+                  </span>
+                {% endif %}
+              </div>
             </div>
           </div>
         {% empty %}

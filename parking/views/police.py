@@ -11,7 +11,6 @@ Version: 1.2.0
 from datetime import datetime
 from decimal import Decimal
 
-from django.core.paginator import Paginator
 from django.db.models import Count, Q, Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -91,14 +90,10 @@ def police_query_view(request: HttpRequest) -> HttpResponse:
     # 排序
     queryset = queryset.order_by("-entry_time")
 
-    # 分页
-    paginator = Paginator(queryset, PAGE_SIZE)
-    page = request.GET.get("page", 1)
+    # 使用通用分页函数
+    from parking.utils.pagination import paginate_queryset
 
-    try:
-        records = paginator.page(page)
-    except Exception:
-        records = paginator.page(1)
+    records, current_page = paginate_queryset(queryset, request, page_size=PAGE_SIZE)
 
     # 统计信息
     stats = {

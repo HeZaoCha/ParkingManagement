@@ -24,6 +24,7 @@ from loguru import logger
 from parking.email_service import EmailService
 from parking.forms import ForgotPasswordForm, RegisterForm, ResetPasswordForm, VerifyCodeForm
 from parking.user_models import UserProfile, VerificationCode
+from parking.views.api import api_response
 
 
 @require_http_methods(["GET", "POST"])
@@ -63,9 +64,7 @@ def register_view(request):
         )
 
         if not verification or not verification.is_valid():
-            return JsonResponse(
-                {"success": False, "message": "验证码无效或已过期，请重新获取"}, status=400
-            )
+            return api_response(success=False, message="验证码无效或已过期，请重新获取")
 
         # 创建用户
         username = form.cleaned_data["username"]
@@ -74,10 +73,10 @@ def register_view(request):
         password = form.cleaned_data["password"]
 
         if User.objects.filter(username=username).exists():
-            return JsonResponse({"success": False, "message": "用户名已存在"}, status=400)
+            return api_response(success=False, message="用户名已存在")
 
         if email and User.objects.filter(email=email).exists():
-            return JsonResponse({"success": False, "message": "邮箱已被注册"}, status=400)
+            return api_response(success=False, message="邮箱已被注册")
 
         user = User.objects.create_user(username=username, email=email, password=password)
 
@@ -127,7 +126,7 @@ def send_verification_code(request):
         purpose = data.get("purpose", "register")  # register/login/reset_password
 
         if not target:
-            return JsonResponse({"success": False, "message": "请提供邮箱或手机号"}, status=400)
+            return api_response(success=False, message="请提供邮箱或手机号")
 
         # 检查频率限制（1分钟内只能发送一次）
         recent_code = VerificationCode.objects.filter(
@@ -201,21 +200,27 @@ def check_username(request):
     username = request.GET.get("username", "").strip()
 
     if not username:
-        return JsonResponse({"available": False, "message": "用户名不能为空"})
+        return api_response(success=False, message="用户名不能为空", data={"available": False})
 
     # 验证长度
     if len(username) < 3 or len(username) > 20:
-        return JsonResponse({"available": False, "message": "用户名长度必须在3-20个字符之间"})
+        return api_response(
+            success=False, message="用户名长度必须在3-20个字符之间", data={"available": False}
+        )
 
     # 检查是否包含控制字符
     if any(ord(c) < 32 and c not in "\t\n\r" for c in username):
-        return JsonResponse({"available": False, "message": "用户名不能包含控制字符"})
+        return api_response(
+            success=False, message="用户名不能包含控制字符", data={"available": False}
+        )
 
     # 检查是否已存在
     if User.objects.filter(username=username).exists():
-        return JsonResponse({"available": False, "message": "用户名已存在，请选择其他用户名"})
+        return api_response(
+            success=False, message="用户名已存在，请选择其他用户名", data={"available": False}
+        )
 
-    return JsonResponse({"available": True, "message": "用户名可用"})
+    return api_response(success=True, message="用户名可用", data={"available": True})
 
 
 @require_http_methods(["POST"])

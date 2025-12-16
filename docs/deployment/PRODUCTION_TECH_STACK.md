@@ -1,7 +1,7 @@
 # 生产环境技术栈方案
 
 **版本**: 3.0.0  
-**日期**: 2025-12-15  
+**日期**: 2025-12-16  
 **目标**: 支持 10 万级别用户流畅运行  
 **更新**: 
 - 更新所有组件到指定版本
@@ -1270,7 +1270,7 @@ archive-push-queue-max=1GB
 docker-compose -f docker-compose.prod.yml exec pgbackrest \
   pgbackrest --stanza=parking_management \
   --type=time \
-  --target="2025-12-15 14:30:00" \
+  --target="2025-12-16 14:30:00" \
   --target-action=promote \
   restore
 
@@ -2082,5 +2082,5 @@ rename-command FLUSHALL ""
 ---
 
 **文档维护**: HeZaoCha  
-**最后更新**: 2025-12-15  
+**最后更新**: 2025-12-16  
 **版本**: 3.0.0

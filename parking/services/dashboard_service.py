@@ -62,8 +62,17 @@ class DashboardService:
         recent_records = [
             {
                 "id": r.id,
-                "license_plate": r.vehicle.license_plate,
-                "space_number": r.parking_space.space_number,
+                "vehicle": {
+                    "license_plate": r.vehicle.license_plate,
+                },
+                "parking_space": {
+                    "space_number": r.parking_space.space_number,
+                    "parking_lot": {
+                        "name": r.parking_space.parking_lot.name,
+                    },
+                },
+                "license_plate": r.vehicle.license_plate,  # 保持向后兼容
+                "space_number": r.parking_space.space_number,  # 保持向后兼容
                 "parking_lot": r.parking_space.parking_lot.name,  # 使用parking_lot保持API兼容
                 "lot_name": r.parking_space.parking_lot.name,  # 同时保留lot_name
                 "entry_time": r.entry_time.isoformat(),
@@ -71,6 +80,7 @@ class DashboardService:
                 "fee": str(r.fee) if r.fee else None,
                 "is_paid": r.is_paid,
                 "is_active": r.exit_time is None,  # 添加is_active字段
+                "duration_minutes": r.duration_minutes if hasattr(r, "duration_minutes") else None,
             }
             for r in recent_records_qs
         ]

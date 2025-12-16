@@ -1,7 +1,7 @@
 # Docker 开发测试环境指南
 
 **版本**: 1.0.0  
-**日期**: 2025-12-15
+**日期**: 2025-12-16
 
 ---
 
@@ -449,4 +449,4 @@ docker-compose -f docker-compose.test.yml run --rm test pytest --cov=parking --c
 ---
 
 **文档维护**: HeZaoCha  
-**最后更新**: 2025-12-15
+**最后更新**: 2025-12-16

@@ -325,7 +325,7 @@ function clearContactFieldError(fieldName) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': getCookie('csrftoken')
+      'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : ''
     },
     body: JSON.stringify(data)
   })

@@ -11,7 +11,6 @@ Version: 1.1.0
 import json
 
 from django.contrib.auth.models import User
-from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -22,6 +21,7 @@ from parking.decorators import staff_member_required
 from parking.email_service import EmailService
 from parking.models import ParkingLot
 from parking.user_models import ContactMessage, StaffSchedule
+from parking.views.api import api_response
 
 
 @require_http_methods(["GET", "POST"])
@@ -45,7 +45,7 @@ def contact_form(request):
     cache_key = f"contact_form_rate_limit:{client_ip}"
     submit_count = cache.get(cache_key, 0)
     if submit_count >= 3:
-        return JsonResponse({"success": False, "message": "提交过于频繁，请稍后再试"}, status=429)
+        return api_response(success=False, message="提交过于频繁，请稍后再试")
 
     try:
         data = (
@@ -61,7 +61,7 @@ def contact_form(request):
 
         # 验证必填字段
         if not name or not email or not subject or not content:
-            return JsonResponse({"success": False, "message": "请填写所有必填字段"}, status=400)
+            return api_response(success=False, message="请填写所有必填字段")
 
         # 验证邮箱格式
         from django.core.validators import validate_email
@@ -70,7 +70,7 @@ def contact_form(request):
         try:
             validate_email(email)
         except ValidationError:
-            return JsonResponse({"success": False, "message": "邮箱格式不正确"}, status=400)
+            return api_response(success=False, message="邮箱格式不正确")
 
         # 创建联系消息
         message = ContactMessage.objects.create(
@@ -102,11 +102,11 @@ def contact_form(request):
         # 更新频率限制计数
         cache.set(cache_key, submit_count + 1, 60)  # 60秒过期
 
-        return JsonResponse({"success": True, "message": "感谢您的反馈，我们会尽快处理！"})
+        return api_response(success=True, message="感谢您的反馈，我们会尽快处理！")
 
     except Exception as e:
         logger.exception("提交联系消息失败")
-        return JsonResponse({"success": False, "message": f"提交失败: {str(e)}"}, status=500)
+        return api_response(success=False, message=f"提交失败: {str(e)}")
 
 
 @require_http_methods(["GET"])
@@ -115,12 +115,12 @@ def get_on_duty_staff(request):
     parking_lot_id = request.GET.get("parking_lot_id")
 
     if not parking_lot_id:
-        return JsonResponse({"success": False, "message": "请提供停车场ID"}, status=400)
+        return api_response(success=False, message="请提供停车场ID")
 
     try:
         parking_lot = ParkingLot.objects.get(id=parking_lot_id)
     except ParkingLot.DoesNotExist:
-        return JsonResponse({"success": False, "message": "停车场不存在"}, status=404)
+        return api_response(success=False, message="停车场不存在")
 
     # 获取当前星期和时间
     now = timezone.now()
@@ -150,15 +150,13 @@ def get_on_duty_staff(request):
             }
         )
 
-    return JsonResponse(
-        {
-            "success": True,
-            "data": {
-                "parking_lot": parking_lot.name,
-                "staff": staff_list,
-                "count": len(staff_list),
-            },
-        }
+    return api_response(
+        success=True,
+        data={
+            "parking_lot": parking_lot.name,
+            "staff": staff_list,
+            "count": len(staff_list),
+        },
     )
 
 
@@ -184,7 +182,7 @@ def get_admin_contacts(request):
             }
         )
 
-    return JsonResponse({"success": True, "data": {"admins": admin_list, "count": len(admin_list)}})
+    return api_response(success=True, data={"admins": admin_list, "count": len(admin_list)})
 
 
 @staff_member_required
@@ -218,7 +216,7 @@ def contact_message_reply(request, message_id):
     try:
         message = ContactMessage.objects.get(id=message_id)
     except ContactMessage.DoesNotExist:
-        return JsonResponse({"success": False, "message": "消息不存在"}, status=404)
+        return api_response(success=False, message="消息不存在")
 
     try:
         data = (
@@ -227,7 +225,7 @@ def contact_message_reply(request, message_id):
         reply_content = data.get("reply", "").strip()
 
         if not reply_content:
-            return JsonResponse({"success": False, "message": "回复内容不能为空"}, status=400)
+            return api_response(success=False, message="回复内容不能为空")
 
         # 更新消息
         message.reply = reply_content
@@ -244,8 +242,8 @@ def contact_message_reply(request, message_id):
         except Exception as e:
             logger.error(f"发送回复邮件失败: {message.email}, {e}")
 
-        return JsonResponse({"success": True, "message": "回复成功"})
+        return api_response(success=True, message="回复成功")
 
     except Exception as e:
         logger.exception("回复联系消息失败")
-        return JsonResponse({"success": False, "message": f"回复失败: {str(e)}"}, status=500)
+        return api_response(success=False, message=f"回复失败: {str(e)}")

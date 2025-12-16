@@ -36,17 +36,52 @@ class Command(BaseCommand):
                 "free_minutes": 15,
                 "daily_max_fee": Decimal("100.00"),
                 "rules": [
-                    {"start_minutes": 0, "end_minutes": 60, "rate_per_hour": Decimal("5.00"), "vehicle_type": "all"},
-                    {"start_minutes": 60, "end_minutes": 120, "rate_per_hour": Decimal("8.00"), "vehicle_type": "all"},
-                    {"start_minutes": 120, "end_minutes": None, "rate_per_hour": Decimal("10.00"), "vehicle_type": "all"},
+                    {
+                        "start_minutes": 0,
+                        "end_minutes": 60,
+                        "rate_per_hour": Decimal("5.00"),
+                        "vehicle_type": "all",
+                    },
+                    {
+                        "start_minutes": 60,
+                        "end_minutes": 120,
+                        "rate_per_hour": Decimal("8.00"),
+                        "vehicle_type": "all",
+                    },
+                    {
+                        "start_minutes": 120,
+                        "end_minutes": None,
+                        "rate_per_hour": Decimal("10.00"),
+                        "vehicle_type": "all",
+                    },
                 ],
                 "month_year_rates": [
-                    {"rate_type": "month", "price": Decimal("300.00"), "vehicle_type": "all", "description": "包月优惠"},
-                    {"rate_type": "quarter", "price": Decimal("800.00"), "vehicle_type": "all", "description": "包季优惠"},
-                    {"rate_type": "year", "price": Decimal("2800.00"), "vehicle_type": "all", "description": "包年优惠"},
+                    {
+                        "rate_type": "month",
+                        "price": Decimal("300.00"),
+                        "vehicle_type": "all",
+                        "description": "包月优惠",
+                    },
+                    {
+                        "rate_type": "quarter",
+                        "price": Decimal("800.00"),
+                        "vehicle_type": "all",
+                        "description": "包季优惠",
+                    },
+                    {
+                        "rate_type": "year",
+                        "price": Decimal("2800.00"),
+                        "vehicle_type": "all",
+                        "description": "包年优惠",
+                    },
                 ],
                 "overtime_rates": [
-                    {"overtime_fee": Decimal("15.00"), "overtime_start_hours": 24, "vehicle_type": "all", "description": "超过24小时后的超时费用"},
+                    {
+                        "overtime_fee": Decimal("15.00"),
+                        "overtime_start_hours": 24,
+                        "vehicle_type": "all",
+                        "description": "超过24小时后的超时费用",
+                    },
                 ],
             },
             {
@@ -55,11 +90,26 @@ class Command(BaseCommand):
                 "free_minutes": 30,
                 "daily_max_fee": Decimal("80.00"),
                 "rules": [
-                    {"start_minutes": 0, "end_minutes": 120, "rate_per_hour": Decimal("4.00"), "vehicle_type": "all"},
-                    {"start_minutes": 120, "end_minutes": None, "rate_per_hour": Decimal("6.00"), "vehicle_type": "all"},
+                    {
+                        "start_minutes": 0,
+                        "end_minutes": 120,
+                        "rate_per_hour": Decimal("4.00"),
+                        "vehicle_type": "all",
+                    },
+                    {
+                        "start_minutes": 120,
+                        "end_minutes": None,
+                        "rate_per_hour": Decimal("6.00"),
+                        "vehicle_type": "all",
+                    },
                 ],
                 "month_year_rates": [
-                    {"rate_type": "month", "price": Decimal("250.00"), "vehicle_type": "all", "description": "优惠包月"},
+                    {
+                        "rate_type": "month",
+                        "price": Decimal("250.00"),
+                        "vehicle_type": "all",
+                        "description": "优惠包月",
+                    },
                 ],
                 "overtime_rates": [],
             },
@@ -69,15 +119,40 @@ class Command(BaseCommand):
                 "free_minutes": 30,
                 "daily_max_fee": Decimal("150.00"),
                 "rules": [
-                    {"start_minutes": 0, "end_minutes": 60, "rate_per_hour": Decimal("8.00"), "vehicle_type": "vip"},
-                    {"start_minutes": 60, "end_minutes": None, "rate_per_hour": Decimal("12.00"), "vehicle_type": "vip"},
+                    {
+                        "start_minutes": 0,
+                        "end_minutes": 60,
+                        "rate_per_hour": Decimal("8.00"),
+                        "vehicle_type": "vip",
+                    },
+                    {
+                        "start_minutes": 60,
+                        "end_minutes": None,
+                        "rate_per_hour": Decimal("12.00"),
+                        "vehicle_type": "vip",
+                    },
                 ],
                 "month_year_rates": [
-                    {"rate_type": "month", "price": Decimal("500.00"), "vehicle_type": "vip", "description": "VIP包月"},
-                    {"rate_type": "year", "price": Decimal("5000.00"), "vehicle_type": "vip", "description": "VIP包年"},
+                    {
+                        "rate_type": "month",
+                        "price": Decimal("500.00"),
+                        "vehicle_type": "vip",
+                        "description": "VIP包月",
+                    },
+                    {
+                        "rate_type": "year",
+                        "price": Decimal("5000.00"),
+                        "vehicle_type": "vip",
+                        "description": "VIP包年",
+                    },
                 ],
                 "overtime_rates": [
-                    {"overtime_fee": Decimal("20.00"), "overtime_start_hours": 24, "vehicle_type": "vip", "description": "VIP超时费用"},
+                    {
+                        "overtime_fee": Decimal("20.00"),
+                        "overtime_start_hours": 24,
+                        "vehicle_type": "vip",
+                        "description": "VIP超时费用",
+                    },
                 ],
             },
         ]
@@ -97,7 +172,9 @@ class Command(BaseCommand):
                     existing_template.delete()
                 else:
                     self.stdout.write(
-                        self.style.WARNING(f"模板 '{template_name}' 已存在，跳过（使用 --force 强制重新创建）")
+                        self.style.WARNING(
+                            f"模板 '{template_name}' 已存在，跳过（使用 --force 强制重新创建）"
+                        )
                     )
                     skipped_count += 1
                     continue

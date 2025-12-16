@@ -268,15 +268,161 @@
     }
   }
   
-  // 更新最近记录
+  // 更新最近记录（活动动态）
   function updateRecentRecords(records) {
-    // 查找最近记录容器并更新
-    const recordsSection = document.querySelector('[data-recent-records-section]');
-    if (recordsSection && records.length > 0) {
-      // 这里可以根据实际页面结构更新最近记录
-      console.log('更新最近记录:', records);
+    const activityFeed = document.getElementById('activity-feed');
+    if (!activityFeed || !Array.isArray(records)) {
+      return;
     }
+
+    // 获取当前显示的记录ID集合
+    const currentRecordIds = new Set(
+      Array.from(activityFeed.querySelectorAll('.activity-item')).map(el => el.dataset.recordId)
+    );
+
+    // 获取新记录ID集合
+    const newRecordIds = new Set(records.map(r => String(r.id)));
+
+    // 找出需要移除的记录（已不在新数据中）
+    const toRemove = Array.from(currentRecordIds).filter(id => !newRecordIds.has(id));
+    toRemove.forEach(id => {
+      const item = activityFeed.querySelector(`[data-record-id="${id}"]`);
+      if (item) {
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(-20px)';
+        setTimeout(() => item.remove(), 300);
+      }
+    });
+
+    // 找出需要添加的新记录
+    const toAdd = records.filter(r => !currentRecordIds.has(String(r.id)));
+
+    // 添加新记录（带动画）
+    toAdd.forEach((record, index) => {
+      const item = createActivityItem(record);
+      item.style.opacity = '0';
+      item.style.transform = 'translateX(20px)';
+      activityFeed.insertBefore(item, activityFeed.firstChild);
+      
+      // 延迟动画，创建连续出现效果
+      setTimeout(() => {
+        item.style.transition = 'all 0.3s ease-out';
+        item.style.opacity = '1';
+        item.style.transform = 'translateX(0)';
+      }, index * 50);
+    });
+
+    // 更新现有记录的时间显示
+    updateRelativeTimes();
   }
+
+  // 创建活动动态项
+  function createActivityItem(record) {
+    const div = document.createElement('div');
+    div.className = 'activity-item flex items-start gap-3 p-3 bg-theme-secondary rounded-xl transition-all duration-300 hover:bg-theme-secondary/80';
+    div.dataset.recordId = record.id;
+    div.dataset.entryTime = record.entry_time;
+    if (record.exit_time) {
+      div.dataset.exitTime = record.exit_time;
+    }
+
+    // 确定状态
+    const isParking = !record.exit_time;
+    const isUnpaid = record.exit_time && !record.is_paid;
+    const isCompleted = record.exit_time && record.is_paid;
+
+    // 图标和颜色
+    let iconClass, bgClass, textClass, statusText, statusIcon;
+    if (isParking) {
+      iconClass = 'fa-arrow-right text-emerald-500';
+      bgClass = 'bg-emerald-100 dark:bg-emerald-900/30';
+      textClass = 'text-emerald-600 dark:text-emerald-400';
+      statusText = '车辆入场';
+      statusIcon = '<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>';
+    } else if (isUnpaid) {
+      iconClass = 'fa-clock text-amber-500';
+      bgClass = 'bg-amber-100 dark:bg-amber-900/30';
+      textClass = 'text-amber-600 dark:text-amber-400';
+      statusText = '已出场待支付';
+      statusIcon = '<i class="fas fa-exclamation-circle text-xs"></i>';
+    } else {
+      iconClass = 'fa-check-circle text-slate-500';
+      bgClass = 'bg-slate-100 dark:bg-slate-900/30';
+      textClass = 'text-slate-600 dark:text-slate-400';
+      statusText = '已出场并支付';
+      statusIcon = '<i class="fas fa-check-circle text-xs"></i>';
+    }
+
+    const timeAttr = isParking ? record.entry_time : record.exit_time;
+    const timeLabel = isParking ? 'far fa-clock' : 'fas fa-sign-out-alt';
+
+    div.innerHTML = `
+      <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${bgClass}">
+        <i class="fas ${iconClass}"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="font-mono font-medium text-theme-primary">${record.vehicle?.license_plate || '未知'}</span>
+          <span class="text-xs px-2 py-0.5 ${bgClass} ${textClass} rounded-full flex items-center gap-1">
+            ${statusIcon}
+            ${statusText}
+          </span>
+        </div>
+        <p class="text-sm text-theme-muted truncate mb-1">
+          <i class="fas fa-map-marker-alt text-xs mr-1"></i>
+          ${record.parking_space?.parking_lot?.name || '未知'} · ${record.parking_space?.space_number || '未知'}
+        </p>
+        <div class="flex items-center gap-2 text-xs text-theme-muted flex-wrap">
+          <span class="flex items-center gap-1">
+            <i class="${timeLabel}"></i>
+            <span class="relative-time" data-time="${timeAttr}">刚刚</span>
+          </span>
+          ${record.fee ? `<span class="text-amber-500 font-medium"><i class="fas fa-yen-sign"></i>${record.fee}</span>` : ''}
+          ${record.duration_minutes ? `<span class="text-theme-muted"><i class="far fa-hourglass-half"></i>${record.duration_minutes}分钟</span>` : ''}
+        </div>
+      </div>
+    `;
+
+    return div;
+  }
+
+  // 更新相对时间显示
+  function updateRelativeTimes() {
+    document.querySelectorAll('.relative-time').forEach(el => {
+      const timeStr = el.dataset.time;
+      if (!timeStr) return;
+
+      try {
+        const time = new Date(timeStr);
+        const now = new Date();
+        const diff = Math.floor((now - time) / 1000); // 秒
+
+        let text;
+        if (diff < 60) {
+          text = '刚刚';
+        } else if (diff < 3600) {
+          const minutes = Math.floor(diff / 60);
+          text = `${minutes}分钟前`;
+        } else if (diff < 86400) {
+          const hours = Math.floor(diff / 3600);
+          text = `${hours}小时前`;
+        } else {
+          const days = Math.floor(diff / 86400);
+          text = `${days}天前`;
+        }
+
+        el.textContent = text;
+      } catch (e) {
+        console.error('时间解析错误:', e);
+      }
+    });
+  }
+
+  // 定期更新相对时间（每分钟）
+  setInterval(updateRelativeTimes, 60000);
+
+  // 导出到全局，供其他模块使用
+  window.updateRelativeTimes = updateRelativeTimes;
   
   // 查询出场车辆
   async function searchForExit() {

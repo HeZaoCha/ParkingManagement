@@ -1,7 +1,7 @@
 # 项目文档索引
 
-**最后更新**: 2025-12-14  
-**版本**: 2.0.0
+**最后更新**: 2025-12-16  
+**版本**: 2.1.0
 
 欢迎来到停车场管理系统文档中心！本文档提供了项目所有文档的索引和导航。
 
@@ -56,7 +56,8 @@
 ### 🔄 [重构记录](./refactoring/)
 项目重构历史、重构总结等。
 
-- [重构总结](./refactoring/RESTRUCTURE_SUMMARY.md) - 重构工作总结
+- [企业级结构重构](./refactoring/RESTRUCTURE_SUMMARY.md) - 企业级Django项目结构重构总结
+- [代码重构 2025-12-16](./refactoring/CODE_REFACTORING_2025_12_16.md) - 代码复用性提升和代码质量改进
 
 ### ⚡ [优化记录](./optimization/)
 性能优化、前端优化、用户体验优化等优化记录。
@@ -124,13 +125,15 @@ API接口文档、API使用指南等。
 ### 按主题搜索
 
 **性能优化**
-- [优化最终报告](./optimization/FINAL_OPTIMIZATION_REPORT.md)
+- [代码复用性分析](./optimization/CODE_REUSABILITY_ANALYSIS.md) - 代码复用性分析和改进方案
+- [优化最终报告](./optimization/FINAL_OPTIMIZATION_REPORT.md) - 所有优化工作的完整总结
 
 **Bug修复**
-- [Bug修复总结](./bugfixes/BUGFIX_SUMMARY.md)
+- [Bug修复总结](./bugfixes/BUGFIX_SUMMARY.md) - Bug修复汇总
 
 **重构记录**
-- [重构总结](./refactoring/RESTRUCTURE_SUMMARY.md)
+- [企业级结构重构](./refactoring/RESTRUCTURE_SUMMARY.md) - 企业级Django项目结构重构总结
+- [代码重构 2025-12-16](./refactoring/CODE_REFACTORING_2025_12_16.md) - 代码复用性提升和代码质量改进
 
 ---
 
@@ -157,4 +160,4 @@ API接口文档、API使用指南等。
 ---
 
 **文档维护**: HeZaoCha  
-**最后更新**: 2025-12-15
+**最后更新**: 2025-12-16

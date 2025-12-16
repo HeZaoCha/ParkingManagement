@@ -14,7 +14,13 @@ import json
 from decimal import Decimal
 
 from django.contrib import messages
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+
+# 导入删除视图函数供 urls.py 使用
+from parking.views.admin_delete_views import (  # noqa: F401
+    parking_lot_delete,
+    parking_space_delete,
+    vehicle_delete,
+)
 from django.db import transaction
 from django.db.models import Count, Q, Sum
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -28,6 +34,7 @@ from loguru import logger
 from parking.decorators import staff_member_required
 from parking.models import ParkingLot, ParkingRecord, ParkingSpace, Vehicle
 from parking.services import DashboardService
+from parking.utils.pagination import paginate_queryset
 
 # 每页显示数量
 PAGE_SIZE = 15
@@ -96,20 +103,15 @@ def parking_lot_list(request: HttpRequest) -> HttpResponse:
     elif status == "inactive":
         queryset = queryset.filter(is_active=False)
 
-    # 分页
-    paginator = Paginator(queryset, PAGE_SIZE)
-    page = request.GET.get("page", 1)
-
-    try:
-        lots = paginator.page(page)
-    except (PageNotAnInteger, EmptyPage):
-        lots = paginator.page(1)
+    # 使用通用分页函数
+    lots, current_page = paginate_queryset(queryset, request, page_size=PAGE_SIZE)
 
     context = {
         "lots": lots,
         "search": search,
         "status": status,
         "total_count": queryset.count(),
+        "current_page": current_page,
     }
 
     return render(request, "admin/parking_lot/list.html", context)
@@ -210,29 +212,8 @@ def parking_lot_edit(request: HttpRequest, pk: int = None) -> HttpResponse:
     return render(request, "admin/parking_lot/edit.html", {"lot": lot})
 
 
-@staff_member_required
-@require_POST
-def parking_lot_delete(request: HttpRequest, pk: int) -> JsonResponse:
-    """停车场删除视图（AJAX）"""
-    try:
-        lot = get_object_or_404(ParkingLot, pk=pk)
-        name = lot.name
-
-        # 检查是否有关联数据
-        # 优化：使用exists()而不是count()，更高效
-        if ParkingSpace.objects.filter(parking_lot=lot).exists():
-            return JsonResponse(
-                {"success": False, "message": "该停车场下存在车位，无法删除。请先删除所有车位。"}
-            )
-
-        lot.delete()
-        logger.info("用户 %s 删除停车场: %s", request.user.username, name)
-
-        return JsonResponse({"success": True, "message": f'停车场 "{name}" 已删除'})
-
-    except Exception as e:
-        logger.error("删除停车场失败: %s", str(e))
-        return JsonResponse({"success": False, "message": f"删除失败：{str(e)}"})
+# 停车场删除视图已迁移到 parking.views.admin_delete_views.ParkingLotDeleteView
+# 使用导入的 parking_lot_delete 视图函数
 
 
 @staff_member_required
@@ -286,14 +267,8 @@ def parking_space_list(request: HttpRequest) -> HttpResponse:
     elif status == "reserved":
         queryset = queryset.filter(is_reserved=True)
 
-    # 分页
-    paginator = Paginator(queryset, PAGE_SIZE)
-    page = request.GET.get("page", 1)
-
-    try:
-        spaces = paginator.page(page)
-    except (PageNotAnInteger, EmptyPage):
-        spaces = paginator.page(1)
+    # 使用通用分页函数
+    spaces, current_page = paginate_queryset(queryset, request, page_size=PAGE_SIZE)
 
     # 优化：使用only()限制字段，减少数据传输
     lots = ParkingLot.objects.filter(is_active=True).only("id", "name")
@@ -352,23 +327,8 @@ def parking_space_edit(request: HttpRequest, pk: int = None) -> HttpResponse:
     return render(request, "admin/parking_space/edit.html", context)
 
 
-@staff_member_required
-@require_POST
-def parking_space_delete(request: HttpRequest, pk: int) -> JsonResponse:
-    """车位删除视图（AJAX）"""
-    try:
-        space = get_object_or_404(ParkingSpace, pk=pk)
-
-        if space.is_occupied:
-            return JsonResponse({"success": False, "message": "该车位当前被占用，无法删除"})
-
-        number = space.space_number
-        space.delete()
-
-        return JsonResponse({"success": True, "message": f'车位 "{number}" 已删除'})
-
-    except Exception as e:
-        return JsonResponse({"success": False, "message": f"删除失败：{str(e)}"})
+# 车位删除视图已迁移到 parking.views.admin_delete_views.ParkingSpaceDeleteView
+# 使用导入的 parking_space_delete 视图函数
 
 
 @staff_member_required
@@ -428,14 +388,8 @@ def vehicle_list(request: HttpRequest) -> HttpResponse:
     if vehicle_type:
         queryset = queryset.filter(vehicle_type=vehicle_type)
 
-    # 分页
-    paginator = Paginator(queryset, PAGE_SIZE)
-    page = request.GET.get("page", 1)
-
-    try:
-        vehicles = paginator.page(page)
-    except (PageNotAnInteger, EmptyPage):
-        vehicles = paginator.page(1)
+    # 使用通用分页函数
+    vehicles, current_page = paginate_queryset(queryset, request, page_size=PAGE_SIZE)
 
     context = {
         "vehicles": vehicles,
@@ -482,25 +436,8 @@ def vehicle_edit(request: HttpRequest, pk: int = None) -> HttpResponse:
     return render(request, "admin/vehicle/edit.html", context)
 
 
-@staff_member_required
-@require_POST
-def vehicle_delete(request: HttpRequest, pk: int) -> JsonResponse:
-    """车辆删除视图（AJAX）"""
-    try:
-        vehicle = get_object_or_404(Vehicle, pk=pk)
-
-        # 检查是否有未完成的停车记录
-        # 优化：直接使用exists()检查，避免加载数据
-        if ParkingRecord.objects.filter(vehicle=vehicle, exit_time__isnull=True).exists():
-            return JsonResponse({"success": False, "message": "该车辆当前正在停车中，无法删除"})
-
-        plate = vehicle.license_plate
-        vehicle.delete()
-
-        return JsonResponse({"success": True, "message": f'车辆 "{plate}" 已删除'})
-
-    except Exception as e:
-        return JsonResponse({"success": False, "message": f"删除失败：{str(e)}"})
+# 车辆删除视图已迁移到 parking.views.admin_delete_views.VehicleDeleteView
+# 使用导入的 vehicle_delete 视图函数
 
 
 # ==================== 停车记录管理 ====================
@@ -540,14 +477,8 @@ def parking_record_list(request: HttpRequest) -> HttpResponse:
     if date_to:
         queryset = queryset.filter(entry_time__date__lte=date_to)
 
-    # 分页
-    paginator = Paginator(queryset, PAGE_SIZE)
-    page = request.GET.get("page", 1)
-
-    try:
-        records = paginator.page(page)
-    except (PageNotAnInteger, EmptyPage):
-        records = paginator.page(1)
+    # 使用通用分页函数
+    records, current_page = paginate_queryset(queryset, request, page_size=PAGE_SIZE)
 
     # 优化：使用aggregate合并统计查询，减少数据库访问
     stats = queryset.aggregate(
@@ -564,6 +495,7 @@ def parking_record_list(request: HttpRequest) -> HttpResponse:
         "date_from": date_from,
         "date_to": date_to,
         "stats": stats,
+        "current_page": current_page,
     }
 
     return render(request, "admin/parking_record/list.html", context)

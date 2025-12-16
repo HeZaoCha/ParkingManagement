@@ -8,108 +8,225 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('parking', '0007_province_parkingrecord_plate_city_code_and_more'),
+        ("parking", "0007_province_parkingrecord_plate_city_code_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MonthYearRate',
+            name="MonthYearRate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rate_type', models.CharField(choices=[('month', '月卡'), ('quarter', '季卡'), ('year', '年卡')], help_text='包月、包季或包年', max_length=20, verbose_name='类型')),
-                ('price', models.DecimalField(decimal_places=2, help_text='包月/包年费用', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='价格（元）')),
-                ('vehicle_type', models.CharField(choices=[('standard', '标准车位'), ('disabled', '残疾人车位'), ('vip', 'VIP车位'), ('large', '大型车位'), ('all', '全部类型')], default='all', help_text='适用的车位类型', max_length=20, verbose_name='车位类型')),
-                ('description', models.TextField(blank=True, help_text='包月/包年套餐的详细说明', null=True, verbose_name='说明')),
-                ('is_active', models.BooleanField(default=True, verbose_name='是否启用')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "rate_type",
+                    models.CharField(
+                        choices=[("month", "月卡"), ("quarter", "季卡"), ("year", "年卡")],
+                        help_text="包月、包季或包年",
+                        max_length=20,
+                        verbose_name="类型",
+                    ),
+                ),
+                (
+                    "price",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="包月/包年费用",
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                        verbose_name="价格（元）",
+                    ),
+                ),
+                (
+                    "vehicle_type",
+                    models.CharField(
+                        choices=[
+                            ("standard", "标准车位"),
+                            ("disabled", "残疾人车位"),
+                            ("vip", "VIP车位"),
+                            ("large", "大型车位"),
+                            ("all", "全部类型"),
+                        ],
+                        default="all",
+                        help_text="适用的车位类型",
+                        max_length=20,
+                        verbose_name="车位类型",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True,
+                        help_text="包月/包年套餐的详细说明",
+                        null=True,
+                        verbose_name="说明",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True, verbose_name="是否启用")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
             ],
             options={
-                'verbose_name': '包月/包年费率',
-                'verbose_name_plural': '包月/包年费率',
-                'db_table': 'parking_month_year_rate',
-                'ordering': ['template', 'rate_type', 'vehicle_type'],
+                "verbose_name": "包月/包年费率",
+                "verbose_name_plural": "包月/包年费率",
+                "db_table": "parking_month_year_rate",
+                "ordering": ["template", "rate_type", "vehicle_type"],
             },
         ),
         migrations.CreateModel(
-            name='OvertimeRate',
+            name="OvertimeRate",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('overtime_fee', models.DecimalField(decimal_places=2, help_text='超过每日收费上限后的超时收费标准', max_digits=10, validators=[django.core.validators.MinValueValidator(Decimal('0.01'))], verbose_name='超时费用（元/小时）')),
-                ('overtime_start_hours', models.PositiveIntegerField(default=24, help_text='超过多少小时后开始收取超时费用（默认24小时）', verbose_name='超时起始小时')),
-                ('vehicle_type', models.CharField(choices=[('standard', '标准车位'), ('disabled', '残疾人车位'), ('vip', 'VIP车位'), ('large', '大型车位'), ('all', '全部类型')], default='all', help_text='适用的车位类型', max_length=20, verbose_name='车位类型')),
-                ('description', models.TextField(blank=True, help_text='超时收费的详细说明', null=True, verbose_name='说明')),
-                ('is_active', models.BooleanField(default=True, verbose_name='是否启用')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='创建时间')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='更新时间')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "overtime_fee",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="超过每日收费上限后的超时收费标准",
+                        max_digits=10,
+                        validators=[django.core.validators.MinValueValidator(Decimal("0.01"))],
+                        verbose_name="超时费用（元/小时）",
+                    ),
+                ),
+                (
+                    "overtime_start_hours",
+                    models.PositiveIntegerField(
+                        default=24,
+                        help_text="超过多少小时后开始收取超时费用（默认24小时）",
+                        verbose_name="超时起始小时",
+                    ),
+                ),
+                (
+                    "vehicle_type",
+                    models.CharField(
+                        choices=[
+                            ("standard", "标准车位"),
+                            ("disabled", "残疾人车位"),
+                            ("vip", "VIP车位"),
+                            ("large", "大型车位"),
+                            ("all", "全部类型"),
+                        ],
+                        default="all",
+                        help_text="适用的车位类型",
+                        max_length=20,
+                        verbose_name="车位类型",
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        blank=True, help_text="超时收费的详细说明", null=True, verbose_name="说明"
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True, verbose_name="是否启用")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="创建时间")),
+                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="更新时间")),
             ],
             options={
-                'verbose_name': '超时收费',
-                'verbose_name_plural': '超时收费',
-                'db_table': 'parking_overtime_rate',
-                'ordering': ['template', 'vehicle_type'],
+                "verbose_name": "超时收费",
+                "verbose_name_plural": "超时收费",
+                "db_table": "parking_overtime_rate",
+                "ordering": ["template", "vehicle_type"],
             },
         ),
         migrations.AddField(
-            model_name='pricingrule',
-            name='vehicle_type',
-            field=models.CharField(choices=[('standard', '标准车位'), ('disabled', '残疾人车位'), ('vip', 'VIP车位'), ('large', '大型车位'), ('all', '全部类型')], default='all', help_text="此规则适用的车位类型，选择'全部类型'则适用于所有车位", max_length=20, verbose_name='车位类型'),
+            model_name="pricingrule",
+            name="vehicle_type",
+            field=models.CharField(
+                choices=[
+                    ("standard", "标准车位"),
+                    ("disabled", "残疾人车位"),
+                    ("vip", "VIP车位"),
+                    ("large", "大型车位"),
+                    ("all", "全部类型"),
+                ],
+                default="all",
+                help_text="此规则适用的车位类型，选择'全部类型'则适用于所有车位",
+                max_length=20,
+                verbose_name="车位类型",
+            ),
         ),
         migrations.AddIndex(
-            model_name='parkinglot',
-            index=models.Index(fields=['lot_type'], name='lot_type_idx'),
+            model_name="parkinglot",
+            index=models.Index(fields=["lot_type"], name="lot_type_idx"),
         ),
         migrations.AddIndex(
-            model_name='parkinglot',
-            index=models.Index(fields=['name'], name='lot_name_idx'),
+            model_name="parkinglot",
+            index=models.Index(fields=["name"], name="lot_name_idx"),
         ),
         migrations.AddIndex(
-            model_name='parkingrecord',
-            index=models.Index(fields=['plate_province_code', 'plate_city_code'], name='record_plate_location_idx'),
+            model_name="parkingrecord",
+            index=models.Index(
+                fields=["plate_province_code", "plate_city_code"], name="record_plate_location_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='parkingrecord',
-            index=models.Index(fields=['plate_province_code', 'entry_time'], name='record_province_entry_idx'),
+            model_name="parkingrecord",
+            index=models.Index(
+                fields=["plate_province_code", "entry_time"], name="record_province_entry_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='parkingrecord',
-            index=models.Index(fields=['entry_time', 'exit_time'], name='record_date_range_idx'),
+            model_name="parkingrecord",
+            index=models.Index(fields=["entry_time", "exit_time"], name="record_date_range_idx"),
         ),
         migrations.AddIndex(
-            model_name='parkingspace',
-            index=models.Index(fields=['parking_lot', 'floor', 'area'], name='space_lot_floor_area_idx'),
+            model_name="parkingspace",
+            index=models.Index(
+                fields=["parking_lot", "floor", "area"], name="space_lot_floor_area_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='parkingspace',
-            index=models.Index(fields=['space_type'], name='space_type_idx'),
+            model_name="parkingspace",
+            index=models.Index(fields=["space_type"], name="space_type_idx"),
         ),
         migrations.AddIndex(
-            model_name='vehicle',
-            index=models.Index(fields=['vehicle_type'], name='vehicle_type_idx'),
+            model_name="vehicle",
+            index=models.Index(fields=["vehicle_type"], name="vehicle_type_idx"),
         ),
         migrations.AddIndex(
-            model_name='vehicle',
-            index=models.Index(fields=['-created_at'], name='vehicle_created_at_idx'),
+            model_name="vehicle",
+            index=models.Index(fields=["-created_at"], name="vehicle_created_at_idx"),
         ),
         migrations.AddField(
-            model_name='monthyearrate',
-            name='template',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='month_year_rates', to='parking.pricingtemplate', verbose_name='费率模板'),
+            model_name="monthyearrate",
+            name="template",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="month_year_rates",
+                to="parking.pricingtemplate",
+                verbose_name="费率模板",
+            ),
         ),
         migrations.AddField(
-            model_name='overtimerate',
-            name='template',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='overtime_rates', to='parking.pricingtemplate', verbose_name='费率模板'),
+            model_name="overtimerate",
+            name="template",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="overtime_rates",
+                to="parking.pricingtemplate",
+                verbose_name="费率模板",
+            ),
         ),
         migrations.AddIndex(
-            model_name='monthyearrate',
-            index=models.Index(fields=['template', 'rate_type'], name='parking_mon_templat_9dc746_idx'),
+            model_name="monthyearrate",
+            index=models.Index(
+                fields=["template", "rate_type"], name="parking_mon_templat_9dc746_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='overtimerate',
-            index=models.Index(fields=['template', 'vehicle_type'], name='parking_ove_templat_218666_idx'),
+            model_name="overtimerate",
+            index=models.Index(
+                fields=["template", "vehicle_type"], name="parking_ove_templat_218666_idx"
+            ),
         ),
     ]
